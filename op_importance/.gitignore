@@ -1,1 +1,8 @@
 /temp_test_scripts/
+
+# Designate directories for input and output data
+/input_data/
+/output/
+
+# Sarab's lazy way of importing the modules
+/workflow_classes/modules/

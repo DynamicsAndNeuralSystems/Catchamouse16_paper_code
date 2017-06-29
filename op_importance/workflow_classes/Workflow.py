@@ -218,9 +218,8 @@ if __name__ == '__main__':
     label_regex_pattern = '.*,(.*)$'
     #task_names = ['Lighting2','OliveOil','FaceFour','N', 'FISH']
 
-#    task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'N', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
-    task_names = ['mouse']
-    
+    #task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'N', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', #'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
+    task_names=['ts1','ts2']
     combine_pair_method = 'mean'
     combine_tasks_method = 'mean'
     combine_tasks_norm = None
@@ -229,7 +228,9 @@ if __name__ == '__main__':
     similarity_method = 'correlation'
     compare_space = 'problem_stats'
     n_good_perf_ops = 200
-    min_calc_tasks = 32
+    #n_good_perf_ops = 1
+    #min_calc_tasks = 32
+    min_calc_tasks = 1
     # -- max distance inside one cluster
     max_dist_cluster = 0.3
 

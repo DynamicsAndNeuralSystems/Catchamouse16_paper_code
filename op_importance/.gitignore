@@ -1,7 +1,7 @@
 /temp_test_scripts/
 
 # Designate directories for input and output data
-/input_data/
+/input_data/*.mat
 /output/
 
 # Sarab's lazy way of importing the modules

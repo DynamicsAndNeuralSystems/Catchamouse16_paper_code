@@ -3,6 +3,5 @@
 # Designate directories for input and output data
 /input_data/*.mat
 /output/
+*.mat
 
-# Sarab's lazy way of importing the modules
-#/workflow_classes/modules/

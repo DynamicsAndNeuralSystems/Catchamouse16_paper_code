@@ -215,7 +215,9 @@ if __name__ == '__main__':
     result_txt_outpath = '../output/figure_tmp/result_txt.txt'
 
     masking_method = 'NaN'
-    label_regex_pattern = '.*,(.*)$'
+    #label_regex_pattern = '.*,(.*)$'
+    # regex to find first value in comma separated list (above is last value)
+    label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'
     #task_names = ['Lighting2','OliveOil','FaceFour','N', 'FISH']
 
     task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']

@@ -1,5 +1,5 @@
 /temp_test_scripts/
-
+/UCR_TS_Archive*
 # Designate directories for input and output data
 /input_data/*.mat
 /output/

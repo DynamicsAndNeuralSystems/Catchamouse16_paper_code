@@ -19,17 +19,19 @@ for i=1:length(names)
 	ts_id = [ts_id_cell{:}]';
     % create local HCTSA_loc.mat file
     try
-        SQL_retrieve(ts_id,'all','all')
         % Remove default amount of bad values from data - don't actually normalise it
-        TS_normalize('none');
-        delete('HCTSA.mat');
+        % TS_normalize('none');
+        % delete('HCTSA.mat');
         % Save normalised data in -v7 .mat format
-        norm_data = load('HCTSA_N.mat');
-        fname = sprintf('HCTSA_%s_N_70_100_reduced.mat',names{i});
-        save(fname,'-struct','norm_data','-v7');
-        delete('HCTSA_N.mat')
-    catch
-        warning(['Problem getting ',names{i}]);
+        % norm_data = load('HCTSA_N.mat');
+        % delete('HCTSA_N.mat')
+
+        SQL_retrieve(ts_id,'all','all')
+        fname = sprintf('HCTSA_%s.mat',names{i});
+	data = load('HCTSA.mat')
+        save(fname,'-struct','data','-v7');
+    catch err
+        warning(['Problem getting ',names{i},'\n',err.message]);
     end
 end
 

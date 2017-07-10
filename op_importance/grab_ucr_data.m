@@ -38,4 +38,4 @@ timeSeriesData = timeSeriesData';
 keywords = keywords';
 labels = labels';
 save('INP_test.mat','timeSeriesData','keywords','labels');
-TS_init('INP_test.mat');
+%TS_init('INP_test.mat',~,~,[0,0,0]);

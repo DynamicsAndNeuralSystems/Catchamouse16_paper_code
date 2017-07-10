@@ -27,7 +27,8 @@ class Task:
         self.pair_stats = np.ma.masked_array([])
         self.tot_stats = np.ma.masked_array([])
         self.op = dict()
-        self.ts = dict()      
+        self.ts = dict()
+
     def calc_stats(self,is_keep_data = False):
         """
         Calculate the statistics using the method given by self.stat_method. Pairwise and task total. 
@@ -37,13 +38,18 @@ class Task:
             Is the feature data to be kept after calculating the statistics or discarded (to save RAM space)?
             
         """
-        self.pair_stats = self.stat_method.calc_pairs(self.labels,self.data)
-        
+
+        if self.stat_method.is_pairwise_stat:
+            self.pair_stats = self.stat_method.calc_pairs(self.labels, self.data)
+            # -- combine the stats of the label pairs to one pooled stat for each feature
+            self.tot_stats = self.stat_method.combine_pair(self.pair_stats)
+        else:
+            self.tot_stats = self.stat_method.calc_tots(self.labels,self.data)
+
         # -- free data if not required anymore to safe RAM space
         if not is_keep_data:
             self.data = None
-        # -- combine the stats of the label pairs to one pooled stat for each feature
-        self.tot_stats = self.stat_method.combine_pair(self.pair_stats)
+
         
     def read_data(self,is_read_feature_data = True):
         """

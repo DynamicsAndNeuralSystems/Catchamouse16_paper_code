@@ -213,15 +213,15 @@ if __name__ == '__main__':
     path_pattern_task_attrib = "../data/intermediate_results/task_{:s}_{:s}"
     plot_out_path = '../output/figure_tmp/test.png'
     result_txt_outpath = '../output/figure_tmp/result_txt.txt'
-
     masking_method = 'NaN'
-    #label_regex_pattern = '.*,(.*)$'
+    label_regex_pattern = '.*,(.*)$'
     # regex to find first value in comma separated list (above is last value)
-    label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'
+    #label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'
     #task_names = ['Lighting2','OliveOil','FaceFour','N', 'FISH']
 
-    task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
+    #task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
     #task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'N', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
+    task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200']
     #task_names=['50_words','Adiac','Coffee']
     #task_names=['50_words','Adiac']
     #task_names=['ts1','ts2']
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     n_good_perf_ops = 50
     #n_good_perf_ops = 1
     #min_calc_tasks = 32
-    min_calc_tasks = 2
+    min_calc_tasks = 4
     # -- max distance inside one cluster
     max_dist_cluster = 0.3
 
@@ -244,7 +244,8 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
 
     input_method = Data_Input.Datafile_Input(path_pattern,masking_method,label_regex_pattern)
-    ranking_method = Feature_Stats.U_Stats(combine_pair_method)
+    #ranking_method = Feature_Stats.U_Stats(combine_pair_method)
+    ranking_method = Feature_Stats.Decision_Tree()
     redundancy_method = Reducing_Redundancy.Reducing_Redundancy(similarity_method = similarity_method,compare_space = compare_space)
 
     workflow = Workflow(task_names,input_method,ranking_method,
@@ -258,7 +259,7 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
 
     # -- calculate the statistics
-    if False:
+    if True:
         workflow.read_data()
         workflow.calculate_stats()
         workflow.save_task_attribute('tot_stats', path_pattern_task_attrib)

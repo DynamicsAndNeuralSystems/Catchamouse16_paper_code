@@ -5,9 +5,6 @@ import Feature_Stats
 import Reducing_Redundancy
 import Plotting
 
-import multiprocessing
-from joblib import Parallel, delayed
-
 import collections
 import modules.misc.PK_helper as hlp
 import modules.feature_importance.PK_feat_array_proc as fap
@@ -82,6 +79,7 @@ class Workflow:
         """
         Calculate the statistics of the features for each task using the method given by stats_method
         """
+
         for task in self.tasks:
             task.calc_stats(is_keep_data = is_keep_data)
 
@@ -157,7 +155,7 @@ class Workflow:
         for task in self.tasks:
             task.load_attribute(attribute_name,in_path_pattern)
 
-    def read_data(self,is_read_feature_data = True):
+    def read_data(self, is_read_feature_data=True, old_matlab=False):
         """
         Read the data for all tasks from disk using the method given by self.input_method
         Parameters:
@@ -166,9 +164,9 @@ class Workflow:
             Is the feature data to be read
         """
         for task in self.tasks:
-           task.read_data(is_read_feature_data = is_read_feature_data)
+           task.read_data(is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
 
-    def save_task_attribute(self,attribute_name,out_path_pattern):
+    def save_task_attribute(self, attribute_name, out_path_pattern):
         """
         Save an attribute of of all tasks to separate files
         Parameters:
@@ -179,7 +177,7 @@ class Workflow:
             A string containing the pattern for the path pointing to the output file. Formatted as out_path_pattern.format(self.name,attribute_name)
         """
         for task in self.tasks:
-            task.save_attribute(attribute_name,out_path_pattern)
+            task.save_attribute(attribute_name, out_path_pattern)
 
     def select_good_perf_ops_sort_asc(self):
         """
@@ -211,18 +209,21 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- Set Parameters -----------------------------------------------
     # -----------------------------------------------------------------
-    #path_pattern = '/home/philip/work/OperationImportanceProject/results/reduced/HCTSA_{:s}_N_70_100_reduced.mat'
     path_pattern = '../input_data/HCTSA_{:s}.mat'
+    old_matlab = False
+    label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
+
+    path_pattern = '../phil_matlab/HCTSA_{:s}_N_70_100_reduced.mat'
+    old_matlab = True
+    label_regex_pattern = label_regex_pattern = '.*,(.*)$' # LAST VALUE
+
     path_pattern_task_attrib = "../data/intermediate_results/task_{:s}_{:s}"
     plot_out_path = '../output/figure_tmp/test.png'
     result_txt_outpath = '../output/figure_tmp/result_txt.txt'
     masking_method = 'NaN'
-    # label_regex_pattern = '.*,(.*)$'
-    # regex to find first value in comma separated list (above is last value)
-    label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'
 
-    task_names = ["50words","Adiac","ArrowHead","Beef","BeetleFly","BirdChicken","CBF","Car","ChlorineConcentration","CinC_ECG_torso","Coffee","Computers","Cricket_X","Cricket_Y","Cricket_Z","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup","DistalPhalanxOutlineCorrect","DistalPhalanxTW","ECG200","ECG5000","ECGFiveDays","Earthquakes","ElectricDevices","FISH","FaceAll","FaceFour","FacesUCR","FordA","FordB","Gun_Point","Ham","HandOutlines","Haptics","Herring","InlineSkate","InsectWingbeatSound","ItalyPowerDemand","LargeKitchenAppliances","Lighting2","Lighting7","MALLAT","Meat","MedicalImages","MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect","MiddlePhalanxTW","MoteStrain","NonInvasiveFatalECG_Thorax1","NonInvasiveFatalECG_Thorax2","OSULeaf","OliveOil","PhalangesOutlinesCorrect","Phoneme","Plane","ProximalPhalanxOutlineAgeGroup","ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices","ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances","SonyAIBORobotSurface","SonyAIBORobotSurfaceII","StarLightCurves","Strawberry","SwedishLeaf","Symbols","ToeSegmentation1","ToeSegmentation2","Trace","TwoLeadECG","Two_Patterns","UWaveGestureLibraryAll","Wine","WordsSynonyms","Worms","WormsTwoClass","synthetic_control","uWaveGestureLibrary_X","uWaveGestureLibrary_Y","uWaveGestureLibrary_Z","wafer","yoga"]
-    task_names = ["50words", "Adiac"]
+    #task_names = ["50words","Adiac","ArrowHead","Beef","BeetleFly","BirdChicken","CBF","Car","ChlorineConcentration","CinC_ECG_torso","Coffee","Computers","Cricket_X","Cricket_Y","Cricket_Z","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup","DistalPhalanxOutlineCorrect","DistalPhalanxTW","ECG200","ECG5000","ECGFiveDays","Earthquakes","ElectricDevices","FISH","FaceAll","FaceFour","FacesUCR","FordA","FordB","Gun_Point","Ham","HandOutlines","Haptics","Herring","InlineSkate","InsectWingbeatSound","ItalyPowerDemand","LargeKitchenAppliances","Lighting2","Lighting7","MALLAT","Meat","MedicalImages","MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect","MiddlePhalanxTW","MoteStrain","NonInvasiveFatalECG_Thorax1","NonInvasiveFatalECG_Thorax2","OSULeaf","OliveOil","PhalangesOutlinesCorrect","Phoneme","Plane","ProximalPhalanxOutlineAgeGroup","ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices","ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances","SonyAIBORobotSurface","SonyAIBORobotSurfaceII","StarLightCurves","Strawberry","SwedishLeaf","Symbols","ToeSegmentation1","ToeSegmentation2","Trace","TwoLeadECG","Two_Patterns","UWaveGestureLibraryAll","Wine","WordsSynonyms","Worms","WormsTwoClass","synthetic_control","uWaveGestureLibrary_X","uWaveGestureLibrary_Y","uWaveGestureLibrary_Z","wafer","yoga"]
+    task_names = ['Cricket_X', 'InlineSkate']
     #task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
     combine_pair_method = 'mean'
     combine_tasks_method = 'mean'
@@ -234,7 +235,7 @@ if __name__ == '__main__':
     n_good_perf_ops = 50
     #n_good_perf_ops = 1
     #min_calc_tasks = 32
-    min_calc_tasks = 32
+    min_calc_tasks = 2
     # -- max distance inside one cluster
     max_dist_cluster = 0.2
 
@@ -259,11 +260,11 @@ if __name__ == '__main__':
 
     # -- calculate the statistics
     if True:
-        workflow.read_data()
+        workflow.read_data(old_matlab=old_matlab)
         workflow.calculate_stats()
         workflow.save_task_attribute('tot_stats', path_pattern_task_attrib)
     else:
-        workflow.read_data(is_read_feature_data = False)
+        workflow.read_data(is_read_feature_data = False, old_matlab=old_matlab)
         workflow.load_task_attribute('tot_stats', path_pattern_task_attrib)
 
     # -- find the features which are calculated for at least min_calc_tasks tasks
@@ -301,8 +302,6 @@ if __name__ == '__main__':
         plotting.plot_similarity_array()
 
     plt.savefig(plot_out_path)
-
-
 
     # -----------------------------------------------------------------
     # -- Output the results to text file-------------------------------

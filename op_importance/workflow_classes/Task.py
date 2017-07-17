@@ -51,7 +51,7 @@ class Task:
             self.data = None
 
         
-    def read_data(self,is_read_feature_data = True):
+    def read_data(self,is_read_feature_data = True, old_matlab = False):
         """
         Read the data using the input method given by self.input_method.
         Paramters:
@@ -60,7 +60,7 @@ class Task:
             Is the feature data to be read or not
         """
         #self.data, keywords_ts, self.op_ids = self.input_method.input_task(self.name,is_read_feature_data = is_read_feature_data)
-        self.data, self.ts, self.op = self.input_method.input_task(self.name,is_read_feature_data = is_read_feature_data)
+        self.data, self.ts, self.op = self.input_method.input_task(self.name,is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
         
         self.op_ids = np.array(self.op['id'])
         keywords_ts = self.ts['keywords']
@@ -78,8 +78,9 @@ class Task:
             Formatted as in_path_pattern.format(self.name,attribute_name) + file extension
         """
        
-        if attribute_name == 'tot_stats':  
-            self.tot_stats = np.ma.load(in_path_pattern.format(self.name,attribute_name)+'.pckl')      
+        if attribute_name == 'tot_stats':
+            self.tot_stats = np.loadtxt(in_path_pattern.format(self.name,attribute_name)+'.txt')
+            #self.tot_stats = np.ma.load(in_path_pattern.format(self.name,attribute_name)+'.pckl')
     
     
     def save_attribute(self,attribute_name,out_path_pattern):    
@@ -92,8 +93,10 @@ class Task:
         out_path-pattern : string
             A string containing the pattern for the path pointing to the output file. 
             Formatted as out_path_pattern.format(self.name,attribute_name) + file extension
-        """ 
+        """
+
         if attribute_name == 'tot_stats':  
-            np.ma.dump(self.tot_stats, out_path_pattern.format(self.name,attribute_name)+'.pckl') 
+            np.savetxt(out_path_pattern.format(self.name,attribute_name)+'.txt',self.tot_stats)
+            #np.ma.dump(self.tot_stats, out_path_pattern.format(self.name,attribute_name)+'.pckl')
                  
            

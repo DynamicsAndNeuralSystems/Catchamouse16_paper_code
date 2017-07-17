@@ -92,7 +92,7 @@ class Datafile_Input(Data_Input):
         # -- initialise the pattern for the home folder of the data files
         self.path_pattern = path_pattern
         
-    def input_task(self,task_name,is_read_feature_data = True):
+    def input_task(self,task_name,is_read_feature_data = True, old_matlab = False):
         """
         Read the required data from a HCTSA_loc.mat file
         Parameters:
@@ -119,9 +119,9 @@ class Datafile_Input(Data_Input):
 
         # -- load the data,operations and timeseries from the matlab file
         if is_read_feature_data:
-            data , op, ts = mIO.read_from_mat_file(mat_file_path,['TS_DataMat','Operations','TimeSeries'],is_from_old_matlab = False)
+            data , op, ts = mIO.read_from_mat_file(mat_file_path,['TS_DataMat','Operations','TimeSeries'],is_from_old_matlab=old_matlab)
         else:
-            op, ts = mIO.read_from_mat_file(mat_file_path,['Operations','TimeSeries'],is_from_old_matlab = False)
+            op, ts = mIO.read_from_mat_file(mat_file_path,['Operations','TimeSeries'],is_from_old_matlab=old_matlab)
             data = None
         
         if is_read_feature_data:

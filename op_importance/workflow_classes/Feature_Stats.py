@@ -3,6 +3,8 @@ import numpy as np
 from sklearn import tree
 from sklearn.model_selection import train_test_split, cross_val_score, KFold
 
+from pathos.multiprocessing import ThreadPool as Pool
+
 class Feature_Stats:
     
     def __init__(self, is_pairwise_stat = False, combine_pair_method = 'mean'):
@@ -80,15 +82,29 @@ class Decision_Tree(Feature_Stats):
             Returns the decision tree accuracy for each operation.
         """
 
-        op_error_rate = np.zeros(data.shape[1])
-
         # Find maximum allowed folds for cross validation
         un, counts = np.unique(labels, return_counts=True)
-        max_folds = 10
+        max_folds = 2
         min_folds = 2
         folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
         print "Calculating decision tree classification error, {} fold cross validation, {} classes, {} samples".format(folds, len(un), len(labels))
 
+        # Loop through each operation in a threaded manner
+        def process_task_threaded(i):
+            operation = data[:,i]
+            # Use decision tree classifier
+            clf = tree.DecisionTreeClassifier()
+            # Reshape data as we have only one feature at a time
+            operation = operation.reshape(-1, 1)
+            # Find accuracy of classifier using cross validation
+            scores = cross_val_score(clf, operation, labels, cv=folds)
+            return 1 - np.mean(scores)
+            #op_error_rate[i] = 1 - np.mean(scores)
+
+        pool = Pool()
+        op_error_rate = np.asarray(pool.map(process_task_threaded,range(data.shape[1])))
+
+        '''
         # Loop through each operation
         for i, operation in enumerate(data.T):
             # Use decision tree classifier
@@ -98,6 +114,7 @@ class Decision_Tree(Feature_Stats):
             # Find accuracy of classifier using cross validation
             scores = cross_val_score(clf, operation, labels, cv=folds)
             op_error_rate[i] = 1 - np.mean(scores)
+        '''
 
         print "Min decision tree classification error is {} ({} labels)".format(np.min(op_error_rate), len(un))
         return op_error_rate

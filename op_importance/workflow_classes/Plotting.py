@@ -1,4 +1,6 @@
 import itertools
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.cluster.hierarchy as hierarchy
@@ -57,7 +59,7 @@ class Plotting:
         
         # -- number of problems for which each good performing feature has been calculated
         measures[0,:] = (~self.workflow.stats_good_op[:,tmp_ind].mask).sum(axis=0)
-        # -- z scored u-stat(for all features) for top features 
+        # -- z scored classification stats (for all features) for top features
         stats_good_op_z_score = fap.normalise_masked_array(self.workflow.stats_good_op_comb, axis= 0,norm_type = 'zscore')[0]
         measures[1,:] = stats_good_op_z_score[tmp_ind]
         
@@ -94,7 +96,7 @@ class Plotting:
         ax_dendr.set_yticks([])
         ax_dendr.axvline(self.max_dist_cluster,ls='--',c='k')
 
-        # -- plot sorted U-Stat array ------------------------------------------
+        # -- plot sorted classification stat array ------------------------------------------
 
         # -- create index that sort rows to correspond to dendrogram
         feat_sort_ind = dist_dendrogram['leaves']
@@ -158,27 +160,27 @@ class Plotting:
         ax_measures00.set_xticklabels([])
         
 
-        # -- U-stat measures --------------------------------------------------
+        # -- Classification stat measures --------------------------------------------------
         
-        # -- minimum average U-score for all features
-        ax_measures10.plot(x_loc,np.min(self.workflow.stats_good_op[task_sort_ind,:],axis=1),marker='o',label='min. avg. U-score all')
+        # -- minimum average classification stat for all features
+        ax_measures10.plot(x_loc,np.min(self.workflow.stats_good_op[task_sort_ind,:],axis=1),marker='o',label='min. avg. classification stat all')
 
-        # -- minimum average U-score for top features
-        ax_measures10.plot(x_loc,np.ma.min(self.ops_base_perf_vals[task_sort_ind,:],axis=1),marker='o',label='min. avg. U-score top')
+        # -- minimum average classification stat for top features
+        ax_measures10.plot(x_loc,np.ma.min(self.ops_base_perf_vals[task_sort_ind,:],axis=1),marker='o',label='min. avg. classification stat top')
             
-        # -- average minimum (for each class pair) U-score for top features
+        # -- average minimum (for each class pair) classification stat for top features
         # XXX This would require task.pair_stats to be available (not saved as intermediate at the moment); then it is trivial to implement
         
         ax_measures10.legend(loc=2,fontsize='small',labelspacing=.1)
-        ax_measures10.set_ylabel('u-score')
+        ax_measures10.set_ylabel('classification stat')
         ax_measures10.set_xlim([0,len(self.workflow.tasks)])
         ax_measures10.set_ylim([0,0.5])
 
-        # -- U-stat measures and avg operations working--------------------------------------------------
-        # -- mean average U-score for all features
+        # -- Classification stat measures and avg operations working--------------------------------------------------
+        # -- mean average classification stat for all features
         ax_measures20.plot(x_loc,np.ma.mean(self.workflow.stats_good_op[task_sort_ind,:],axis=1),marker='o')
         [label.set_color('b') for label in ax_measures20.get_yticklabels()]
-        ax_measures20.set_ylabel('avrg u-scrore all feat')
+        ax_measures20.set_ylabel('avrg classification stat all feat')
         ax_measures20.yaxis.label.set_color('b')
         
         # -- number of successfully calculated features

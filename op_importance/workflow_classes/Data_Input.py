@@ -115,11 +115,13 @@ class Datafile_Input(Data_Input):
         """
         # -- assemble the file path
         mat_file_path = self.path_pattern.format(task_name)
+        print "Reading file {}".format(mat_file_path)
+
         # -- load the data,operations and timeseries from the matlab file
         if is_read_feature_data:
-            data , op, ts = mIO.read_from_mat_file(mat_file_path,['TS_DataMat','Operations','TimeSeries'],is_from_old_matlab = True)
+            data , op, ts = mIO.read_from_mat_file(mat_file_path,['TS_DataMat','Operations','TimeSeries'],is_from_old_matlab = False)
         else:
-            op, ts = mIO.read_from_mat_file(mat_file_path,['Operations','TimeSeries'],is_from_old_matlab = True)
+            op, ts = mIO.read_from_mat_file(mat_file_path,['Operations','TimeSeries'],is_from_old_matlab = False)
             data = None
         
         if is_read_feature_data:

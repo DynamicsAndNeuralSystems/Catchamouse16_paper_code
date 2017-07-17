@@ -5,6 +5,9 @@ import Feature_Stats
 import Reducing_Redundancy
 import Plotting
 
+import multiprocessing
+from joblib import Parallel, delayed
+
 import collections
 import modules.misc.PK_helper as hlp
 import modules.feature_importance.PK_feat_array_proc as fap
@@ -163,7 +166,7 @@ class Workflow:
             Is the feature data to be read
         """
         for task in self.tasks:
-            task.read_data(is_read_feature_data = is_read_feature_data)
+           task.read_data(is_read_feature_data = is_read_feature_data)
 
     def save_task_attribute(self,attribute_name,out_path_pattern):
         """
@@ -209,22 +212,18 @@ if __name__ == '__main__':
     # -- Set Parameters -----------------------------------------------
     # -----------------------------------------------------------------
     #path_pattern = '/home/philip/work/OperationImportanceProject/results/reduced/HCTSA_{:s}_N_70_100_reduced.mat'
-    path_pattern = '../phil_matlab/HCTSA_{:s}_N_70_100_reduced.mat'
+    path_pattern = '../input_data/HCTSA_{:s}.mat'
     path_pattern_task_attrib = "../data/intermediate_results/task_{:s}_{:s}"
     plot_out_path = '../output/figure_tmp/test.png'
     result_txt_outpath = '../output/figure_tmp/result_txt.txt'
     masking_method = 'NaN'
-    label_regex_pattern = '.*,(.*)$'
+    # label_regex_pattern = '.*,(.*)$'
     # regex to find first value in comma separated list (above is last value)
-    #label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'
-    #task_names = ['Lighting2','OliveOil','FaceFour','N', 'FISH']
+    label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'
 
+    task_names = ["50words","Adiac","ArrowHead","Beef","BeetleFly","BirdChicken","CBF","Car","ChlorineConcentration","CinC_ECG_torso","Coffee","Computers","Cricket_X","Cricket_Y","Cricket_Z","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup","DistalPhalanxOutlineCorrect","DistalPhalanxTW","ECG200","ECG5000","ECGFiveDays","Earthquakes","ElectricDevices","FISH","FaceAll","FaceFour","FacesUCR","FordA","FordB","Gun_Point","Ham","HandOutlines","Haptics","Herring","InlineSkate","InsectWingbeatSound","ItalyPowerDemand","LargeKitchenAppliances","Lighting2","Lighting7","MALLAT","Meat","MedicalImages","MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect","MiddlePhalanxTW","MoteStrain","NonInvasiveFatalECG_Thorax1","NonInvasiveFatalECG_Thorax2","OSULeaf","OliveOil","PhalangesOutlinesCorrect","Phoneme","Plane","ProximalPhalanxOutlineAgeGroup","ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices","ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances","SonyAIBORobotSurface","SonyAIBORobotSurfaceII","StarLightCurves","Strawberry","SwedishLeaf","Symbols","ToeSegmentation1","ToeSegmentation2","Trace","TwoLeadECG","Two_Patterns","UWaveGestureLibraryAll","Wine","WordsSynonyms","Worms","WormsTwoClass","synthetic_control","uWaveGestureLibrary_X","uWaveGestureLibrary_Y","uWaveGestureLibrary_Z","wafer","yoga"]
+    task_names = ["50words", "Adiac"]
     #task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
-    #task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'N', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
-    task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200']
-    #task_names=['50_words','Adiac','Coffee']
-    #task_names=['50_words','Adiac']
-    #task_names=['ts1','ts2']
     combine_pair_method = 'mean'
     combine_tasks_method = 'mean'
     combine_tasks_norm = None
@@ -235,9 +234,9 @@ if __name__ == '__main__':
     n_good_perf_ops = 50
     #n_good_perf_ops = 1
     #min_calc_tasks = 32
-    min_calc_tasks = 4
+    min_calc_tasks = 32
     # -- max distance inside one cluster
-    max_dist_cluster = 0.3
+    max_dist_cluster = 0.2
 
     # -----------------------------------------------------------------
     # -- Initialise Class instances -----------------------------------

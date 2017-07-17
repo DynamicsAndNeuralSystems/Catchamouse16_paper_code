@@ -2,7 +2,7 @@ import modules.feature_importance.PK_test_stats as fistat
 import numpy as np
 from sklearn import tree
 from sklearn.model_selection import train_test_split, cross_val_score, KFold
-from sklearn.metrics import accuracy_score
+
 class Feature_Stats:
     
     def __init__(self, is_pairwise_stat = False, combine_pair_method = 'mean'):
@@ -57,7 +57,6 @@ class Feature_Stats:
         # -- combine the stas for all labels pairs by taking the mean
         return np.ma.average(pair_stats,axis=0)
 
-
 class Decision_Tree(Feature_Stats):
 
     def __init__(self):
@@ -87,7 +86,7 @@ class Decision_Tree(Feature_Stats):
         un, counts = np.unique(labels, return_counts=True)
         max_folds = 10
         min_folds = 2
-        folds = np.min([max_folds, np.max([min_folds, np.min(counts) + 1])])
+        folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
         print "Calculating decision tree classification error, {} fold cross validation, {} classes, {} samples".format(folds, len(un), len(labels))
 
         # Loop through each operation
@@ -99,19 +98,6 @@ class Decision_Tree(Feature_Stats):
             # Find accuracy of classifier using cross validation
             scores = cross_val_score(clf, operation, labels, cv=folds)
             op_error_rate[i] = 1 - np.mean(scores)
-
-            '''
-            # Split into training and test data
-            op_train, op_test, labels_train, labels_test = train_test_split(operation, labels, test_size=0.33)
-            op_train = op_train.reshape(-1, 1)
-            op_test = op_test.reshape(-1, 1)
-            # Fit decision tree classifier on training data
-            clf = tree.DecisionTreeClassifier()
-            clf = clf.fit(op_train, labels_train)
-            # Calculate accuracy on test data
-            labels_test_predicted = clf.predict(op_test)
-            op_accuracies[i] = accuracy_score(labels_test, labels_test_predicted)
-            '''
 
         print "Min decision tree classification error is {} ({} labels)".format(np.min(op_error_rate), len(un))
         return op_error_rate

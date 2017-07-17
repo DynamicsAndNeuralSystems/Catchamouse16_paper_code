@@ -80,9 +80,8 @@ class Task:
        
         if attribute_name == 'tot_stats':
             self.tot_stats = np.loadtxt(in_path_pattern.format(self.name,attribute_name)+'.txt')
-            #self.tot_stats = np.ma.load(in_path_pattern.format(self.name,attribute_name)+'.pckl')
-    
-    
+
+
     def save_attribute(self,attribute_name,out_path_pattern):    
         """
         Save an attribute of the instance to a file
@@ -97,6 +96,5 @@ class Task:
 
         if attribute_name == 'tot_stats':  
             np.savetxt(out_path_pattern.format(self.name,attribute_name)+'.txt',self.tot_stats)
-            #np.ma.dump(self.tot_stats, out_path_pattern.format(self.name,attribute_name)+'.pckl')
-                 
+
            

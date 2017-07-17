@@ -91,7 +91,8 @@ class Decision_Tree(Feature_Stats):
 
         # Loop through each operation in a threaded manner
         def process_task_threaded(i):
-            operation = data[:,i]
+            # data is type float64 by default but Decision
+            operation = np.float32(data[:,i])
             # Use decision tree classifier
             clf = tree.DecisionTreeClassifier()
             # Reshape data as we have only one feature at a time
@@ -99,10 +100,10 @@ class Decision_Tree(Feature_Stats):
             # Find accuracy of classifier using cross validation
             scores = cross_val_score(clf, operation, labels, cv=folds)
             return 1 - np.mean(scores)
-            #op_error_rate[i] = 1 - np.mean(scores)
 
         pool = Pool()
-        op_error_rate = np.asarray(pool.map(process_task_threaded,range(data.shape[1])))
+        error_rate_list = pool.map(process_task_threaded,range(data.shape[1]))
+        op_error_rate = np.asarray(error_rate_list)
 
         '''
         # Loop through each operation

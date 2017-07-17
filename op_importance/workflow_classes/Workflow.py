@@ -11,6 +11,8 @@ import modules.feature_importance.PK_feat_array_proc as fap
 
 import matplotlib.pyplot as plt
 
+from pathos.multiprocessing import ThreadPool as Pool
+
 class Workflow:
 
     def __init__(self,task_names,input_method,stats_method,redundancy_method,combine_tasks_method = 'mean',
@@ -163,8 +165,14 @@ class Workflow:
         is_read_feature_data : bool
             Is the feature data to be read
         """
-        for task in self.tasks:
-           task.read_data(is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
+        def read_task_parallel(t):
+            t.read_data(is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
+
+        pool = Pool()
+        pool.map(read_task_parallel, self.tasks)
+
+        #for task in self.tasks:
+        #   task.read_data(is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
 
     def save_task_attribute(self, attribute_name, out_path_pattern):
         """
@@ -235,7 +243,7 @@ if __name__ == '__main__':
     n_good_perf_ops = 50
     #n_good_perf_ops = 1
     #min_calc_tasks = 32
-    min_calc_tasks = 2
+    min_calc_tasks = 32
     # -- max distance inside one cluster
     max_dist_cluster = 0.2
 

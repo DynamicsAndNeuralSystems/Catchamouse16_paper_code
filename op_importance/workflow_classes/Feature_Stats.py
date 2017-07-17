@@ -84,7 +84,7 @@ class Decision_Tree(Feature_Stats):
 
         # Find maximum allowed folds for cross validation
         un, counts = np.unique(labels, return_counts=True)
-        max_folds = 2
+        max_folds = 10
         min_folds = 2
         folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
         print "Calculating decision tree classification error, {} fold cross validation, {} classes, {} samples".format(folds, len(un), len(labels))

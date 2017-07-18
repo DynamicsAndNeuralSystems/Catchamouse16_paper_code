@@ -225,7 +225,7 @@ if __name__ == '__main__':
     #old_matlab = True
     #label_regex_pattern = label_regex_pattern = '.*,(.*)$' # LAST VALUE
 
-    path_pattern_task_attrib = "../data/intermediate_results/task_{:s}_{:s}"
+    path_pattern_task_attrib = "../data/intermediate_results_scaledrobustsigmoid/task_{:s}_{:s}"
     plot_out_path = '../output/figure_tmp/test.png'
     result_txt_outpath = '../output/figure_tmp/result_txt.txt'
     masking_method = 'NaN'
@@ -267,7 +267,7 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
 
     # -- calculate the statistics
-    if True:
+    if False:
         workflow.read_data(old_matlab=old_matlab)
         workflow.calculate_stats()
         workflow.save_task_attribute('tot_stats', path_pattern_task_attrib)

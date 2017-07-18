@@ -18,7 +18,7 @@ for i = 1:length(mat_files)
     core_name = f_split{1};
     
     orig = load(f,'Operations');
-    norm = load([core_name,'_N.mat'],'Operations');
+    norm = load(['scaledrobustsigmoid_norm/',core_name,'_N.mat'],'Operations');
     
     orig_ids = [orig.Operations.ID];
     norm_ids = [norm.Operations.ID];
@@ -31,7 +31,7 @@ for i = 1:length(mat_files)
 end
 
 op_names = {orig.Operations.Name};
-save('UCR_op_kept_post_norm.mat','op_names','op_kept','task_names');
+save('UCR_op_kept_post_scaledrobustsigmoid_norm.mat','op_names','op_kept','task_names');
 
 imagesc(op_kept);
 xlabel('Task');

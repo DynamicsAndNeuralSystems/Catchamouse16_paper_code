@@ -217,7 +217,7 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- Set Parameters -----------------------------------------------
     # -----------------------------------------------------------------
-    path_pattern = '../input_data/HCTSA_{:s}_N.mat'
+    path_pattern = '../input_data/scaledrobustsigmoid_norm/HCTSA_{:s}_N.mat'
     old_matlab = False
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
 

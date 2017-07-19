@@ -4,6 +4,7 @@ import Data_Input
 import Feature_Stats
 import Reducing_Redundancy
 import Plotting
+import os
 
 import collections
 import modules.misc.PK_helper as hlp
@@ -211,13 +212,23 @@ class Workflow:
             self.stats_good_perf_op_comb  = self.stats_good_op_comb[sort_ind_tmp][:self.n_good_perf_ops]
             self.good_perf_op_ids =  self.good_op_ids[sort_ind_tmp][:self.n_good_perf_ops]
 
-
 if __name__ == '__main__':
 
     # -----------------------------------------------------------------
     # -- Set Parameters -----------------------------------------------
     # -----------------------------------------------------------------
-    path_pattern = '../input_data/scaledrobustsigmoid_norm/HCTSA_{:s}_N.mat'
+    runtype = 'scaledrobustsigmoid'
+    inputDir = '../input_data/'+runtype+'/'
+    intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
+    outputDir = '../output/'+runtype+'/'
+    if not os.path.exists(inputDir):
+        os.makedirs(inputDir)
+    if not os.path.exists(intermediateResultsDir):
+        os.makedirs(intermediateResultsDir)
+    if not os.path.exists(outputDir):
+        os.makedirs(outputDir)
+
+    path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
     old_matlab = False
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
 
@@ -225,9 +236,9 @@ if __name__ == '__main__':
     #old_matlab = True
     #label_regex_pattern = label_regex_pattern = '.*,(.*)$' # LAST VALUE
 
-    path_pattern_task_attrib = "../data/intermediate_results_scaledrobustsigmoid/task_{:s}_{:s}"
-    plot_out_path = '../output/figure_tmp/test.png'
-    result_txt_outpath = '../output/figure_tmp/result_txt.txt'
+    path_pattern_task_attrib = intermediateResultsDir + 'task_{:s}_{:s}'
+    plot_out_path = outputDir + 'test.png'
+    result_txt_outpath = outputDir + 'result_txt.txt'
     masking_method = 'NaN'
 
     task_names = ["50words","Adiac","ArrowHead","Beef","BeetleFly","BirdChicken","CBF","Car","ChlorineConcentration","CinC_ECG_torso","Coffee","Computers","Cricket_X","Cricket_Y","Cricket_Z","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup","DistalPhalanxOutlineCorrect","DistalPhalanxTW","ECG200","ECG5000","ECGFiveDays","Earthquakes","ElectricDevices","FISH","FaceAll","FaceFour","FacesUCR","FordA","FordB","Gun_Point","Ham","HandOutlines","Haptics","Herring","InlineSkate","InsectWingbeatSound","ItalyPowerDemand","LargeKitchenAppliances","Lighting2","Lighting7","MALLAT","Meat","MedicalImages","MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect","MiddlePhalanxTW","MoteStrain","NonInvasiveFatalECG_Thorax1","NonInvasiveFatalECG_Thorax2","OSULeaf","OliveOil","PhalangesOutlinesCorrect","Phoneme","Plane","ProximalPhalanxOutlineAgeGroup","ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices","ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances","SonyAIBORobotSurface","SonyAIBORobotSurfaceII","StarLightCurves","Strawberry","SwedishLeaf","Symbols","ToeSegmentation1","ToeSegmentation2","Trace","TwoLeadECG","Two_Patterns","UWaveGestureLibraryAll","Wine","WordsSynonyms","Worms","WormsTwoClass","synthetic_control","uWaveGestureLibrary_X","uWaveGestureLibrary_Y","uWaveGestureLibrary_Z","wafer","yoga"]

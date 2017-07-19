@@ -251,10 +251,10 @@ if __name__ == '__main__':
     select_good_perf_ops_method = 'sort_asc'
     similarity_method = 'correlation'
     compare_space = 'problem_stats'
-    n_good_perf_ops = 50
+    n_good_perf_ops = 100
     #n_good_perf_ops = 1
     #min_calc_tasks = 32
-    min_calc_tasks = 32
+    min_calc_tasks = 60
     # -- max distance inside one cluster
     max_dist_cluster = 0.2
 

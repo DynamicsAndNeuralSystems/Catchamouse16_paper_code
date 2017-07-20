@@ -26,6 +26,7 @@ class Task:
         self.op_ids = np.array([])
         self.pair_stats = np.ma.masked_array([])
         self.tot_stats = np.ma.masked_array([])
+        self.tot_stats_all_runs = np.ma.masked_array([])
         self.op = dict()
         self.ts = dict()
 
@@ -44,7 +45,8 @@ class Task:
             # -- combine the stats of the label pairs to one pooled stat for each feature
             self.tot_stats = self.stat_method.combine_pair(self.pair_stats)
         else:
-            self.tot_stats = self.stat_method.calc_tots(self.labels,self.data)
+            [self.tot_stats_all_runs,self.tot_stats] = self.stat_method.calc_tots(self.labels,self.data)
+
 
         # -- free data if not required anymore to safe RAM space
         if not is_keep_data:
@@ -96,5 +98,7 @@ class Task:
 
         if attribute_name == 'tot_stats':  
             np.savetxt(out_path_pattern.format(self.name,attribute_name)+'.txt',self.tot_stats)
+        if attribute_name == 'tot_stats_all_runs':
+            np.savetxt(out_path_pattern.format(self.name,attribute_name)+'_all_runs.txt',self.tot_stats_all_runs)
 
            

@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib as mpl
+#mpl.use("Agg")
 import Task
 import Data_Input
 import Feature_Stats
@@ -9,8 +11,6 @@ import os
 import collections
 import modules.misc.PK_helper as hlp
 import modules.feature_importance.PK_feat_array_proc as fap
-
-import matplotlib.pyplot as plt
 
 from pathos.multiprocessing import ThreadPool as Pool
 
@@ -217,8 +217,10 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- Set Parameters -----------------------------------------------
     # -----------------------------------------------------------------
-    runtype = 'scaledrobustsigmoid'
-    inputDir = '../input_data/'+runtype+'/'
+    runtype = 'null'
+    compute_features = False
+    datatype = 'scaledrobustsigmoid'
+    inputDir = '../input_data/'+datatype+'/'
     intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
     outputDir = '../output/'+runtype+'/'
     if not os.path.exists(inputDir):
@@ -231,6 +233,10 @@ if __name__ == '__main__':
     path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
     old_matlab = False
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
+    #ranking_method = Feature_Stats.U_Stats(combine_pair_method)
+    ranking_method = Feature_Stats.Decision_Tree()
+    if runtype == 'null':
+        ranking_method = Feature_Stats.Null_Decision_Tree()
 
     #path_pattern = '../phil_matlab/HCTSA_{:s}_N_70_100_reduced.mat'
     #old_matlab = True
@@ -242,7 +248,7 @@ if __name__ == '__main__':
     masking_method = 'NaN'
 
     task_names = ["50words","Adiac","ArrowHead","Beef","BeetleFly","BirdChicken","CBF","Car","ChlorineConcentration","CinC_ECG_torso","Coffee","Computers","Cricket_X","Cricket_Y","Cricket_Z","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup","DistalPhalanxOutlineCorrect","DistalPhalanxTW","ECG200","ECG5000","ECGFiveDays","Earthquakes","ElectricDevices","FISH","FaceAll","FaceFour","FacesUCR","FordA","FordB","Gun_Point","Ham","HandOutlines","Haptics","Herring","InlineSkate","InsectWingbeatSound","ItalyPowerDemand","LargeKitchenAppliances","Lighting2","Lighting7","MALLAT","Meat","MedicalImages","MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect","MiddlePhalanxTW","MoteStrain","NonInvasiveFatalECG_Thorax1","NonInvasiveFatalECG_Thorax2","OSULeaf","OliveOil","PhalangesOutlinesCorrect","Phoneme","Plane","ProximalPhalanxOutlineAgeGroup","ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices","ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances","SonyAIBORobotSurface","SonyAIBORobotSurfaceII","StarLightCurves","Strawberry","SwedishLeaf","Symbols","ToeSegmentation1","ToeSegmentation2","Trace","TwoLeadECG","Two_Patterns","UWaveGestureLibraryAll","Wine","WordsSynonyms","Worms","WormsTwoClass","synthetic_control","uWaveGestureLibrary_X","uWaveGestureLibrary_Y","uWaveGestureLibrary_Z","wafer","yoga"]
-    #task_names = ["50words","Adiac"]
+    task_names = ["50words","Wine"]
     #task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
     combine_pair_method = 'mean'
     combine_tasks_method = 'mean'
@@ -254,7 +260,7 @@ if __name__ == '__main__':
     n_good_perf_ops = 100
     #n_good_perf_ops = 1
     #min_calc_tasks = 32
-    min_calc_tasks = 60
+    min_calc_tasks = 2
     # -- max distance inside one cluster
     max_dist_cluster = 0.2
 
@@ -263,8 +269,6 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
 
     input_method = Data_Input.Datafile_Input(path_pattern,masking_method,label_regex_pattern)
-    #ranking_method = Feature_Stats.U_Stats(combine_pair_method)
-    ranking_method = Feature_Stats.Decision_Tree()
     redundancy_method = Reducing_Redundancy.Reducing_Redundancy(similarity_method = similarity_method,compare_space = compare_space)
 
     workflow = Workflow(task_names,input_method,ranking_method,
@@ -278,7 +282,7 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
 
     # -- calculate the statistics
-    if False:
+    if compute_features:
         workflow.read_data(old_matlab=old_matlab)
         workflow.calculate_stats()
         workflow.save_task_attribute('tot_stats', path_pattern_task_attrib)
@@ -320,7 +324,7 @@ if __name__ == '__main__':
         # -- Plot the similarity array
         plotting.plot_similarity_array()
 
-    plt.savefig(plot_out_path)
+    mpl.pyplot.savefig(plot_out_path)
 
     # -----------------------------------------------------------------
     # -- Output the results to text file-------------------------------
@@ -343,7 +347,7 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- show the plot as last task of the script
     # -----------------------------------------------------------------
-    plt.show()
+    mpl.pyplot.show()
 
     # -- write not reduced top performing features to text file
 #     with open(result_txt_outpath,'wb') as out_result_txt_file:

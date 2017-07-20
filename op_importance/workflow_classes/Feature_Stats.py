@@ -94,7 +94,7 @@ class Decision_Tree(Feature_Stats):
             # data is type float64 by default but Decision
             operation = np.float32(data[:,i])
             # Use decision tree classifier
-            clf = tree.DecisionTreeClassifier()
+            clf = tree.DecisionTreeClassifier(random_state = 23)
             # Reshape data as we have only one feature at a time
             operation = operation.reshape(-1, 1)
             # Find accuracy of classifier using cross validation
@@ -105,17 +105,57 @@ class Decision_Tree(Feature_Stats):
         error_rate_list = pool.map(process_task_threaded,range(data.shape[1]))
         op_error_rate = np.asarray(error_rate_list)
 
-        '''
-        # Loop through each operation
-        for i, operation in enumerate(data.T):
+        print "Min decision tree classification error is {} ({} labels)".format(np.min(op_error_rate), len(un))
+        return op_error_rate
+
+class Null_Decision_Tree(Feature_Stats):
+
+    def __init__(self):
+        """
+        Constructor
+        """
+        Feature_Stats.__init__(self, False)
+
+    def calc_tots(self, labels, data):
+        """
+        Calculate the decision tree accuracy for each operation
+        Parameters:
+        -----------
+        labels : ndarray
+            1-D array containing the labels for each row in data.
+        data : ndarray
+            Array containing the data. Each row corresponds to a timeseries and each column to an operation.
+        Returns:
+        --------
+        ranks : ndarray
+            Returns the decision tree accuracy for each operation.
+        """
+
+        # Find maximum allowed folds for cross validation
+        un, counts = np.unique(labels, return_counts=True)
+        max_folds = 10
+        min_folds = 2
+        folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
+        print "Calculating decision tree classification error, {} fold cross validation, {} classes, {} samples".format(folds, len(un), len(labels))
+
+        # Loop through each operation in a threaded manner
+        def process_task_threaded(i):
+            # Shuffle labels
+            shuffled_labels = np.copy(labels)
+            np.random.permutation(shuffled_labels)
+            # data is type float64 by default but Decision
+            operation = np.float32(data[:,i])
             # Use decision tree classifier
-            clf = tree.DecisionTreeClassifier()
+            clf = tree.DecisionTreeClassifier(random_state = 23)
             # Reshape data as we have only one feature at a time
             operation = operation.reshape(-1, 1)
             # Find accuracy of classifier using cross validation
-            scores = cross_val_score(clf, operation, labels, cv=folds)
-            op_error_rate[i] = 1 - np.mean(scores)
-        '''
+            scores = cross_val_score(clf, operation, shuffled_labels, cv=folds)
+            return 1 - np.mean(scores)
+
+        pool = Pool()
+        error_rate_list = pool.map(process_task_threaded,range(data.shape[1]))
+        op_error_rate = np.asarray(error_rate_list)
 
         print "Min decision tree classification error is {} ({} labels)".format(np.min(op_error_rate), len(un))
         return op_error_rate

@@ -39,6 +39,7 @@ class Task:
             Is the feature data to be kept after calculating the statistics or discarded (to save RAM space)?
             
         """
+        print "Calculating stats for Task: {}".format(self.name)
 
         if self.stat_method.is_pairwise_stat:
             self.pair_stats = self.stat_method.calc_pairs(self.labels, self.data)
@@ -97,7 +98,8 @@ class Task:
             Formatted as out_path_pattern.format(self.name,attribute_name) + file extension
         """
 
-        if attribute_name == 'tot_stats':  
+        if attribute_name == 'tot_stats':
+            print "Saving stats to text file for {}".format(self.name)
             np.savetxt(out_path_pattern.format(self.name,attribute_name)+'.txt',self.tot_stats)
             np.savetxt(out_path_pattern.format(self.name,attribute_name)+'_all_runs.txt',self.tot_stats_all_runs)
 

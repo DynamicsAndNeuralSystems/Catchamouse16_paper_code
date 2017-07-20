@@ -1,7 +1,8 @@
 import modules.feature_importance.PK_test_stats as fistat
 import numpy as np
 from sklearn import tree
-from sklearn.model_selection import train_test_split, cross_val_score, KFold
+from sklearn.model_selection import cross_val_score
+import random
 
 from pathos.multiprocessing import ThreadPool as Pool
 
@@ -91,7 +92,7 @@ class Decision_Tree(Feature_Stats):
 
         # Loop through each operation in a threaded manner
         def process_task_threaded(i):
-            # data is type float64 by default but Decision
+            # data is type float64 by default but Decision tree classifier works with float32
             operation = np.float32(data[:,i])
             # Use decision tree classifier
             clf = tree.DecisionTreeClassifier(random_state = 23)
@@ -105,7 +106,7 @@ class Decision_Tree(Feature_Stats):
         error_rates = pool.map(process_task_threaded,range(data.shape[1]))
         op_error_rates = np.vstack(error_rates)
         mean_error_rates = np.mean(op_error_rates, axis=1)
-        print "Min decision tree classification error is {} ({} labels)".format(np.min(mean_error_rates), len(un))
+        print "Min decision tree classification error is {}".format(np.min(mean_error_rates))
         return (op_error_rates,mean_error_rates)
 
 
@@ -137,28 +138,29 @@ class Null_Decision_Tree(Feature_Stats):
         max_folds = 10
         min_folds = 2
         folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
-        print "Calculating decision tree classification error, {} fold cross validation, {} classes, {} samples".format(folds, len(un), len(labels))
+        print "Calculating NULL decision tree classification error, {} fold cross validation, {} classes, {} samples".format(folds, len(un), len(labels))
+
+        # Shuffle labels
+        random.seed(25)
+        random.shuffle(labels)
 
         # Loop through each operation in a threaded manner
         def process_task_threaded(i):
-            # Shuffle labels
-            shuffled_labels = np.copy(labels)
-            np.random.permutation(shuffled_labels)
-            # data is type float64 by default but Decision
+            # data is type float64 by default but Decision tree classifier works with float32
             operation = np.float32(data[:,i])
             # Use decision tree classifier
             clf = tree.DecisionTreeClassifier(random_state = 23)
             # Reshape data as we have only one feature at a time
             operation = operation.reshape(-1, 1)
             # Find accuracy of classifier using cross validation
-            scores = cross_val_score(clf, operation, shuffled_labels, cv=folds)
+            scores = cross_val_score(clf, operation, labels, cv=folds)
             return 1 - scores
 
         pool = Pool()
         error_rates = pool.map(process_task_threaded,range(data.shape[1]))
         op_error_rates = np.vstack(error_rates)
         mean_error_rates = np.mean(op_error_rates, axis=1)
-        print "Min decision tree classification error is {} ({} labels)".format(np.min(mean_error_rates), len(un))
+        print "Min decision tree classification error is {}".format(np.min(mean_error_rates))
         return (op_error_rates,mean_error_rates)
 
 

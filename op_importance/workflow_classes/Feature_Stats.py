@@ -99,14 +99,15 @@ class Decision_Tree(Feature_Stats):
             operation = operation.reshape(-1, 1)
             # Find accuracy of classifier using cross validation
             scores = cross_val_score(clf, operation, labels, cv=folds)
-            return 1 - np.mean(scores)
+            return 1 - scores
 
         pool = Pool()
-        error_rate_list = pool.map(process_task_threaded,range(data.shape[1]))
-        op_error_rate = np.asarray(error_rate_list)
+        error_rates = pool.map(process_task_threaded,range(data.shape[1]))
+        op_error_rates = np.vstack(error_rates)
+        mean_error_rates = np.mean(op_error_rates, axis=1)
+        print "Min decision tree classification error is {} ({} labels)".format(np.min(mean_error_rates), len(un))
+        return (op_error_rates,mean_error_rates)
 
-        print "Min decision tree classification error is {} ({} labels)".format(np.min(op_error_rate), len(un))
-        return op_error_rate
 
 class Null_Decision_Tree(Feature_Stats):
 
@@ -151,15 +152,14 @@ class Null_Decision_Tree(Feature_Stats):
             operation = operation.reshape(-1, 1)
             # Find accuracy of classifier using cross validation
             scores = cross_val_score(clf, operation, shuffled_labels, cv=folds)
-            return [1 - scores, 1 - np.mean(scores)]
+            return 1 - scores
 
         pool = Pool()
-        error_rate_all_runs, error_rate_mean = pool.map(process_task_threaded,range(data.shape[1]))
-        op_error_rate = np.asarray(error_rate_mean)
-        op_error_rate_all_runs = np.asarray(error_rate_all_runs)
-
-        print "Min decision tree classification error is {} ({} labels)".format(np.min(op_error_rate), len(un))
-        return [op_error_rate_all_runs,op_error_rate]
+        error_rates = pool.map(process_task_threaded,range(data.shape[1]))
+        op_error_rates = np.vstack(error_rates)
+        mean_error_rates = np.mean(op_error_rates, axis=1)
+        print "Min decision tree classification error is {} ({} labels)".format(np.min(mean_error_rates), len(un))
+        return (op_error_rates,mean_error_rates)
 
 
 class U_Stats(Feature_Stats):

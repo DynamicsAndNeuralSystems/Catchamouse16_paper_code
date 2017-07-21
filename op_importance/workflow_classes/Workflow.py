@@ -7,6 +7,7 @@ import Feature_Stats
 import Reducing_Redundancy
 import Plotting
 import os
+import sys
 
 import collections
 import modules.misc.PK_helper as hlp
@@ -217,11 +218,23 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- Set Parameters -----------------------------------------------
     # -----------------------------------------------------------------
-    runtype = 'null_maxmin'
+    if len(sys.argv) > 1:
+        runtype = sys.argv[1]
+    else:
+        runtype = 'null_maxmin'
+
     compute_features = True
-    #datatype = 'scaledrobustsigmoid'
-    datatype = 'maxmin'
-    inputDir = '../input_data/'+datatype+'/'
+    if 'maxmin' in runtype:
+        datatype = 'maxmin'
+    elif 'scaledrobustsigmoid' in runtype:
+        datatype = 'scaledrobustsigmoid'
+    else:
+        raise Exception('runtype not recognised! Should include maxmin or scaledrobustsigmoid')
+
+    # First check if hpc input directory exists, otherwise use local one
+    inputDir = '/work/ss7412/op_importance_input_data/'
+    if not os.path.exists(inputDir):
+        inputDir = '../input_data/'+datatype+'/'
     intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
     outputDir = '../output/'+runtype+'/'
     if not os.path.exists(inputDir):
@@ -230,6 +243,8 @@ if __name__ == '__main__':
         os.makedirs(intermediateResultsDir)
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
+
+    print "runtype = {}, datatype = {}, inputDir = {}".format(runtype,datatype,inputDir)
 
     path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
     old_matlab = False

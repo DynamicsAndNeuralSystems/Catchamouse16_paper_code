@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib as mpl
-#mpl.use("Agg")
+mpl.use("Agg")
 import Task
 import Data_Input
 import Feature_Stats
@@ -217,9 +217,10 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- Set Parameters -----------------------------------------------
     # -----------------------------------------------------------------
-    runtype = 'null'
+    runtype = 'null_maxmin'
     compute_features = True
-    datatype = 'scaledrobustsigmoid'
+    #datatype = 'scaledrobustsigmoid'
+    datatype = 'maxmin'
     inputDir = '../input_data/'+datatype+'/'
     intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
     outputDir = '../output/'+runtype+'/'
@@ -235,7 +236,7 @@ if __name__ == '__main__':
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
     #ranking_method = Feature_Stats.U_Stats(combine_pair_method)
     ranking_method = Feature_Stats.Decision_Tree()
-    if runtype == 'null':
+    if 'null' in runtype:
         ranking_method = Feature_Stats.Null_Decision_Tree()
 
     #path_pattern = '../phil_matlab/HCTSA_{:s}_N_70_100_reduced.mat'

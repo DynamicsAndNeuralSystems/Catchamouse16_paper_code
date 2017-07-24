@@ -13,19 +13,19 @@ for i = 1:length(mat_files)
     if any(strfind(f,'_N.mat'))
         continue
     end
-    
+
     f_split = strsplit(f,'.');
     core_name = f_split{1};
-    
+
     orig = load(f,'Operations');
-    norm = load(['scaledrobustsigmoid/',core_name,'_N.mat'],'Operations');
+    norm = load(['maxmin/',core_name,'_N.mat'],'Operations');
     
     orig_ids = [orig.Operations.ID];
     norm_ids = [norm.Operations.ID];
-    
+
     common = intersect(orig_ids,norm_ids);
     op_kept(common,i_task) = 1;
-    
+
     task_names{i_task} = core_name;
     i_task = i_task + 1;
 end

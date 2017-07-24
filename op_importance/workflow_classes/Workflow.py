@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib as mpl
-#mpl.use("Agg")
+mpl.use("Agg")
 import Task
 import Data_Input
 import Feature_Stats
 import Reducing_Redundancy
 import Plotting
 import os
+import sys
 
 import collections
 import modules.misc.PK_helper as hlp
@@ -217,10 +218,23 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- Set Parameters -----------------------------------------------
     # -----------------------------------------------------------------
-    runtype = 'scaledrobustsigmoid'
+    if len(sys.argv) > 1:
+        runtype = sys.argv[1]
+    else:
+        runtype = 'null_maxmin'
+
     compute_features = True
-    datatype = 'scaledrobustsigmoid'
-    inputDir = '../input_data/'+datatype+'/'
+    if 'maxmin' in runtype:
+        datatype = 'maxmin'
+    elif 'scaledrobustsigmoid' in runtype:
+        datatype = 'scaledrobustsigmoid'
+    else:
+        raise Exception('runtype not recognised! Should include maxmin or scaledrobustsigmoid')
+
+    # First check if hpc input directory exists, otherwise use local one
+    inputDir = '/work/ss7412/op_importance_input_data/'
+    if not os.path.exists(inputDir):
+        inputDir = '../input_data/'+datatype+'/'
     intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
     outputDir = '../output/'+runtype+'/'
     if not os.path.exists(inputDir):
@@ -230,12 +244,14 @@ if __name__ == '__main__':
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
 
+    print "runtype = {}, datatype = {}, inputDir = {}".format(runtype,datatype,inputDir)
+
     path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
     old_matlab = False
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
     #ranking_method = Feature_Stats.U_Stats(combine_pair_method)
     ranking_method = Feature_Stats.Decision_Tree()
-    if runtype == 'null':
+    if 'null' in runtype:
         ranking_method = Feature_Stats.Null_Decision_Tree()
 
     #path_pattern = '../phil_matlab/HCTSA_{:s}_N_70_100_reduced.mat'

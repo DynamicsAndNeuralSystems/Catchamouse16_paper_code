@@ -11,8 +11,12 @@ for i = 1:length(mat_files)
     f_split = strsplit(f,'.');
     core_name = f_split{1};
     
-    TS_normalize('scaledRobustSigmoid',[],f);
-    a = load([core_name,'_N.mat']);
-    save(['scaledrobustsigmoid_norm/',core_name,'_N.mat'],'-struct','a','-v7');
+    TS_normalize('maxmin',[],f);
+    
+    norm_fname = [core_name,'_N.mat'];
+    final_fname = ['maxmin/',core_name,'_N.mat'];
+    
+    a = load(norm_fname);
+    save(final_fname,'-struct','a','-v7');
     delete([core_name,'_N.mat']);
 end

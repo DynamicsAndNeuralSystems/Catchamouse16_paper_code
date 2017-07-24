@@ -95,7 +95,7 @@ class Decision_Tree(Feature_Stats):
             # data is type float64 by default but Decision tree classifier works with float32
             operation = np.float32(data[:,i])
             # Use decision tree classifier
-            clf = tree.DecisionTreeClassifier(random_state = 23)
+            clf = tree.DecisionTreeClassifier(max_leaf_nodes = len(un), random_state = 23)
             # Reshape data as we have only one feature at a time
             operation = operation.reshape(-1, 1)
             # Find accuracy of classifier using cross validation
@@ -149,7 +149,7 @@ class Null_Decision_Tree(Feature_Stats):
             # data is type float64 by default but Decision tree classifier works with float32
             operation = np.float32(data[:,i])
             # Use decision tree classifier
-            clf = tree.DecisionTreeClassifier(random_state = 23)
+            clf = tree.DecisionTreeClassifier(max_leaf_nodes = len(un), random_state = 23)
             # Reshape data as we have only one feature at a time
             operation = operation.reshape(-1, 1)
             # Find accuracy of classifier using cross validation

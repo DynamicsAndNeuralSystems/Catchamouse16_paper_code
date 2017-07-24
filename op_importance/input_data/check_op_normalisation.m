@@ -18,7 +18,7 @@ for i = 1:length(mat_files)
     core_name = f_split{1};
     
     orig = load(f,'Operations');
-    norm = load(['scaledrobustsigmoid_norm/',core_name,'_N.mat'],'Operations');
+    norm = load(['scaledrobustsigmoid/',core_name,'_N.mat'],'Operations');
     
     orig_ids = [orig.Operations.ID];
     norm_ids = [norm.Operations.ID];

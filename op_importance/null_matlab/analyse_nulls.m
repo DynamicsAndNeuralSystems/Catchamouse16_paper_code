@@ -2,8 +2,8 @@ clear variables;
 
 task = '50words';
 
-null = load(['../data/intermediate_results_null/task_',task,'_tot_stats_all_runs.txt']);
-legit = load(['../data/intermediate_results_scaledrobustsigmoid/task_',task,'_tot_stats_all_runs.txt']);
+null = load(['../data/intermediate_results_null/task_',task,'_tot_stats.txt']);
+legit = load(['../data/intermediate_results_scaledrobustsigmoid/task_',task,'_tot_stats.txt']);
 
 histogram(null(:),'Normalization','probability');
 hold on

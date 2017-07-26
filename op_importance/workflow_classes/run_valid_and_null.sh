@@ -1,3 +1,3 @@
-python Workflow.py 'maxmin'
+python Workflow.py 'svm_maxmin'
 
-python Workflow.py 'maxmin_null'
+python Workflow.py 'svm_maxmin_null'

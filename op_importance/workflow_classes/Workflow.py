@@ -79,13 +79,14 @@ class Workflow:
         self.stats_good_perf_op_comb = None
         self.good_perf_op_ids = None
 
-    def calculate_stats(self,is_keep_data = False):
+    def calculate_stats(self, save_attribute_name, out_path_pattern, is_keep_data = False):
         """
         Calculate the statistics of the features for each task using the method given by stats_method
         """
 
         for task in self.tasks:
             task.calc_stats(is_keep_data = is_keep_data)
+            task.save_attribute(save_attribute_name, out_path_pattern)
 
     def collect_stats_good_op_ids(self):
         """
@@ -221,7 +222,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         runtype = sys.argv[1]
     else:
-        runtype = 'maxmin_svm'
+        runtype = 'maxmin_svm_null'
 
     compute_features = True
     if 'maxmin' in runtype:
@@ -234,16 +235,22 @@ if __name__ == '__main__':
         raise Exception('normalisation not specified! Using maxmin')
 
     if 'dectree' in runtype:
-        ranking_method = Feature_Stats.Decision_Tree()
+        if 'null' in runtype:
+            ranking_method = Feature_Stats.Null_Decision_Tree()
+        else:
+            ranking_method = Feature_Stats.Decision_Tree()
     elif 'svm' in runtype:
-        ranking_method = Feature_Stats.Linear_Classifier()
+        if 'null' in runtype:
+            ranking_method = Feature_Stats.Null_Linear_Classifier()
+        else:
+            ranking_method = Feature_Stats.Linear_Classifier()
     else:
         ranking_method = Feature_Stats.Linear_Classifier()
         runtype = runtype + '_svm'
         raise Warning('classifier not specified! Using svm')
 
     # First check if hpc input directory exists, otherwise use local one
-    inputDir = '/work/ss7412/op_importance_input_data/'
+    inputDir = '/work/ss7412/op_importance_input_data/'+datatype+'/'
     if not os.path.exists(inputDir):
         inputDir = '../input_data/'+datatype+'/'
     intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
@@ -261,8 +268,6 @@ if __name__ == '__main__':
     path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
     old_matlab = False
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
-    if 'null' in runtype:
-        ranking_method = Feature_Stats.Null_Decision_Tree()
 
     #path_pattern = '../phil_matlab/HCTSA_{:s}_N_70_100_reduced.mat'
     #old_matlab = True
@@ -308,10 +313,9 @@ if __name__ == '__main__':
     # -- calculate the statistics
     if compute_features:
         workflow.read_data(old_matlab=old_matlab)
-        workflow.calculate_stats()
-        workflow.save_task_attribute('tot_stats', path_pattern_task_attrib)
+        workflow.calculate_stats('tot_stats', path_pattern_task_attrib)
     else:
-        workflow.read_data(is_read_feature_data = False, old_matlab=old_matlab)
+        workflow.read_data(is_read_feature_data=False, old_matlab=old_matlab)
         workflow.load_task_attribute('tot_stats', path_pattern_task_attrib)
 
     # -- find the features which are calculated for at least min_calc_tasks tasks

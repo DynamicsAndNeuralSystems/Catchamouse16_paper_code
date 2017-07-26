@@ -152,7 +152,7 @@ class U_Stats(Feature_Stats):
 
 
 def train_svm(labels, data):
-    clf = svm.SVC(class_weight="balanced", kernel='linear')
+    clf = svm.SVC(class_weight="balanced", decision_function_shape='ovo', kernel='linear', random_state=23)
     return train_model_template(labels, data, clf)
 
 

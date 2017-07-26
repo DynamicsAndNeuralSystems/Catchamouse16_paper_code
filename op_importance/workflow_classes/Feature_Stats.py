@@ -114,7 +114,7 @@ class Null_Linear_Classifier(Feature_Stats):
         # Shuffle labels
         random.seed(25)
         random.shuffle(labels)
-        print "SVM - labels have been shuffled"
+        print "SVM: null calculations - labels have been shuffled"
 
         return train_svm(labels,data)
 

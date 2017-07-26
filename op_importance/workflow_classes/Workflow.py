@@ -52,7 +52,7 @@ class Workflow:
         self.stats_method = stats_method
         self.redundancy_method = redundancy_method
         self.combine_tasks_norm = combine_tasks_norm
-        #normalise_array(data,axis,norm_type = 'zscore')
+        # normalise_array(data,axis,norm_type = 'zscore')
         if combine_tasks_method == 'mean':
             self.combine_tasks = self.combine_task_stats_mean
 
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         runtype = sys.argv[1]
     else:
-        runtype = 'maxmin'
+        runtype = 'maxmin_svm'
 
     compute_features = True
     if 'maxmin' in runtype:
@@ -229,7 +229,18 @@ if __name__ == '__main__':
     elif 'scaledrobustsigmoid' in runtype:
         datatype = 'scaledrobustsigmoid'
     else:
-        raise Exception('runtype not recognised! Should include maxmin or scaledrobustsigmoid')
+        datatype = 'maxmin'
+        runtype = runtype + '_maxmin'
+        raise Exception('normalisation not specified! Using maxmin')
+
+    if 'dectree' in runtype:
+        ranking_method = Feature_Stats.Decision_Tree()
+    elif 'svm' in runtype:
+        ranking_method = Feature_Stats.Linear_Classifier()
+    else:
+        ranking_method = Feature_Stats.Linear_Classifier()
+        runtype = runtype + '_svm'
+        raise Warning('classifier not specified! Using svm')
 
     # First check if hpc input directory exists, otherwise use local one
     inputDir = '/work/ss7412/op_importance_input_data/'
@@ -244,13 +255,12 @@ if __name__ == '__main__':
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
 
+
     print "runtype = {}, datatype = {}, inputDir = {}".format(runtype,datatype,inputDir)
 
     path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
     old_matlab = False
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
-    #ranking_method = Feature_Stats.U_Stats(combine_pair_method)
-    ranking_method = Feature_Stats.Decision_Tree()
     if 'null' in runtype:
         ranking_method = Feature_Stats.Null_Decision_Tree()
 
@@ -263,8 +273,8 @@ if __name__ == '__main__':
     result_txt_outpath = outputDir + 'result_txt.txt'
     masking_method = 'NaN'
 
-    task_names = ["50words","Adiac","ArrowHead","Beef","BeetleFly","BirdChicken","CBF","Car","ChlorineConcentration","CinC_ECG_torso","Coffee","Computers","Cricket_X","Cricket_Y","Cricket_Z","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup","DistalPhalanxOutlineCorrect","DistalPhalanxTW","ECG200","ECG5000","ECGFiveDays","Earthquakes","ElectricDevices","FISH","FaceAll","FaceFour","FacesUCR","FordA","FordB","Gun_Point","Ham","HandOutlines","Haptics","Herring","InlineSkate","InsectWingbeatSound","ItalyPowerDemand","LargeKitchenAppliances","Lighting2","Lighting7","MALLAT","Meat","MedicalImages","MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect","MiddlePhalanxTW","MoteStrain","NonInvasiveFatalECG_Thorax1","NonInvasiveFatalECG_Thorax2","OSULeaf","OliveOil","PhalangesOutlinesCorrect","Phoneme","Plane","ProximalPhalanxOutlineAgeGroup","ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices","ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances","SonyAIBORobotSurface","SonyAIBORobotSurfaceII","StarLightCurves","Strawberry","SwedishLeaf","Symbols","ToeSegmentation1","ToeSegmentation2","Trace","TwoLeadECG","Two_Patterns","UWaveGestureLibraryAll","Wine","WordsSynonyms","Worms","WormsTwoClass","synthetic_control","uWaveGestureLibrary_X","uWaveGestureLibrary_Y","uWaveGestureLibrary_Z","wafer","yoga"]
-    #task_names = ["Wine","50words"]
+    #task_names = ["50words","Adiac","ArrowHead","Beef","BeetleFly","BirdChicken","CBF","Car","ChlorineConcentration","CinC_ECG_torso","Coffee","Computers","Cricket_X","Cricket_Y","Cricket_Z","DiatomSizeReduction","DistalPhalanxOutlineAgeGroup","DistalPhalanxOutlineCorrect","DistalPhalanxTW","ECG200","ECG5000","ECGFiveDays","Earthquakes","ElectricDevices","FISH","FaceAll","FaceFour","FacesUCR","FordA","FordB","Gun_Point","Ham","HandOutlines","Haptics","Herring","InlineSkate","InsectWingbeatSound","ItalyPowerDemand","LargeKitchenAppliances","Lighting2","Lighting7","MALLAT","Meat","MedicalImages","MiddlePhalanxOutlineAgeGroup","MiddlePhalanxOutlineCorrect","MiddlePhalanxTW","MoteStrain","NonInvasiveFatalECG_Thorax1","NonInvasiveFatalECG_Thorax2","OSULeaf","OliveOil","PhalangesOutlinesCorrect","Phoneme","Plane","ProximalPhalanxOutlineAgeGroup","ProximalPhalanxOutlineCorrect","ProximalPhalanxTW","RefrigerationDevices","ScreenType","ShapeletSim","ShapesAll","SmallKitchenAppliances","SonyAIBORobotSurface","SonyAIBORobotSurfaceII","StarLightCurves","Strawberry","SwedishLeaf","Symbols","ToeSegmentation1","ToeSegmentation2","Trace","TwoLeadECG","Two_Patterns","UWaveGestureLibraryAll","Wine","WordsSynonyms","Worms","WormsTwoClass","synthetic_control","uWaveGestureLibrary_X","uWaveGestureLibrary_Y","uWaveGestureLibrary_Z","wafer","yoga"]
+    task_names = ["Wine","50words"]
     # PHILS TASKS: task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
     combine_pair_method = 'mean'
     combine_tasks_method = 'mean'

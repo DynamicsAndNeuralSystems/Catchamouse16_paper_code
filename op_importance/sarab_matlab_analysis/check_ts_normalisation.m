@@ -1,5 +1,7 @@
 clear variables;
 
+startDir = pwd;
+cd('../input_data');
 mat_files = dir('./HCTSA_*.mat');
 
 i_task = 1;
@@ -31,3 +33,5 @@ for i = 1:length(mat_files)
     task_names{i_task} = core_name;
     i_task = i_task + 1;
 end
+
+cd(startDir);

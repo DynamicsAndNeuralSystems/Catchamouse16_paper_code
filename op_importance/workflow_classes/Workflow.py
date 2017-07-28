@@ -243,7 +243,7 @@ if __name__ == '__main__':
                       "ToeSegmentation1", "ToeSegmentation2", "Trace", "TwoLeadECG", "Two_Patterns",
                       "UWaveGestureLibraryAll", "Wine", "WordsSynonyms", "Worms", "WormsTwoClass", "synthetic_control",
                       "uWaveGestureLibrary_X", "uWaveGestureLibrary_Y", "uWaveGestureLibrary_Z", "wafer", "yoga"]
-        # task_names = ["Wine","50words"]
+        task_names = ["Wine","50words"]
         # PHILS TASKS: task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
 
     compute_features = True

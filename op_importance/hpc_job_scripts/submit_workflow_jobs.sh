@@ -1,7 +1,7 @@
 ## interpreter directive - this is a bash script
 #!/bin/bash
 
-timePerJob=1
+timePerJob=00:30:00
 cpusPerJob=4
 memPerJob=8
 
@@ -21,7 +21,7 @@ do
   for i in "${tasks[@]}"
   do
     ScriptLocation="submit_scripts/job-$i-$rtype.sh"
-    sed -e "s/xxxTIMEHRSxxx/$timePerJob/g" -e "s/xxxCPUSxxx/$cpusPerJob/g" -e "s/xxxRAMGBxxx/$memPerJob/g" -e "s/xxxRUNTYPExxx/$rtype/g" -e "s/xxxTASKSxxx/$i/g" workflow_job_template.sh > $ScriptLocation
+    sed -e "s/xxxJOBTIMExxx/$timePerJob/g" -e "s/xxxCPUSxxx/$cpusPerJob/g" -e "s/xxxRAMGBxxx/$memPerJob/g" -e "s/xxxRUNTYPExxx/$rtype/g" -e "s/xxxTASKSxxx/$i/g" workflow_job_template.sh > $ScriptLocation
     qsub $ScriptLocation
     echo "Sumbmitted job $ScriptLocation"
   done

@@ -1,7 +1,7 @@
 ## interpreter directive - this is a shell script
 #!/bin/sh
 ## ask PBS for time (format hh:mm:ss)
-#PBS -l walltime=xxxTIMEHRSxxx:00:00
+#PBS -l walltime=xxxJOBTIMExxx
 ## ask for one node with some cpus and memory (per node)
 #PBS -l select=1:ncpus=xxxCPUSxxx:mem=xxxRAMGBxxxgb
 

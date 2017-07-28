@@ -1,8 +1,8 @@
 ## interpreter directive - this is a bash script
 #!/bin/bash
 
-timePerJob=00:30:00
-cpusPerJob=4
+timePerJob=1:00:00
+cpusPerJob=8
 memPerJob=8
 
 ## declare an array variable

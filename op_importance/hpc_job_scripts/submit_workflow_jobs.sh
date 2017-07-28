@@ -1,7 +1,7 @@
 ## interpreter directive - this is a bash script
 #!/bin/bash
 
-timePerJob=1:00:00
+timePerJob=2:00:00
 cpusPerJob=8
 memPerJob=8
 

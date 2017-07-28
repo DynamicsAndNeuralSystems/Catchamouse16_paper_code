@@ -1,6 +1,6 @@
 clear variables;
 
-runtype = 'svm_maxmin';
+runtype = 'dectree_maxmin';
 legit_folder = ['../data/intermediate_results_',runtype,'/'];
 null_folder = ['../data/intermediate_results_',runtype,'_null/'];
 

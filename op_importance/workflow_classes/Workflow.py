@@ -171,7 +171,7 @@ class Workflow:
         def read_task_parallel(t):
             t.read_data(is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
 
-        pool = Pool()
+        pool = Pool(processes=8)
         pool.map(read_task_parallel, self.tasks)
 
         #for task in self.tasks:
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         runtype = sys.argv[1]
     else:
-        runtype = 'maxmin_svm_null'
+        runtype = 'maxmin_svm'
 
     if len(sys.argv) > 2:
         task_names = sys.argv[2].split(",")

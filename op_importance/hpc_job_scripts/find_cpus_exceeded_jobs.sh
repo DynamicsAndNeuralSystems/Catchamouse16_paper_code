@@ -1,1 +1,1 @@
-find ./ | xargs grep -l 'exceeded limit'
+find ./* | xargs grep -l 'exceeded limit'

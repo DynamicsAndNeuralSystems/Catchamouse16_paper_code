@@ -194,7 +194,7 @@ def train_model_template(labels,data,clf):
         scores = cross_val_score(clf, operation, labels, cv=folds, n_jobs=1)
         return 1 - scores
 
-    pool = Pool()
+    pool = Pool(processes=8)
     error_rates = pool.map(process_task_threaded, range(data.shape[1]))
     op_error_rates = np.vstack(error_rates)
     mean_error_rates = np.mean(op_error_rates, axis=1)

@@ -191,7 +191,7 @@ def train_model_template(labels,data,clf):
         # Reshape data as we have only one feature at a time
         operation = operation.reshape(-1, 1)
         # Find accuracy of classifier using cross validation
-        scores = cross_val_score(clf, operation, labels, cv=folds)
+        scores = cross_val_score(clf, operation, labels, cv=folds, n_jobs=1)
         return 1 - scores
 
     pool = Pool()

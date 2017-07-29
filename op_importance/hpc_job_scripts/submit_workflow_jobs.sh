@@ -23,7 +23,7 @@ do
   do
     # dectree takes longer. some take especially long...
     timePerJob=1:00:00
-    if [[ $rtype == *"dectree"* ]]; then
+    if [[ $rtype == *"svm"* ]]; then
       echo "dectree"
       timePerJob=2:00:00
       if [[ " ${longerTasks[@]} " =~ " ${i} " ]]; then

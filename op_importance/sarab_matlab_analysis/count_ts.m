@@ -20,7 +20,7 @@ for i = 1:length(mat_files)
 end
 
 lens = cell2mat(lens);
-[sortedLens,idx] = sort(lens);
+[sortedLens,idx] = sort(lens,'descend');
 task_names = task_names(idx);
 
 for j = 1:length(sortedLens)

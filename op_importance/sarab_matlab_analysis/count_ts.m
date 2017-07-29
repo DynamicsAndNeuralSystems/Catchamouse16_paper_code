@@ -5,7 +5,7 @@ cd('../input_data');
 mat_files = dir('./HCTSA_*.mat');
 
 i_task = 1;
-ts_missing = {};
+lens = {};
 task_names = {};
 
 for i = 1:length(mat_files)
@@ -15,7 +15,15 @@ for i = 1:length(mat_files)
     end
     
     load(f,'TimeSeries');
-    fprintf('%s: %i time-series\n',f,length(TimeSeries));
+    lens{end+1} = length(TimeSeries);
+    task_names{end+1} = f;
 end
 
+lens = cell2mat(lens);
+[sortedLens,idx] = sort(lens);
+task_names = task_names(idx);
+
+for j = 1:length(sortedLens)
+    fprintf('%s: %i time-series\n',task_names{j},sortedLens(j));
+end
 cd(startDir);

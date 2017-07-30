@@ -30,7 +30,7 @@ do
         timePerJob=5:00:00
       fi
       if [[ " ${longestTasks[@]} " =~ " ${i} " ]]; then
-        timePerJob=8:00:00
+        timePerJob=12:00:00
       fi
     fi
 

@@ -23,7 +23,7 @@ do
   for i in "${tasks[@]}"
   do
     # dectree takes longer. some take especially long...
-    timePerJob=2:00:00
+    timePerJob=3:00:00
 
     ScriptLocation="submit_scripts/job-$i-$rtype.sh"
     sed -e "s/xxxJOBTIMExxx/$timePerJob/g" -e "s/xxxCPUSxxx/$cpusPerJob/g" -e "s/xxxRAMGBxxx/$memPerJob/g" -e "s/xxxRUNTYPExxx/$rtype/g" -e "s/xxxTASKSxxx/$i/g" workflow_job_template.sh > $ScriptLocation

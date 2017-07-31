@@ -99,11 +99,10 @@ def calc_null_template(labels,data,clf):
 
     # Loop through each operation in a threaded manner
     def process_task_threaded(i):
-        null_reps = 10
+        null_reps = 50
         op_errs = np.zeros(null_reps)
         for j in range(null_reps):
             # Shuffle labels
-            random.seed(25)
             random.shuffle(labels)
             # data is type float64 by default but Decision tree classifier works with float32
             operation = np.float32(data[:, i])
@@ -111,7 +110,7 @@ def calc_null_template(labels,data,clf):
             operation = operation.reshape(-1, 1)
             # Split into training and test data
             t_size = 1/float(folds)
-            op_train, op_test, labels_train, labels_test = train_test_split(operation, labels, test_size=t_size, stratify=labels.astype(np.float))
+            op_train, op_test, labels_train, labels_test = train_test_split(operation, labels, test_size=t_size, stratify=labels.astype(np.float), random_state=23)
             op_train = op_train.reshape(-1, 1)
             op_test = op_test.reshape(-1, 1)
             # Fit classifier on training data
@@ -123,6 +122,7 @@ def calc_null_template(labels,data,clf):
 
         return op_errs
 
+    random.seed(25)
     pool = Pool(processes=8)
     error_rates = pool.map(process_task_threaded, range(data.shape[1]))
     op_error_rates = np.vstack(error_rates)

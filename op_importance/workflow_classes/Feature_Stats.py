@@ -99,7 +99,7 @@ def calc_null_template(labels,data,clf):
 
     # Loop through each operation in a threaded manner
     def process_task_threaded(i):
-        null_reps = 50
+        null_reps = 100
         op_errs = np.zeros(null_reps)
         for j in range(null_reps):
             # Shuffle labels

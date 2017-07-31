@@ -222,7 +222,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         runtype = sys.argv[1]
     else:
-        runtype = 'maxmin_svm'
+        runtype = 'maxmin_dectree_null'
 
     if len(sys.argv) > 2:
         task_names = sys.argv[2].split(",")
@@ -268,8 +268,8 @@ if __name__ == '__main__':
             ranking_method = Feature_Stats.Linear_Classifier()
     else:
         ranking_method = Feature_Stats.Linear_Classifier()
-        runtype = runtype + '_svm'
-        raise Warning('classifier not specified! Using svm')
+        runtype = runtype + '_dectree'
+        raise Warning('classifier not specified! Using dectree')
 
     # First check if hpc input directory exists, otherwise use local one
     inputDir = '/work/ss7412/op_importance_input_data/'+datatype+'/'

@@ -99,7 +99,7 @@ def calc_null_template(labels,data,clf):
 
     # Loop through each operation in a threaded manner
     def process_task_threaded(i):
-        null_reps = 100
+        null_reps = 1000
         op_errs = np.zeros(null_reps)
         for j in range(null_reps):
             # Shuffle labels
@@ -110,7 +110,7 @@ def calc_null_template(labels,data,clf):
             operation = operation.reshape(-1, 1)
             # Split into training and test data
             t_size = 1/float(folds)
-            op_train, op_test, labels_train, labels_test = train_test_split(operation, labels, test_size=t_size, stratify=labels.astype(np.float), random_state=23)
+            op_train, op_test, labels_train, labels_test = train_test_split(operation, labels, test_size=t_size, random_state=23)
             op_train = op_train.reshape(-1, 1)
             op_test = op_test.reshape(-1, 1)
             # Fit classifier on training data

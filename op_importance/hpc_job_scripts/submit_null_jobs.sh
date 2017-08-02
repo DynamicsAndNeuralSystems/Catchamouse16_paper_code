@@ -24,7 +24,7 @@ do
     # dectree takes longer. some take especially long...
     timePerJob=10:00:00
     if [[ " ${longerTasks[@]} " =~ " ${i} " ]]; then
-      timePerJob=20:00:00
+      timePerJob=30:00:00
     fi
 
     ScriptLocation="submit_scripts/job-$i-$rtype.sh"

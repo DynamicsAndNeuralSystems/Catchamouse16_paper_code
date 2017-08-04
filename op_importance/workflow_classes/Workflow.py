@@ -222,7 +222,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         runtype = sys.argv[1]
     else:
-        runtype = 'maxmin_dectree_null'
+        runtype = 'dectree_maxmin'
 
     if len(sys.argv) > 2:
         task_names = sys.argv[2].split(",")
@@ -260,7 +260,9 @@ if __name__ == '__main__':
         if 'null' in runtype:
             ranking_method = Feature_Stats.Null_Decision_Tree()
         else:
-            ranking_method = Feature_Stats.Decision_Tree()
+            null_folder = 'C:/Users/Sarab/Documents/op_importance_data/hpc_individual_nulls/intermediate_results_'+runtype+'_null/';
+            null_pattern = null_folder + 'task_{:s}_tot_stats_all_runs.txt'
+            ranking_method = Feature_Stats.Decision_Tree(null_pattern)
     elif 'svm' in runtype:
         if 'null' in runtype:
             ranking_method = Feature_Stats.Null_Linear_Classifier()
@@ -275,7 +277,9 @@ if __name__ == '__main__':
     inputDir = '/work/ss7412/op_importance_input_data/'+datatype+'/'
     if not os.path.exists(inputDir):
         inputDir = '../input_data/'+datatype+'/'
-    intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
+    intermediateResultsDir = 'C:/Users/Sarab/Documents/op_importance_data/hpc_individual_nulls/intermediate_results_'+runtype+'/'
+    if not os.path.exists(intermediateResultsDir):
+        intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
     outputDir = '../output/'+runtype+'/'
     if not os.path.exists(inputDir):
         os.makedirs(inputDir)

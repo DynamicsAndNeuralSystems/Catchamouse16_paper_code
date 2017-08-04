@@ -29,16 +29,33 @@ class Feature_Stats:
 
 class Decision_Tree(Feature_Stats):
 
-    def __init__(self):
+    def __init__(self, null_pattern):
         """
         Constructor
         """
+        self.null_pattern = null_pattern
+
         Feature_Stats.__init__(self, False)
 
-    def calc_tots(self, labels, data):
+    def calc_tots(self, labels, data, task_name):
         print "Decision tree: true calculations - labels have not been shuffled"
         clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
-        return train_model_template(labels, data, clf)
+        op_error_rates, mean_error_rates = train_model_template(labels, data, clf)
+
+        null_stats = np.loadtxt(self.null_pattern.format(task_name))
+        num_ops = np.size(mean_error_rates)
+        if np.size(null_stats,0) != num_ops:
+            raise Exception('Number of operations do not match number of rows in null stats file')
+
+        num_null_reps = np.size(null_stats,1)
+        p_vals = np.empty(num_ops)
+        for i in range(num_ops):
+            null_dist = null_stats[i,:]
+            num_null_more_accurate = (null_dist < mean_error_rates[i]).sum()
+            p_vals[i] = np.float(num_null_more_accurate) / np.float(num_null_reps)
+
+        return (op_error_rates, mean_error_rates, p_vals)
+
 
 
 class Null_Decision_Tree(Feature_Stats):

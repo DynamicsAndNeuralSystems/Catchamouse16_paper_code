@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 class Task:
     
@@ -85,7 +86,9 @@ class Task:
         if attribute_name == 'tot_stats':
             self.tot_stats = np.loadtxt(in_path_pattern.format(self.name,attribute_name)+'.txt')
             self.tot_stats_all_runs = np.loadtxt(in_path_pattern.format(self.name,attribute_name)+'_all_runs.txt')
-            self.tot_stats_p_vals = np.loadtxt(in_path_pattern.format(self.name,attribute_name)+'_p_vals.txt')
+            pvals_file = in_path_pattern.format(self.name,attribute_name)+'_p_vals.txt'
+            if not os.path.exists(pvals_file):
+                self.tot_stats_p_vals = np.loadtxt(pvals_file)
 
 
     def save_attribute(self,attribute_name,out_path_pattern):    
@@ -104,6 +107,7 @@ class Task:
             print "Saving {}".format(out_path_pattern)
             np.savetxt(out_path_pattern.format(self.name,attribute_name)+'.txt',self.tot_stats)
             np.savetxt(out_path_pattern.format(self.name,attribute_name)+'_all_runs.txt',self.tot_stats_all_runs)
-            np.savetxt(out_path_pattern.format(self.name,attribute_name)+'_p_vals.txt',self.tot_stats_p_vals)
+            if self.tot_stats_p_vals.size != 0:
+                np.savetxt(out_path_pattern.format(self.name,attribute_name)+'_p_vals.txt',self.tot_stats_p_vals)
 
            

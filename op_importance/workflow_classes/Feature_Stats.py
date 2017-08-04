@@ -66,9 +66,11 @@ class Null_Decision_Tree(Feature_Stats):
         """
         Feature_Stats.__init__(self, False)
 
-    def calc_tots(self, labels, data):
+    def calc_tots(self, labels, data, task_name):
         clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
-        return calc_null_template(labels,data,clf)
+        op_error_rates, mean_error_rates = calc_null_template(labels,data,clf)
+        p_vals = np.empty([])
+        return (op_error_rates, mean_error_rates, p_vals)
 
 class Linear_Classifier(Feature_Stats):
 
@@ -78,11 +80,12 @@ class Linear_Classifier(Feature_Stats):
         """
         Feature_Stats.__init__(self, False)
 
-    def calc_tots(self, labels, data):
+    def calc_tots(self, labels, data, task_name):
         print "SVM: true calculations - labels have not been shuffled"
         clf = svm.SVC(class_weight="balanced", decision_function_shape='ovo', kernel='linear', random_state=23)
-        return train_model_template(labels, data, clf)
-
+        op_error_rates, mean_error_rates = train_model_template(labels, data, clf)
+        p_vals = np.empty([])
+        return (op_error_rates, mean_error_rates, p_vals)
 
 class Null_Linear_Classifier(Feature_Stats):
 
@@ -92,9 +95,11 @@ class Null_Linear_Classifier(Feature_Stats):
         """
         Feature_Stats.__init__(self, False)
 
-    def calc_tots(self, labels, data):
+    def calc_tots(self, labels, data, task_name):
         clf = svm.SVC(class_weight="balanced", decision_function_shape='ovo', kernel='linear', random_state=23)
-        return calc_null_template(labels,data,clf)
+        op_error_rates, mean_error_rates = calc_null_template(labels,data,clf)
+        p_vals = np.empty([])
+        return (op_error_rates, mean_error_rates, p_vals)
 
 
 class U_Stats(Feature_Stats):

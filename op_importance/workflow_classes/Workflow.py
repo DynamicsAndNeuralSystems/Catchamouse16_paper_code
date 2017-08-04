@@ -260,7 +260,9 @@ if __name__ == '__main__':
         if 'null' in runtype:
             ranking_method = Feature_Stats.Null_Decision_Tree()
         else:
-            null_folder = 'C:/Users/Sarab/Documents/op_importance_data/hpc_individual_nulls/intermediate_results_'+runtype+'_null/';
+            null_folder = 'C:/Users/Sarab/Documents/op_importance_data/hpc_individual_nulls/intermediate_results_'+runtype+'_null/'
+            if not os.path.exists(null_folder):
+                null_folder = '../data/intermediate_results_'+runtype+'_null/'
             null_pattern = null_folder + 'task_{:s}_tot_stats_all_runs.txt'
             ranking_method = Feature_Stats.Decision_Tree(null_pattern)
     elif 'svm' in runtype:

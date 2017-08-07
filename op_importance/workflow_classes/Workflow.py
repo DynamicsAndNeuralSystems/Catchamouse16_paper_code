@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib as mpl
-mpl.use("Agg")
+#mpl.use("Agg")
 import Task
 import Data_Input
 import Feature_Stats
@@ -75,6 +75,7 @@ class Workflow:
         # -- place holders
         self.good_op_ids = []
         self.stats_good_op = None
+        self.pvals_good_op = None
         self.stats_good_op_comb = None
         self.stats_good_perf_op_comb = None
         self.good_perf_op_ids = None
@@ -94,24 +95,31 @@ class Workflow:
         """
         #stats_good_op_ma = np.empty((data.shape[0],np.array(self.good_op_ids).shape[0]))
         stats_good_op_tmp = []
+        pvals_good_op_tmp = []
         #stats_good_op_ma[:] = np.NaN
         for task in self.tasks:
             # -- create tmp array for good stats for current task. For sake of simplicity when dealing with different
             # dimensions of task.tot_stats we transpose stats_good_op_ma_tmp so row corresponds to feature temporarily
             if task.tot_stats.ndim > 1:
                 stats_good_op_ma_tmp = np.empty((self.good_op_ids.shape[0],task.tot_stats.shape[0]))
+                pvals_good_op_ma_tmp = np.empty((self.good_op_ids.shape[0],task.tot_stats.shape[0]))
             else:
                 stats_good_op_ma_tmp = np.empty((self.good_op_ids.shape[0]))
+                pvals_good_op_ma_tmp = np.empty((self.good_op_ids.shape[0]))
             stats_good_op_ma_tmp[:] = np.NaN
+            pvals_good_op_ma_tmp[:] = np.NaN
 
             ind = hlp.ismember(task.op_ids,self.good_op_ids,is_return_masked_array = True,return_dtype = int)
             # -- it is position in task.op_ids and i is position in self.good_op_ids
             for it,i in enumerate(ind):
                 if i is not np.ma.masked: # -- that means the entry in task.op_ids is also in self.good_op_ids
                     stats_good_op_ma_tmp[i] = task.tot_stats[it].T
+                    pvals_good_op_ma_tmp[i] = task.tot_stats_p_vals[it].T
             # -- We return to the usual ordering: column equals feature
             stats_good_op_tmp.append(stats_good_op_ma_tmp.T)
+            pvals_good_op_tmp.append(pvals_good_op_ma_tmp.T)
         self.stats_good_op = np.ma.masked_invalid(np.vstack(stats_good_op_tmp))
+        self.pvals_good_op = np.ma.masked_invalid(np.vstack(pvals_good_op_tmp))
 
 
     def combine_task_stats_mean(self):
@@ -246,7 +254,7 @@ if __name__ == '__main__':
         task_names = ["Wine","50words"]
         # PHILS TASKS: task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
 
-    compute_features = True
+    compute_features = False
     if 'maxmin' in runtype:
         datatype = 'maxmin'
     elif 'scaledrobustsigmoid' in runtype:
@@ -314,7 +322,7 @@ if __name__ == '__main__':
     similarity_method = 'correlation'
     compare_space = 'problem_stats'
     n_good_perf_ops = 100
-    min_calc_tasks = 60
+    min_calc_tasks = np.ceil(float(len(task_names)) / float(1.25))
     # -- max distance inside one cluster
     max_dist_cluster = 0.2
 

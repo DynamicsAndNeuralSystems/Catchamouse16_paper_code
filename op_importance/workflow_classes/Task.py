@@ -87,7 +87,7 @@ class Task:
             self.tot_stats = np.loadtxt(in_path_pattern.format(self.name,attribute_name)+'.txt')
             self.tot_stats_all_runs = np.loadtxt(in_path_pattern.format(self.name,attribute_name)+'_all_runs.txt')
             pvals_file = in_path_pattern.format(self.name,attribute_name)+'_p_vals.txt'
-            if not os.path.exists(pvals_file):
+            if os.path.exists(pvals_file):
                 self.tot_stats_p_vals = np.loadtxt(pvals_file)
 
 

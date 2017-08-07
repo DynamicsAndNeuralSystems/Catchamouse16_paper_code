@@ -33,11 +33,23 @@ for i = 1:length(mat_files)
 end
 
 op_names = {orig.Operations.Name};
-save('UCR_op_kept_post_scaledrobustsigmoid_norm.mat','op_names','op_kept','task_names');
 
-imagesc(op_kept);
+kept_per_task = sum(op_kept,1);
+kept_per_op = sum(op_kept,2);
+
+[~,task_ord] = sort(kept_per_task);
+task_names_ordered = task_names(task_ord);
+[~,op_ord] = sort(kept_per_op);
+op_names_ordered = op_names(op_ord);
+op_kept_ordered = op_kept(op_ord,task_ord);
+
+imagesc(op_kept_ordered);
 xlabel('Task');
 ylabel('Op ID');
 title('Operations kept for each task after normalisation: UCR data');
+set(gca,'Xtick',1:length(task_names_ordered),'XtickLabel',task_names_ordered, 'TickLabelInterpreter','none');
+set(gca,'Ytick',1:length(op_names_ordered),'YtickLabel',op_names_ordered, 'TickLabelInterpreter','none');
 
+save('UCR_op_kept_post_scaledrobustsigmoid_norm.mat','task_names_ordered','op_names_ordered','op_kept_ordered','op_names','op_kept','task_names');
 cd(startDir);
+

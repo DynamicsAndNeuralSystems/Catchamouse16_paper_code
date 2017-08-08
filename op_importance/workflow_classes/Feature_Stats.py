@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score
 import random
 import copy
+import scipy.stats
 
 from pathos.multiprocessing import ThreadPool as Pool
 
@@ -51,8 +52,9 @@ class Decision_Tree(Feature_Stats):
         p_vals = np.empty(num_ops)
         for i in range(num_ops):
             null_dist = null_stats[i,:]
-            num_null_more_accurate = (null_dist < mean_error_rates[i]).sum()
-            p_vals[i] = np.float(num_null_more_accurate) / np.float(num_null_reps)
+            p_vals[i] = scipy.stats.norm(np.mean(null_dist), np.std(null_dist)).cdf(mean_error_rates[i])
+            #num_null_more_accurate = (null_dist < mean_error_rates[i]).sum()
+            #p_vals[i] = np.float(num_null_more_accurate) / np.float(num_null_reps)
 
         return (op_error_rates, mean_error_rates, p_vals)
 

@@ -291,7 +291,9 @@ if __name__ == '__main__':
         inputDir = '../input_data/'+datatype+'/'
     intermediateResultsDir = 'C:/Users/Sarab/Documents/op_importance_data/hpc_individual_nulls/intermediate_results_'+runtype+'/'
     if not os.path.exists(intermediateResultsDir):
-        intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
+        intermediateResultsDir = '/work/ss7412/op_importance_data/intermediate_results_' + runtype + '/'
+        if not os.path.exists(intermediateResultsDir):
+            intermediateResultsDir = '../data/intermediate_results_'+runtype+'/'
     outputDir = '../output/'+runtype+'/'
     if not os.path.exists(inputDir):
         os.makedirs(inputDir)

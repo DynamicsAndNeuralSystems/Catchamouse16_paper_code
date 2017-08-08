@@ -7,3 +7,4 @@
 *.pckl
 /hpc_job_scripts/submit_scripts/
 /hpc_job_scripts/job-*
+/sarab_matlab_analysis/*.txt

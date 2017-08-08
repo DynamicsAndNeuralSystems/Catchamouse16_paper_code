@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib as mpl
-mpl.use("Agg")
+#mpl.use("Agg")
 import Task
 import Data_Input
 import Feature_Stats
@@ -251,10 +251,13 @@ if __name__ == '__main__':
                       "ToeSegmentation1", "ToeSegmentation2", "Trace", "TwoLeadECG", "Two_Patterns",
                       "UWaveGestureLibraryAll", "Wine", "WordsSynonyms", "Worms", "WormsTwoClass", "synthetic_control",
                       "uWaveGestureLibrary_X", "uWaveGestureLibrary_Y", "uWaveGestureLibrary_Z", "wafer", "yoga"]
-        task_names = ["Wine","50words"]
+        #task_names = ["Wine","50words"]
         # PHILS TASKS: task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
 
-    compute_features = True
+    n_good_perf_ops = 500
+    compute_features = False
+    max_dist_cluster = 0.2
+
     if 'maxmin' in runtype:
         datatype = 'maxmin'
     elif 'scaledrobustsigmoid' in runtype:
@@ -325,10 +328,7 @@ if __name__ == '__main__':
     select_good_perf_ops_method = 'sort_asc'
     similarity_method = 'correlation'
     compare_space = 'problem_stats'
-    n_good_perf_ops = 100
     min_calc_tasks = np.ceil(float(len(task_names)) / float(1.25))
-    # -- max distance inside one cluster
-    max_dist_cluster = 0.2
 
     # -----------------------------------------------------------------
     # -- Initialise Class instances -----------------------------------

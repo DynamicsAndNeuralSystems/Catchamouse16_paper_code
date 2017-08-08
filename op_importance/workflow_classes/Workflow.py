@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib as mpl
-#mpl.use("Agg")
+mpl.use("Agg")
 import Task
 import Data_Input
 import Feature_Stats
@@ -262,7 +262,7 @@ if __name__ == '__main__':
     else:
         datatype = 'maxmin'
         runtype = runtype + '_maxmin'
-        raise Exception('normalisation not specified! Using maxmin')
+        raise Warning('normalisation not specified! Using maxmin')
 
     if 'dectree' in runtype:
         if 'null' in runtype:
@@ -270,7 +270,9 @@ if __name__ == '__main__':
         else:
             null_folder = 'C:/Users/Sarab/Documents/op_importance_data/hpc_individual_nulls/intermediate_results_'+runtype+'_null/'
             if not os.path.exists(null_folder):
-                null_folder = '../data/intermediate_results_'+runtype+'_null/'
+                null_folder = '/work/ss7412/op_importance_data/intermediate_results_'+runtype+'_null/'
+                if not os.path.exists(null_folder):
+                    null_folder = '../data/intermediate_results_'+runtype+'_null/'
             null_pattern = null_folder + 'task_{:s}_tot_stats_all_runs.txt'
             ranking_method = Feature_Stats.Decision_Tree(null_pattern)
     elif 'svm' in runtype:

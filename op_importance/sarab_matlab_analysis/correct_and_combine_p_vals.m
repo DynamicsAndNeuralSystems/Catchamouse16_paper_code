@@ -52,6 +52,7 @@ end
 
 corr_combined_pvals = NaN(length(allOpIds),1);
 combined_pvals =  NaN(length(allOpIds),1);
+combined_pvals_corr =  NaN(length(allOpIds),1);
 
 for k = 1:length(allOpIds)
    % bonf-holm first then fisher combine
@@ -73,19 +74,32 @@ for k = 1:length(allOpIds)
    end
 end
 
-combined_pvals_corr = bonf_holm(combined_pvals);
+combined_pvals_corr(isnan(combined_pvals)) = NaN;
+combined_pvals_corr(~isnan(combined_pvals)) = bonf_holm(combined_pvals(~isnan(combined_pvals)));
+%combined_pvals_corr = bonf_holm(combined_pvals);
 
 fprintf('%i total ops\n%i sig (fishers then bonf-holm)\n%i sig (bonf-holm then fishers)\n',...
 length(allOpIds),sum(combined_pvals_corr < 0.05),sum(corr_combined_pvals<0.05));
 
-allNaN_idx = find(sum(isnan(all_pvals))==length(task_names));
-nonSigOps_idx = find(combined_pvals_corr > 0.05);
-nonSigOps_idx = setdiff(nonSigOps_idx,allNaN_idx);
-nonSigOps_txt = strcat(allOpNames(nonSigOps_idx),':',allOpKeys(nonSigOps_idx));
-fID = fopen('nonSigOps.txt','w');
-formatSpec = '%s\n';
-for w = 1:length(nonSigOps_txt)
-   fprintf(fID,formatSpec,nonSigOps_txt{w}); 
+for proportion_NaN = 0:0.1:1
+    propCalced = 1 - proportion_NaN;
+    maxNaNTasks = floor(proportion_NaN*length(task_names));
+    opsNaN_idx = find(sum(isnan(all_pvals)) >= maxNaNTasks);
+    nonSigOps_idx = find(combined_pvals_corr > 0.05);
+    nonSigOps_idx = setdiff(nonSigOps_idx,opsNaN_idx);
+    sigOps_idx = find(combined_pvals_corr <= 0.05);
+    sigOps_idx = setdiff(sigOps_idx,opsNaN_idx);
+
+    nonSigOps_txt = strcat(allOpNames(nonSigOps_idx),':',allOpKeys(nonSigOps_idx));
+    fID = fopen(['nonSigOps_min_prop_calced_',num2str(propCalced),'.txt'],'w');
+    formatSpec = '%s\n';
+    for w = 1:length(nonSigOps_txt)
+       fprintf(fID,formatSpec,nonSigOps_txt{w}); 
+    end
+    fprintf(fID,'---');
+    
+    fprintf('%i ops no better than chance (max %i NaN tasks), %i significant (%i ops ignored)\n',...
+        length(nonSigOps_idx),maxNaNTasks,length(sigOps_idx),length(opsNaN_idx));
 end
 
 if doPlot

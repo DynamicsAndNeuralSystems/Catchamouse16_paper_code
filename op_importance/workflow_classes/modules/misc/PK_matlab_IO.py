@@ -71,13 +71,24 @@ def read_from_mat_file(mat_file_path,hctsa_struct_names,is_from_old_matlab = Fal
                 #    read them differently
                 # lambda function used to populate the dictionary with the appropriate data lists
                 #ts_id = lambda i : int(mat_file['TimeSeries'][i][0][0][0])
-                ts_filename = lambda i : str(mat_file['TimeSeries'][0][i][0][0])
-                ts_kw = lambda i : str(mat_file['TimeSeries'][0][i][1][0])
-                ts_n_samples = lambda i : int(mat_file['TimeSeries'][0][i][2][0])
+
+                # ----------- this is the original version, I (Carl) somehow need to switch the first two dimensions ----
+                # ts_filename = lambda i : str(mat_file['TimeSeries'][0][i][0][0])
+                # ts_kw = lambda i : str(mat_file['TimeSeries'][0][i][1][0])
+                # ts_n_samples = lambda i : int(mat_file['TimeSeries'][0][i][2][0])
+                # # -- data is not included in the returned dictionary as it seem a waste of space
+                # #ts_data = lambda i : mat_file['TimeSeries'][i][0][3]
+                # for extractor,key in zip([ts_filename ,ts_kw,ts_n_samples],['filename','keywords','n_samples']):
+                #     timeseries[key] =[extractor(i) for i in range(mat_file['TimeSeries'].shape[1])]
+
+                # ------------ to this
+                ts_filename = lambda i: str(mat_file['TimeSeries'][i][0][0][0])
+                ts_kw = lambda i: str(mat_file['TimeSeries'][i][0][1][0])
+                ts_n_samples = lambda i: int(mat_file['TimeSeries'][i][0][2][0])
                 # -- data is not included in the returned dictionary as it seem a waste of space
-                #ts_data = lambda i : mat_file['TimeSeries'][i][0][3]
-                for extractor,key in zip([ts_filename ,ts_kw,ts_n_samples],['filename','keywords','n_samples']):
-                    timeseries[key] =[extractor(i) for i in range(mat_file['TimeSeries'].shape[1])]
+                # ts_data = lambda i : mat_file['TimeSeries'][i][0][3]
+                for extractor, key in zip([ts_filename, ts_kw, ts_n_samples], ['filename', 'keywords', 'n_samples']):
+                    timeseries[key] = [extractor(i) for i in range(mat_file['TimeSeries'].shape[0])]
                     
             retval = retval + (timeseries,)
             
@@ -101,6 +112,22 @@ def read_from_mat_file(mat_file_path,hctsa_struct_names,is_from_old_matlab = Fal
             for extractor,key in zip([op_id,op_name ,op_kw,op_code,op_mopid],['id','name','keywords','code_string','master_id']):
                 operations[key] =[extractor(i) for i in range(mat_file['Operations'].shape[0])]
             retval = retval + (operations,)
-        if item == 'TS_DataMat':        
+
+        if item == 'TS_DataMat':
             retval = retval+(mat_file['TS_DataMat'],)
+
+        if item == 'MasterOperations':
+            m_operations = dict()
+            if is_from_old_matlab:
+                raise NameError('Don''t know how to get MasterOperations from old Matlab version.')
+            else:
+                # lambda function used to populate the dictionary with the appropriate data lists
+                m_op_id = lambda i: int(mat_file['MasterOperations'][i][0][2][0][0])
+                m_op_name = lambda i: str(mat_file['MasterOperations'][i][0][1][0])
+
+            for extractor, key in zip([m_op_id, m_op_name],
+                                      ['id', 'name']):
+                m_operations[key] = [extractor(i) for i in range(mat_file['MasterOperations'].shape[0])]
+            retval = retval + (m_operations,)
+
     return retval

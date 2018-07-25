@@ -361,7 +361,36 @@ def normalise_masked_array(data,axis,norm_type = 'zscore'):
         # zscore over all features 
         data = ( data - mean ) / std
 
-        return data,mean,std
+        return data, mean, std
+
+    elif norm_type == 'zscore_median':
+        # enable broadcasting for both cases of axis
+        median = np.ma.expand_dims(np.ma.median(data, axis=axis), axis=axis)
+        std = np.ma.expand_dims(np.ma.std(data, axis=axis), axis=axis)
+        # print "mean.shape",mean.shape,"std.shape",std.shape
+        # zscore over all features
+        data = (data - median) / std
+
+        return data, median, std
+
+    elif norm_type == 'median-div':
+        # enable broadcasting for both cases of axis
+        median = np.ma.expand_dims(np.ma.median(data, axis=axis), axis=axis)
+        # print "mean.shape",mean.shape,"std.shape",std.shape
+        # zscore over all features
+        data = data / median
+
+        return data, median
+
+    elif norm_type == 'median-diff':
+        # enable broadcasting for both cases of axis
+        median = np.ma.expand_dims(np.ma.median(data, axis=axis), axis=axis)
+        # print "mean.shape",mean.shape,"std.shape",std.shape
+        # zscore over all features
+        data = (data - median)
+
+        return data, median
+
     
     
     

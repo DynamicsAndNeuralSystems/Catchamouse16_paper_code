@@ -128,3 +128,41 @@ class Datafile_Input(Data_Input):
             return self.masking_method(data), ts, op
         else:
             return None, ts, op
+
+    def input_task_master(self, task_name, is_read_feature_data=True, old_matlab=False):
+        """
+        Read the required data from a HCTSA_loc.mat file and master operations
+        Parameters:
+        -----------
+        task_name : string
+            the name of the classification task to be imported
+        is_read_feature_data : bool
+            if true, the feature data matrix will be read (default is True)
+        Returns:
+        --------
+        data : ndarray
+            Array containing the data. Each row corresponds to a timeseries and each column to an operation.
+        ts : dict
+            dictionary containing the information for all timeseries (rows in data).
+            ['keywords', 'n_samples', 'id', 'filename']
+        op : dict
+            dictionary containing the information for all contained operations.
+            Keys are ['keywords', 'master_id', 'id', 'code_string', 'name']
+
+        """
+        # -- assemble the file path
+        mat_file_path = self.path_pattern.format(task_name)
+        print "Reading file {}".format(mat_file_path)
+
+        # -- load the data,operations and timeseries from the matlab file
+        if is_read_feature_data:
+            data, op, ts, m_op = mIO.read_from_mat_file(mat_file_path, ['TS_DataMat', 'Operations', 'TimeSeries', 'MasterOperations'],
+                                                  is_from_old_matlab=old_matlab)
+        else:
+            op, ts, m_op= mIO.read_from_mat_file(mat_file_path, ['Operations', 'TimeSeries', 'MasterOperations'], is_from_old_matlab=old_matlab)
+            data = None
+
+        if is_read_feature_data:
+            return self.masking_method(data), ts, op, m_op
+        else:
+            return None, ts, op, m_op

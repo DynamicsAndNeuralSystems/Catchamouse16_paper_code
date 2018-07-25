@@ -65,8 +65,9 @@ class Task:
             Is the feature data to be read or not
         """
         #self.data, keywords_ts, self.op_ids = self.input_method.input_task(self.name,is_read_feature_data = is_read_feature_data)
-        self.data, self.ts, self.op = self.input_method.input_task(self.name,is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
-        
+        # self.data, self.ts, self.op = self.input_method.input_task(self.name,is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
+        self.data, self.ts, self.op, self.m_op = self.input_method.input_task_master(self.name,is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
+
         self.op_ids = np.array(self.op['id'])
         keywords_ts = self.ts['keywords']
         self.labels = self.input_method.extract_labels(keywords_ts)

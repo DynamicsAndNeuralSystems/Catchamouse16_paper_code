@@ -3,9 +3,11 @@ import numpy as np
 from sklearn import tree, svm
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import make_scorer
 import random
 import copy
 import scipy.stats
+import collections
 
 from pathos.multiprocessing import ThreadPool as Pool
 
@@ -58,6 +60,9 @@ class Decision_Tree(Feature_Stats):
 
         return (op_error_rates, mean_error_rates, p_vals)
 
+    def get_null_stats(self, task_name):
+        return np.loadtxt(self.null_pattern.format(task_name))
+
 
 
 class Null_Decision_Tree(Feature_Stats):
@@ -71,7 +76,7 @@ class Null_Decision_Tree(Feature_Stats):
     def calc_tots(self, labels, data, task_name):
         clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
         op_error_rates, mean_error_rates = calc_null_template(labels,data,clf)
-        p_vals = np.empty([])
+        p_vals = np.array([]) # np.empty([])
         return (op_error_rates, mean_error_rates, p_vals)
 
 class Linear_Classifier(Feature_Stats):
@@ -155,6 +160,15 @@ def calc_null_template(labels,data,clf):
 
     return (op_error_rates, mean_error_rates)
 
+
+def accuracy_score_class_balanced(y_true, y_pred):
+    class_counts = collections.Counter(y_true)
+    weights = np.zeros(np.size(y_true))
+    for this_class in class_counts.keys():
+        weights[np.array(y_true)==this_class] = 1./class_counts[this_class]
+    return accuracy_score(y_true, y_pred, sample_weight=weights)
+
+
 def train_model_template(labels,data,clf):
     # Find maximum allowed folds for cross validation
     un, counts = np.unique(labels, return_counts=True)
@@ -170,8 +184,12 @@ def train_model_template(labels,data,clf):
         operation = np.float32(data[:, i])
         # Reshape data as we have only one feature at a time
         operation = operation.reshape(-1, 1)
+        # # Find accuracy of classifier using cross validation
+        # scores = cross_val_score(clf, operation, labels, cv=folds, n_jobs=1)
+        # todo: this is a new score that corrects for class imbalances
+        scorer = make_scorer(accuracy_score_class_balanced)
         # Find accuracy of classifier using cross validation
-        scores = cross_val_score(clf, operation, labels, cv=folds, n_jobs=1)
+        scores = cross_val_score(clf, operation, labels, scoring=scorer, cv=folds, n_jobs=1)
         return 1 - scores
 
     pool = Pool(processes=8)

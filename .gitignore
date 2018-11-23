@@ -1,6 +1,37 @@
 *.asv
 *.png
 
+################################
+#Some locally generated folders#
+################################
+
+badOps_old
+C-features
+clusteringTesting
+clusterNotes
+computationTimes
+correct_AALDChallenge
+dataSharing
+dummyTS_differentLengths
+errorHistogramsHighPerformers
+figures
+findBadOp*
+hpc_individual_nulls
+input_data*
+nullHists*
+output*
+paperDrafts
+plottedTS*
+probeFailingFeatures
+results*
+topOps*
+tsfeatures_comparison
+UCR*
+UMAP
+umap-master
+uniqueValues
+intermediateAnalysisResults
+
 ############################
 #Python Specific GitIgnore#
 ############################

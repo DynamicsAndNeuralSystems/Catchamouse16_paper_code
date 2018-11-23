@@ -101,8 +101,11 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     abs_corr_array = abs_corr_array[:,index]
     
     # -- plot the correlation matrix
-    im = axmatrix.matshow(abs_corr_array, aspect='auto', origin='lower',vmin=0,vmax=1)
-      
+    vmin=round(np.min(abs_corr_array),1)
+    vmax=1
+    numSteps = (vmax-vmin)*20 # steps of 0.05 in correlation
+    im = axmatrix.matshow(abs_corr_array, aspect='auto', origin='lower',vmin=vmin,vmax=vmax, cmap=mpl.pyplot.cm.get_cmap('jet', numSteps))
+
     axmatrix.set_xticks([])
     axmatrix.set_yticks(range(len(index)))
     #axmatrix.set_yticklabels(np.array(names)[index],fontsize=5)

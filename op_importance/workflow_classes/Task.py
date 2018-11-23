@@ -69,8 +69,9 @@ class Task:
         self.data, self.ts, self.op, self.m_op = self.input_method.input_task_master(self.name,is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
 
         self.op_ids = np.array(self.op['id'])
-        keywords_ts = self.ts['keywords']
-        self.labels = self.input_method.extract_labels(keywords_ts)
+        self.keywords_op = self.op['keywords']
+        self.keywords_ts = self.ts['keywords']
+        self.labels = self.input_method.extract_labels(self.keywords_ts)
     
     def load_attribute(self,attribute_name,in_path_pattern):
         """

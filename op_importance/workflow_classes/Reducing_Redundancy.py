@@ -14,9 +14,17 @@ class Reducing_Redundancy:
         compare_space : string
             String describing in which space the distance calculation is going to happen (e.g. problem_stats,feature_vals)
         """
-        if similarity_method == 'correlation':
+        if similarity_method == 'abscorr':
             self.calc_similarity = self.calc_abs_corr
-            
+        elif similarity_method == 'corr':
+            self.calc_similarity = self.calc_corr
+        elif similarity_method == 'cos':
+            self.calc_similarity = self.calc_cos
+        elif similarity_method == 'euc':
+            self.calc_similarity = self.calc_euc
+        else:
+            raise NameError('No valid distance metric chosen.')
+
         self.compare_space = compare_space   
         self.good_perf_op_ids = None
         self.ops_base_perf_vals = None
@@ -69,10 +77,38 @@ class Reducing_Redundancy:
         Calculate the distance matrix using a correlation approach for every column in self.ops_base_perf_vals
         """
         # -- no normalisation in here as the best performing features have been picked already, potentially using normalisation
-        self.similarity_array,sort_ind,_ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals,norm=None, 
+        self.similarity_array,sort_ind,_ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals,norm=None, type='abscorr',
                                                               max_feat = self.ops_base_perf_vals.shape[1])
         self.similarity_array_op_ids = self.good_perf_op_ids[sort_ind]
-        
+
+    def calc_corr(self):
+        """
+        Calculate the distance matrix using a correlation approach for every column in self.ops_base_perf_vals
+        """
+        # -- no normalisation in here as the best performing features have been picked already, potentially using normalisation
+        self.similarity_array,sort_ind,_ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals,norm=None, type='abscorr',
+                                                              max_feat = self.ops_base_perf_vals.shape[1])
+        self.similarity_array_op_ids = self.good_perf_op_ids[sort_ind]
+
+    def calc_cos(self):
+        """
+        Calculate the distance matrix using a correlation approach for every column in self.ops_base_perf_vals
+        """
+        # -- no normalisation in here as the best performing features have been picked already, potentially using normalisation
+        self.similarity_array,sort_ind,_ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals,norm=None, type='cos',
+                                                              max_feat = self.ops_base_perf_vals.shape[1])
+        self.similarity_array_op_ids = self.good_perf_op_ids[sort_ind]
+
+    def calc_euc(self):
+        """
+        Calculate the distance matrix using a correlation approach for every column in self.ops_base_perf_vals
+        """
+        # -- no normalisation in here as the best performing features have been picked already, potentially using normalisation
+        self.similarity_array, sort_ind, _ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals, norm=None,
+                                                                         type='euc',
+                                                                         max_feat=self.ops_base_perf_vals.shape[1])
+        self.similarity_array_op_ids = self.good_perf_op_ids[sort_ind]
+
     def calc_hierch_cluster(self,t = 0.2, criterion='distance' ):
         """
         Calculate the clustering using hierachical clustering
@@ -107,16 +143,25 @@ class Reducing_Redundancy:
         with open(out_path,'w') as out_file:
             out_file.write('------------------------------------------------------------------\n')
             out_file.write('--- clusters of operations----------------------------------------\n')
-            out_file.write('--- name, n problems calculated, avg z-scored u-stat\n')
+            out_file.write('--- name, n problems calculated, normalised combined error\n')
             out_file.write('------------------------------------------------------------------\n')
             for cluster in self.cluster_op_id_list:
-                #cluster.sort()
-                for op in cluster:
+
+                names = ['' for i in cluster]
+                n_calcs = np.zeros(len(cluster))
+                norm_ustats = np.zeros(len(cluster))
+
+                for opInd, op in enumerate(cluster):
                     ind_tmp = np.nonzero(measures[0]==op)[0]
-                    name = op_id_name_map[1][op_id_name_map[0].index(op)]
-                    n_calc = measures[1][ind_tmp]
-                    norm_ustat = measures[2][ind_tmp]
-                    out_file.write('{:s},{:d},{:1.2f}\n'.format(name,int(n_calc[0]),norm_ustat[0]))
+                    names[opInd] = op_id_name_map[1][op_id_name_map[0].index(op)]
+                    n_calcs[opInd] = measures[1][ind_tmp]
+                    norm_ustats[opInd] = measures[2][ind_tmp]
+
+                sortInds = np.argsort(norm_ustats)
+
+                for ind in sortInds:
+                    out_file.write('{:s},{:d},{:1.2f}\n'.format(names[ind],int(n_calcs[ind]),norm_ustats[ind]))
+
                 out_file.write('------------------------------------------------------------------\n')
         
         

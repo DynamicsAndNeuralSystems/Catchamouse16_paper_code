@@ -37,7 +37,7 @@ def calc_linkage(abs_corr_array, linkage_method='complete'):#'average'):#
 
     return link_arr,abs_corr_dist_arr
 
-def calc_perform_corr_mat(all_classes_avg_good,norm = None, max_feat = 200):
+def calc_perform_corr_mat(all_classes_avg_good,norm = None, type='abscorr', max_feat = 200):
     """
     Calculate the correlation matrix of the performance for top features. If norm != None it uses a normed
     version of the all_classes_avg_good array for estimating the best features. It uses the non-normed originla
@@ -70,14 +70,57 @@ def calc_perform_corr_mat(all_classes_avg_good,norm = None, max_feat = 200):
         all_classes_avg_good_norm = (all_classes_avg_good.T / all_classes_avg_good_mean).T
     else:
         all_classes_avg_good = np.ma.masked_invalid(all_classes_avg_good)
-        all_classes_avg_good_norm =  all_classes_avg_good
+        all_classes_avg_good_norm = all_classes_avg_good
 
     #all_classes_avg_good_norm = np.ma.masked_invalid(all_classes_avg_good_norm)
     sort_ind = np.ma.argsort(all_classes_avg_good_norm.mean(axis=0))
     acag_n_sort_red = all_classes_avg_good[:,sort_ind[:max_feat]]
+
+    def replace_nan_with_mean(a):
+
+
+        # obtain mean of columns as you need, nanmean is just convenient.
+        col_mean = np.nanmean(a, axis=0)
+
+        # find indicies that you need to replace
+        inds = np.where(np.isnan(a))
+
+        # place column means in the indices. Align the arrays using take
+        acag_n_sort_red[inds] = np.take(col_mean, inds[1])
+
+        return a
+
+
     # -- calculate the correlation
-    abs_corr_array = np.abs(np.ma.corrcoef(acag_n_sort_red, rowvar=0))
-    if np.ma.max(abs_corr_array ) > 1.1:
+    if type == 'corr':
+
+        corr_array = np.ma.corrcoef(acag_n_sort_red, rowvar=0)
+
+    elif type == 'abscorr':
+
+        corr_array = np.abs(np.ma.corrcoef(acag_n_sort_red, rowvar=0))
+
+    elif type == 'cos':
+
+        # there's no built-in pdist function that handles missing values/ nans. So replace nans by column means
+        # (mean over tasks of feature performance)
+        acag_n_sort_red_noNaN = replace_nan_with_mean(acag_n_sort_red)
+
+        corr_array = 1 - spdst.squareform(spdst.pdist(acag_n_sort_red_noNaN.T, 'cosine'))
+
+    elif type == 'euc':
+
+        # there's no built-in pdist function that handles missing values/ nans. So replace nans by column means
+        # (mean over tasks of feature performance)
+        acag_n_sort_red_noNaN = replace_nan_with_mean(acag_n_sort_red)
+
+        corr_array = 1 - spdst.squareform(spdst.pdist(acag_n_sort_red_noNaN.T, 'euclidean'))
+
+    else:
+
+        raise NameError('Unknown distance type.')
+
+    if np.ma.max(corr_array ) > 1.1:
         raise ValueError('Too many masked values in "all_classes_avg_good". \n np.ma.corrcoeff() returned invalid values')
 
-    return abs_corr_array,sort_ind,all_classes_avg_good_norm
+    return corr_array,sort_ind,all_classes_avg_good_norm

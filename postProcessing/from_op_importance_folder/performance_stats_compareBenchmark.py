@@ -4,7 +4,7 @@ import csv
 
 benchmat = []
 
-with open('/Users/carl/PycharmProjects/op_importance/UCR2018_singleTrainTest_results.csv', 'r') as infile:
+with open('/Users/carl/PycharmProjects/op_importance/intermediateAnalysisResults/UCR2018_singleTrainTest_results.csv', 'r') as infile:
     csv_reader = csv.reader(infile, delimiter=',')
     for line in csv_reader:
         benchmat.append(line)
@@ -14,7 +14,7 @@ benchmat = np.array(benchmat)
 # get names of tasks included in bench mark
 task_names_bench = benchmat[1:,0]
 
-perfmat = np.loadtxt('/Users/carl/PycharmProjects/op_importance/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710.txt')
+perfmat = np.loadtxt('/Users/carl/PycharmProjects/op_importance/intermediateAnalysisResults/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710.txt')
 
 task_names_own = ["AALTDChallenge", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "CBF", "Car",
                       "ChlorineConcentration", "CinCECGtorso", "Coffee", "Computers", "CricketX", "CricketY", "CricketZ",
@@ -50,12 +50,13 @@ clusterMean = perfmat[bench_indicator,4]
 clusterStd = perfmat[bench_indicator,5]
 
 # -- also load the final canonical features
-perfmatCanonical = np.loadtxt('/Users/carl/PycharmProjects/op_importance/peformance_mat_canonical_givenSplit_nonBalanced.txt')
+perfmatCanonical = np.loadtxt('/Users/carl/PycharmProjects/op_importance/intermediateAnalysisResults/peformance_mat_canonical_givenSplit_nonBalanced.txt')
 
 canonicalMean = perfmatCanonical[bench_indicator]
 
-# for i, task_name in enumerate(task_names_bench):
-#     print "%1.3f, %s" % (canonicalMean[i], task_name)
+print 'canonical'
+for i, task_name in enumerate(task_names_bench):
+    print "%1.3f, %s" % (canonicalMean[i], task_name)
 
 print "%1.3f mean performance full" % np.mean(wholeMean)
 print "%1.3f mean performance best of cluster" % np.mean(clusterMean)
@@ -97,12 +98,16 @@ benchmat = benchmat[:,1:]
 
 print "%1.3f mean performance bench" % np.nanmean(benchmat[1:,:].astype(float))
 
+print '\nbenchmark mean'
+for i, task_name in enumerate(task_names_bench):
+    print "%1.3f +/- %1.4f, %s" % (np.nanmean(benchmat[(1+i),:].astype(float)), np.nanstd(benchmat[(1+i),:].astype(float)), task_name)
+
 
 # -- load number of classes per method
 # nClasses = np.loadtxt('/Users/carl/PycharmProjects/op_importance/nClassesPerDatasetNewUCR_names.txt')
 # nClasses_bench = nClasses[bench_indicator]
 
-with open('/Users/carl/PycharmProjects/op_importance/nClassesPerDatasetNewUCR_names.txt') as f:
+with open('/Users/carl/PycharmProjects/op_importance/intermediateAnalysisResults/nClassesPerDatasetNewUCR_names.txt') as f:
     read_data = []
     nClasses = []
     nClassesDatasetNames = []
@@ -242,22 +247,23 @@ plt.figure()
 plt.plot((0, 1), (0, 1), '--', color=np.array((1, 1, 1)) * 0.7)
 
 for datasetInd in range(len(meanBenchs)):
-    p = plt.scatter(meanBenchs[datasetInd], clusterMean[datasetInd], label=task_names_bench[datasetInd],
+    p = plt.scatter(canonicalMean[datasetInd], meanBenchs[datasetInd], label=task_names_bench[datasetInd],
                                  marker=markers[np.floor(datasetInd / 10).astype(int)])
     plotColor = p._facecolors[0]
     # print datasetInd, meanBenchs[datasetInd], clusterMean[datasetInd]
-    plt.text(meanBenchs[datasetInd], clusterMean[datasetInd], task_names_bench[datasetInd],
+    plt.text(canonicalMean[datasetInd], meanBenchs[datasetInd], task_names_bench[datasetInd],
                           horizontalalignment='left', color=plotColor)
 
-plt.xlabel('mean accuracy benchmark methods')
-plt.ylabel('accuracy features')
+plt.ylabel('mean accuracy benchmark methods')
+plt.xlabel('accuracy canonical features')
 
 fA = plt.figure()
 
 # reference line (below other data)
 plt.plot((0, 1), (0, 1), '--', color=np.array((1, 1, 1)) * 0.7)
 
-benchmarkDatasets = ['ShapeletSim', 'CinCECGtorso', 'DiatomSizeReduction', 'Trace', 'Wafer', 'StarLightCurves', 'SyntheticControl', 'Plane']
+# benchmarkDatasets = ['ShapeletSim', 'CinCECGtorso', 'DiatomSizeReduction', 'Trace', 'Wafer', 'StarLightCurves', 'SyntheticControl', 'Plane']
+benchmarkDatasets = ['ShapeletSim', 'DiatomSizeReduction', 'FordA', 'OSULeaf', 'CinCECGtorso','MiddlePhalanxOutlineAgeGroup', 'Plane', 'ECG5000', 'UWaveGestureLibraryAll']
 for datasetInd in range(len(meanBenchs)):
 
     p = plt.errorbar(canonicalMean[datasetInd], meanBenchs[datasetInd], yerr=stdBenchs[datasetInd], fmt='o', label=task_names_bench[datasetInd],
@@ -272,6 +278,8 @@ for datasetInd in range(len(meanBenchs)):
 
 plt.xlabel('accuracy features')
 plt.ylabel('mean accuracy benchmark methods')
+
+print "Pearson correlation benchmarks vs. canonical features: %1.3f" % np.corrcoef(canonicalMean, meanBenchs)[0,1]
 
 # -- select a few benchmark methods
 fB = plt.figure()
@@ -292,9 +300,12 @@ for method_ind in range(np.shape(benchmat)[1]):
 
     for datasetInd in range(len(canonicalMean)):
 
-        if task_names_bench[datasetInd] in ['SmallKitchenAppliances', 'FordA', 'ShapeletSim', 'CBF', 'UWaveGestureLibraryAll']:
+        print "%s, %s, %s" % (task_names_bench[datasetInd], method_name, benchmat[1 + datasetInd, method_ind])
+
+        if task_names_bench[datasetInd] in ['SmallKitchenAppliances', 'FordA', 'OSULeaf', 'ShapeletSim', 'CBF', 'UWaveGestureLibraryAll', 'CinCECGtorso', 'Plane', 'ECG5000']:
             plt.text(canonicalMean[datasetInd], np.array(benchmat[1+datasetInd,method_ind]).astype(float), task_names_bench[datasetInd],
                      horizontalalignment='left', color=colors[colorInd])
+
 
         p = plt.scatter(canonicalMean[datasetInd], np.array(benchmat[1+datasetInd,method_ind]).astype(float), label=method_name, facecolors=colors[colorInd])
         # p = plt.plot(clusterMean[datasetInd], np.array(benchmat[1 + datasetInd, method_ind]).astype(float), 'o',

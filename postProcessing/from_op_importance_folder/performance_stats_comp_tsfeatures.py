@@ -19,7 +19,7 @@ task_names_own = ["AALTDChallenge", "Adiac", "ArrowHead", "Beef", "BeetleFly", "
                       "UWaveGestureLibraryAll", "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ",
                       "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
 
-perfmat = np.loadtxt('/Users/carl/PycharmProjects/op_importance/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_new710.txt')
+perfmat = np.loadtxt('/Users/carl/PycharmProjects/op_importance/intermediateAnalysisResults/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_new710.txt')
 
 wholeMean = perfmat[:,0]
 wholeStd = perfmat[:,1]
@@ -34,7 +34,7 @@ meanWholeMean = np.mean(wholeMean)
 meanTopOpMean = np.mean(topOpMean)
 meanClusterMean = np.mean(clusterMean)
 
-perfmatCanonical = np.loadtxt('/Users/carl/PycharmProjects/op_importance/peformance_canonical.txt')
+perfmatCanonical = np.loadtxt('/Users/carl/PycharmProjects/op_importance/intermediateAnalysisResults/peformance_canonical.txt')
 
 canonicalMean = perfmatCanonical[:,0]
 canonicalStd = perfmatCanonical[:,1]
@@ -93,6 +93,8 @@ print "worst %1.3f (%s), best %1.3f (%s)\n" % (np.min(diffCanonicalWhole), task_
 plt.plot((0, 1.3), (0, 1.3), '--', color=np.array((1, 1, 1)) * 0.7)
 
 plt.errorbar(tsfeaturesMean, canonicalMean, xerr=wholeStd, yerr=canonicalStd, fmt='bo')
+
+print 'correlation between catch-22 and tsfeatures: %1.3f' % np.corrcoef(tsfeaturesMean[1:], canonicalMean[1:])[0,1]
 
 highlightTasks = ['OliveOil', 'ECGMeditation', 'InsectWingbeatSound', 'InlineSkate', 'ChlorineConcentration', 'ToeSegmentation1', 'ShapeletSim']
 for i in range(len(tsfeaturesMean)):

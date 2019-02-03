@@ -4,7 +4,7 @@ clear all
 topDir = pwd;
 
 % go to data directory
-dataDir = 'UCR_2018_rawHCTSA_shaved';
+dataDir = '/Users/carl/PycharmProjects/op_importance/UCR_2018_rawHCTSA_shaved';
 
 outDir = 'uniqueValues';
 if exist(outDir) ~= 7
@@ -32,7 +32,7 @@ for i = 1 : length(files)
 %         continue
 %     end
     
-    if ~contains(files(i).name, {'Shapelet'})%{'Shapelet', 'Diatom', 'CinC'}) % }) % 
+    if ~contains(files(i).name, {'Plane'})%{'Shapelet', 'Diatom', 'CinC'}) % }) % 
         continue
     end
 
@@ -77,7 +77,7 @@ for i = 1 : length(files)
         % lines
         downsamplingFactor = 1;
         selectionSkip = 4;
-        Nts = 1;
+        Nts = size(ts_data,2);
         tsSelect = floor(linspace(1, size(ts_data,2),Nts));
         plot(repmat((1:downsamplingFactor:size(ts_data, 1))', 1, Nts), ts_data(1:downsamplingFactor:end,tsSelect), 'b');
         hold on
@@ -100,7 +100,7 @@ for i = 1 : length(files)
     
     f.PaperUnits = 'inches';
     f.PaperPosition = [0 0 10 5];
-    print(['plottedTSByClasses/', datasetName, '_dist'],'-depsc', '-tiff', '-r150', '-painters')
+    print(['/Users/carl/PycharmProjects/op_importance/plottedTSByClasses/', datasetName, '_dist'],'-depsc', '-tiff', '-r150', '-painters')
 %     saveas(f, ['plottedTSByClasses/', datasetName, '.png']);
     close(f)
 end

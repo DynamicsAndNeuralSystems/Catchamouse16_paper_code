@@ -1,6 +1,6 @@
 function checkZScore()
 
-    folder = 'UCR_2018_rawHCTSA_shaved';
+    folder = '../UCR_2018_rawHCTSA_shaved';
 
     curDir = pwd;
     cd(folder);
@@ -13,8 +13,8 @@ function checkZScore()
         load(thisFile.name, 'TimeSeries');
 
         nTS = length(TimeSeries);
-        means = nan(1,nTS);
-        stds = nan(1,nTS);
+        means = nan(nTS,1);
+        stds = nan(nTS,1);
         for j = 1:nTS
             means(j) = mean(TimeSeries(j).Data);
             stds(j) = std(TimeSeries(j).Data);

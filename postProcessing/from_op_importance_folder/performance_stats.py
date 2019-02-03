@@ -19,7 +19,7 @@ task_names_own = ["AALTDChallenge", "Adiac", "ArrowHead", "Beef", "BeetleFly", "
                       "UWaveGestureLibraryAll", "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ",
                       "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
 
-perfmat = np.loadtxt('/Users/carl/PycharmProjects/op_importance/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_new710.txt')
+perfmat = np.loadtxt('/Users/carl/PycharmProjects/op_importance/intermediateAnalysisResults/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_new710.txt')
 
 wholeMean = perfmat[:,0]
 wholeStd = perfmat[:,1]
@@ -34,10 +34,18 @@ meanWholeMean = np.mean(wholeMean)
 meanTopOpMean = np.mean(topOpMean)
 meanClusterMean = np.mean(clusterMean)
 
-perfmatCanonical = np.loadtxt('/Users/carl/PycharmProjects/op_importance/peformance_canonical.txt')
+perfmatCanonical = np.loadtxt('/Users/carl/PycharmProjects/op_importance/intermediateAnalysisResults/peformance_canonical.txt')
 
 canonicalMean = perfmatCanonical[:,0]
 canonicalStd = perfmatCanonical[:,1]
+
+print '\nwhole:'
+for i in range(len(wholeMean)):
+    print "%s, %1.3f +/- %1.3f" % (task_names_own[i], wholeMean[i], wholeStd[i])
+
+print '\ncanonical:'
+for i in range(len(canonicalMean)):
+    print "%s, %1.3f +/- %1.3f" % (task_names_own[i], canonicalMean[i], canonicalStd[i])
 
 meanCanonicalMean = np.mean(canonicalMean)
 
@@ -60,7 +68,11 @@ print 'diff topTop centers %1.3f' % meanDiffTopOpCluster
 
 diffCanonicalWhole = canonicalMean - wholeMean
 print "catch22-whole : %1.3f +/- %1.3f" % (np.mean(diffCanonicalWhole), np.std(diffCanonicalWhole))
-print "worst %1.3f (%s), best %1.3f (%s)\n" % (np.min(diffCanonicalWhole), task_names_own[np.argmin(diffCanonicalWhole)], np.max(diffCanonicalWhole), task_names_own[np.argmax(diffCanonicalWhole)])
+print "worst %1.3f catch22: %1.3f full: %1.3f (%s), best %1.3f catch22: %1.3f full: %1.3f (%s)\n" % (np.min(diffCanonicalWhole), canonicalMean[np.argmin(diffCanonicalWhole)], wholeMean[np.argmin(diffCanonicalWhole)], task_names_own[np.argmin(diffCanonicalWhole)], np.max(diffCanonicalWhole), canonicalMean[np.argmax(diffCanonicalWhole)], wholeMean[np.argmax(diffCanonicalWhole)], task_names_own[np.argmax(diffCanonicalWhole)])
+
+relDiffCanonicalWhole = (canonicalMean - wholeMean) / wholeMean
+print "(catch22-whole)/whole: %1.3f +/- %1.3f" % (np.mean(relDiffCanonicalWhole), np.std(relDiffCanonicalWhole))
+print "worst %1.3f (%s), best %1.3f (%s)\n" % (np.min(relDiffCanonicalWhole), task_names_own[np.argmin(relDiffCanonicalWhole)], np.max(relDiffCanonicalWhole), task_names_own[np.argmax(relDiffCanonicalWhole)])
 
 # plt.hist(perfmat[:,(0,2,4)], label=('whole', 'topOps', 'clusterCenters')) # , histtype='step', fill=True
 # plt.legend()
@@ -77,7 +89,7 @@ plt.xlabel('accuracy canonical features')
 plt.ylabel('accuracy whole set')
 plt.legend()
 
-plt.savefig('/Users/carl/PycharmProjects/op_importance/Fig4A.eps', dpi=300)
+# plt.savefig('/Users/carl/PycharmProjects/op_importance/Fig4A.eps', dpi=300)
 
 plt.show()
 

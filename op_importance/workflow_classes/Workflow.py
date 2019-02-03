@@ -956,6 +956,142 @@ class Workflow:
 
         np.savetxt(locations.rootDir() + '/peformance_canonical_linear.txt', perfmat)
 
+    def classify_selected_ops_internalSet(self):
+
+        import sklearn.tree as tree
+        from sklearn.svm import LinearSVC
+        from sklearn.model_selection import cross_val_score
+        import time
+
+        # initialise tree
+        clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
+
+        # # feature names to filter for
+        # featureNamesCatch22 = ['DN_HistogramMode_5',
+        #                        'DN_HistogramMode_10',
+        #                        'CO_f1ecac',
+        #                        'CO_FirstMin_ac',
+        #                        'CO_HistogramAMI_even_2.ami5',
+        #                        'IN_AutoMutualInfoStats_40_gaussian.fmmi',
+        #                        'CO_trev_1.num',
+        #                        'SB_TransitionMatrix_3ac.sumdiagcov',
+        #                        'PD_PeriodicityWang.th2',
+        #                        'CO_Embed2_Dist_tau.d_expfit_meandiff',
+        #                        'FC_LocalSimple_mean1.tauresrat',
+        #                        'FC_LocalSimple_mean3.stderr',
+        #                        'DN_OutlierInclude_p_001.mdrmd',
+        #                        'DN_OutlierInclude_n_001.mdrmd',
+        #                        'SB_BinaryStats_diff.longstretch0',
+        #                        'SB_BinaryStats_mean.longstretch1',
+        #                        'SB_MotifThree_quantile.hh',
+        #                        'SC_FluctAnal_2_rsrangefit_50_1_logi.prop_r1',
+        #                        'SC_FluctAnal_2_dfa_50_1_2_logi.prop_r1',
+        #                        'SP_Summaries_welch_rect.centroid',
+        #                        'SP_Summaries_welch_rect.area_5_1',
+        #                        'MD_hrv_classic.pnn40']
+
+        featureNamesCatch22 = ['CO_Embed2_Basic_tau.incircle_1',
+                                'CO_Embed2_Basic_tau.incircle_2',
+                                'FC_LocalSimple_mean1.taures',
+                                'SY_SpreadRandomLocal_ac2_100.meantaul',
+                                'DN_HistogramMode_10',
+                                'SY_StdNthDer_1',
+                                'AC_9',
+                                'SB_MotifTwo_mean.hhh',
+                                'EN_SampEn_5_03.sampen1',
+                                'CO_FirstMin_ac',
+                                'DN_OutlierInclude_abs_001.mdrmd',
+                                'CO_trev_1.num',
+                                'FC_LocalSimple_lfittau.taures',
+                                'SY_SpreadRandomLocal_50_100.meantaul',
+                                'SC_FluctAnal_2_rsrangefit_50_1_logi.prop_r1',
+                                'PH_ForcePotential_sine_1_1_1.proppos',
+                                'SP_Summaries_pgram_hamm.maxw',
+                                'SP_Summaries_welch_rect.maxw']
+
+        # catch22 feature indicator
+        catch22Indicator = [item in featureNamesCatch22 for item in self.good_op_names];
+        catch22IDs = [self.good_op_ids[i] for i in range(len(self.good_op_ids)) if
+                      self.good_op_names[i] in featureNamesCatch22];
+
+        # load class balanced scorer
+        from sklearn.metrics import make_scorer
+        scorer = make_scorer(Feature_Stats.accuracy_score_class_balanced)
+
+
+        perfmat = np.zeros((len(self.tasks), 2))
+        for task_ind, task in enumerate(self.tasks):
+
+            t = time.time()
+            print 'classifying task %s' % task.name
+
+            # decide on number of folds
+            un, counts = np.unique(task.labels, return_counts=True)
+            max_folds = 10
+            min_folds = 2
+            folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
+
+            # -- do cross-validated scoring for full and reduced matrix
+
+            # only good operations
+            score_this_task = cross_val_score(clf, task.data[:, np.isin(task.op_ids, catch22IDs)], task.labels, cv=folds, scoring=scorer)
+
+            # save scores
+            perfmat[task_ind, 0] = np.mean(score_this_task)
+            perfmat[task_ind, 1] = np.std(score_this_task)
+
+            print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
+
+        np.savetxt('/Users/carl/PycharmProjects/op_importance/peformance_sarab_nameSelect.txt', perfmat)
+
+    def classify_random_features(self, nFeatures=22, nReps=100):
+
+        import sklearn.tree as tree
+        from sklearn.svm import LinearSVC
+        from sklearn.model_selection import cross_val_score
+        import time
+        import random
+
+        # initialise tree
+        clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
+
+        # load class balanced scorer
+        from sklearn.metrics import make_scorer
+        scorer = make_scorer(Feature_Stats.accuracy_score_class_balanced)
+
+
+        perfmat = np.zeros((len(self.tasks), 2))
+        for task_ind, task in enumerate(self.tasks):
+
+            t = time.time()
+            print 'classifying task %s' % task.name
+
+            # decide on number of folds
+            un, counts = np.unique(task.labels, return_counts=True)
+            max_folds = 10
+            min_folds = 2
+            folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
+
+            # -- do cross-validated scoring for full and reduced matrix
+
+            meanScores = np.full(nReps, fill_value=np.nan)
+            for repInd in range(nReps):
+
+                selectedIDs = random.sample(task.op_ids, nFeatures)
+
+                # only good operations
+                score_this_task = cross_val_score(clf, task.data[:, np.isin(task.op_ids, selectedIDs)], task.labels, cv=folds, scoring=scorer)
+
+                meanScores[repInd] = np.mean(score_this_task)
+
+            # save scores
+            perfmat[task_ind, 0] = np.nanmean(meanScores)
+            perfmat[task_ind, 1] = np.nanstd(meanScores)
+
+            print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
+
+        np.savetxt('/Users/carl/PycharmProjects/op_importance/peformance_randsample_22_100.txt', perfmat)
+
     def classify_good_perf_ops_vs_super_vs_good_ops(self):
 
         import sklearn.tree as tree
@@ -1224,6 +1360,194 @@ class Workflow:
             print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
 
         np.savetxt(locations.rootDir() + '/peformance_mat_canonical_givenSplit_nonBalanced_linear.txt', perfmat)
+
+    def greedy_selectedOps(self):
+
+        import sklearn.tree as tree
+        from sklearn.svm import LinearSVC
+        from sklearn.model_selection import cross_val_score
+        from sklearn.metrics import accuracy_score
+        import time
+
+        featureNamesCatch22 = ['DN_HistogramMode_5',
+                               'DN_HistogramMode_10',
+                               'CO_f1ecac',
+                               'CO_FirstMin_ac',
+                               'CO_HistogramAMI_even_2.ami5',
+                               'IN_AutoMutualInfoStats_40_gaussian.fmmi',
+                               'CO_trev_1.num',
+                               'SB_TransitionMatrix_3ac.sumdiagcov',
+                               'PD_PeriodicityWang.th2',
+                               'CO_Embed2_Dist_tau.d_expfit_meandiff',
+                               'FC_LocalSimple_mean1.tauresrat',
+                               'FC_LocalSimple_mean3.stderr',
+                               'DN_OutlierInclude_p_001.mdrmd',
+                               'DN_OutlierInclude_n_001.mdrmd',
+                               'SB_BinaryStats_diff.longstretch0',
+                               'SB_BinaryStats_mean.longstretch1',
+                               'SB_MotifThree_quantile.hh',
+                               'SC_FluctAnal_2_rsrangefit_50_1_logi.prop_r1',
+                               'SC_FluctAnal_2_dfa_50_1_2_logi.prop_r1',
+                               'SP_Summaries_welch_rect.centroid',
+                               'SP_Summaries_welch_rect.area_5_1',
+                               'MD_hrv_classic.pnn40']
+
+        # catch22 feature indicator
+        catch22Indicator = [item in featureNamesCatch22 for item in self.good_op_names];
+        catch22IDs= [self.good_op_ids[i] for i in range(len(self.good_op_ids)) if self.good_op_names[i] in featureNamesCatch22];
+
+        # initialise tree
+        clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
+
+        # load class balanced scorer
+        from sklearn.metrics import make_scorer
+        scorer = make_scorer(Feature_Stats.accuracy_score_class_balanced)
+
+        for task_ind, task in enumerate(self.tasks):
+
+            # decide on number of folds
+            un, counts = np.unique(task.labels, return_counts=True)
+            max_folds = 10
+            min_folds = 2
+            folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
+
+            # only keep catch22 features
+            thisTask22Indi = np.isin(task.op_ids, catch22IDs)
+            filteredData = task.data[:, thisTask22Indi]
+            filteredOpIDs = task.op_ids[thisTask22Indi]
+            task_op_names = task.op['code_string']
+            filteredOpNames = np.array(task_op_names)[thisTask22Indi]
+            # filteredLabels = task.labels[thisTask22Indi]
+
+            t = time.time()
+            print '\nclassifying task %s' % task.name
+
+            chosenInds = []
+            remainingInds = range(len(filteredOpIDs))
+
+            # number of features to select
+            for k in range(3):
+
+                meanErrors = np.full(len(remainingInds), fill_value=np.nan)
+                for j, remainingIndTemp in enumerate(remainingInds):
+
+                    indsTemp = chosenInds + [remainingIndTemp]
+
+                    # only cluster centers
+                    score = cross_val_score(clf, filteredData[:, indsTemp],
+                                                                  task.labels, cv=folds, scoring=scorer)
+                    meanErrors[j] = 1 - np.mean(score)
+
+                # find minimum error and select corresponding remaining ind to be added
+                addedInd = remainingInds[np.argmin(meanErrors)]
+                chosenInds = chosenInds + [addedInd]
+
+                # remove selected remaining ind from list
+                remainingInds.remove(addedInd)
+
+                # print operation selection
+                print "%1.3f, " % np.min(meanErrors);
+                for i in chosenInds:
+                    print "%s, " % filteredOpNames[i];
+
+            # # save scores
+            # perfmat[task_ind] = score_this_task
+            #
+            # print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
+
+        # np.savetxt('/Users/carl/PycharmProjects/op_importance/peformance_mat_canonical_givenSplit_nonBalanced_linear.txt', perfmat)
+
+    def selectBestTwoOf_selectedOps(self):
+
+        import sklearn.tree as tree
+        from sklearn.svm import LinearSVC
+        from sklearn.model_selection import cross_val_score
+        from sklearn.metrics import accuracy_score
+        import time
+
+        featureNamesCatch22 = ['DN_HistogramMode_5',
+                               'DN_HistogramMode_10',
+                               'CO_f1ecac',
+                               'CO_FirstMin_ac',
+                               'CO_HistogramAMI_even_2.ami5',
+                               'IN_AutoMutualInfoStats_40_gaussian.fmmi',
+                               'CO_trev_1.num',
+                               'SB_TransitionMatrix_3ac.sumdiagcov',
+                               'PD_PeriodicityWang.th2',
+                               'CO_Embed2_Dist_tau.d_expfit_meandiff',
+                               'FC_LocalSimple_mean1.tauresrat',
+                               'FC_LocalSimple_mean3.stderr',
+                               'DN_OutlierInclude_p_001.mdrmd',
+                               'DN_OutlierInclude_n_001.mdrmd',
+                               'SB_BinaryStats_diff.longstretch0',
+                               'SB_BinaryStats_mean.longstretch1',
+                               'SB_MotifThree_quantile.hh',
+                               'SC_FluctAnal_2_rsrangefit_50_1_logi.prop_r1',
+                               'SC_FluctAnal_2_dfa_50_1_2_logi.prop_r1',
+                               'SP_Summaries_welch_rect.centroid',
+                               'SP_Summaries_welch_rect.area_5_1',
+                               'MD_hrv_classic.pnn40']
+
+        # catch22 feature indicator
+        catch22Indicator = [item in featureNamesCatch22 for item in self.good_op_names];
+        catch22IDs= [self.good_op_ids[i] for i in range(len(self.good_op_ids)) if self.good_op_names[i] in featureNamesCatch22];
+
+        # initialise tree
+        clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
+
+        # load class balanced scorer
+        from sklearn.metrics import make_scorer
+        scorer = make_scorer(Feature_Stats.accuracy_score_class_balanced)
+
+        for task_ind, task in enumerate(self.tasks):
+
+            if not task.name in ['ShapeletSim', 'Plane']:
+                continue
+
+            # decide on number of folds
+            un, counts = np.unique(task.labels, return_counts=True)
+            max_folds = 10
+            min_folds = 2
+            folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
+
+            # only keep catch22 features
+            thisTask22Indi = np.isin(task.op_ids, catch22IDs)
+            filteredData = task.data[:, thisTask22Indi]
+            filteredOpIDs = task.op_ids[thisTask22Indi]
+            task_op_names = task.op['code_string']
+            filteredOpNames = np.array(task_op_names)[thisTask22Indi]
+            # filteredLabels = task.labels[thisTask22Indi]
+
+            t = time.time()
+            print '\nclassifying task %s' % task.name
+
+            featureInds = range(len(filteredOpIDs))
+
+            meanErrors = np.full(len(featureInds), fill_value=np.nan)
+            for j in featureInds:
+
+                # only cluster centers
+                score = cross_val_score(clf, filteredData[:, [j]], task.labels, cv=folds, scoring=scorer)
+
+                meanErrors[j] = 1 - np.mean(score)
+
+            # find minimum error and select corresponding remaining ind to be added
+            sortedFeatureInds = np.argsort(meanErrors)
+
+            chosenInds = sortedFeatureInds[0:2]
+
+            mpl.pyplot.figure()
+            uniqueLabels = np.unique(task.labels)
+            for uniqueLabel in uniqueLabels:
+                mpl.pyplot.scatter(filteredData[task.labels==uniqueLabel,chosenInds[0]], filteredData[task.labels==uniqueLabel,chosenInds[1]], label=uniqueLabel)
+            mpl.pyplot.xlabel(filteredOpNames[chosenInds[0]])
+            mpl.pyplot.ylabel(filteredOpNames[chosenInds[1]])
+            mpl.pyplot.title(task.name)
+            mpl.pyplot.legend(uniqueLabels)
+
+        mpl.pyplot.show()
+
+
 
     def classify_N_clusters(self):
 
@@ -1496,8 +1820,11 @@ class Workflow:
         absMax = np.max((-np.min(perfMatCatch22Norm), np.max(perfMatCatch22Norm)))
 
         mpl.pyplot.figure()
+        # mpl.pyplot.imshow(perfMatCatch22Norm,
+        #                   vmin=-absMax, vmax=absMax,
+        #                   cmap='coolwarm')
         mpl.pyplot.imshow(perfMatCatch22Norm,
-                          vmin=-absMax, vmax=absMax,
+                          vmin=-3, vmax=3,
                           cmap='coolwarm')
 
         yTicks = self.good_op_names[catch22Indicator]
@@ -1821,10 +2148,14 @@ if __name__ == '__main__':
     # workflow.classify_good_perf_ops_vs_good_ops_givenSplit()
     # workflow.classify_selected_ops([0011, 0012, 0134, 0135, 0241, 1121, 7543, 3477, 1406, 1585, 1965, 0310, 2997, 3264, 3294, 4492, 3467, 3604, 4036, 4156, 4421, 3010])
     # workflow.classify_selectedOps_givenSplit()
+    # workflow.classify_selected_ops_internalSet()
+    # workflow.greedy_selectedOps()
+    workflow.classify_random_features()
     # quit()
 
-    # # -- show performance matrix of catch22-features only
+    # -- show performance matrix of catch22-features only
     # workflow.show_catch22_perfmat()
+    quit()
 
     # -----------------------------------------------------------------
     # -- Do the plotting ----------------------------------------------

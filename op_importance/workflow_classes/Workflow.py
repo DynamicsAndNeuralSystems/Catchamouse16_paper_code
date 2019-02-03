@@ -12,6 +12,7 @@ import sys
 import collections
 import modules.misc.PK_helper as hlp
 import modules.feature_importance.PK_feat_array_proc as fap
+import locations
 
 import scipy.stats
 import statsmodels
@@ -280,65 +281,13 @@ class Workflow:
                     bad_op_dict[bad_op_name] = [task.name]
 
         # write to file
-        with open('/Users/carl/PycharmProjects/op_importance/bad_operations_and_tasks_they_fail_on.txt', 'w') as f:
+        with open(locations.rootDir() + '/bad_operations_and_tasks_they_fail_on.txt', 'w') as f:
             for item in sorted(bad_op_dict.items(), key=lambda t: len(t[1]), reverse=True):
                 f.write("%s: %i bad tasks\n" % (item[0], len(item[1])))
                 for bad_task in item[1]:
                         f.write("%s," % bad_task)
                 f.write("\n\n")
 
-
-    # def create_op_keyword_and_name_dict(self):
-    #
-    #     op_keyword_dict = {}
-    #     op_name_dict = {}
-    #     op_master_id_dict = {}
-    #
-    #     m_op_name_dict = {}
-    #     m_op_op_id_array = np.array([[], []]).T
-    #
-    #     # some tasks don't cover all operations. To make sure you get all ops, iterate through tasks to create a
-    #     # complete list of operation ids, names and
-    #     for task in self.tasks:
-    #
-    #         # read operation props
-    #         op_master_id_this_task = np.array(task.op['master_id'])
-    #         op_id_this_task = np.array(task.op['id'])
-    #         op_names_this_task = np.array(task.op['code_string'])
-    #         op_keywords_this_task = np.array(task.op['keywords'])
-    #
-    #         # create a continuous array of op, m_op pairs to know for each m_op, what are the ops, not only the other
-    #         # way around
-    #         m_op_op_id_array = np.row_stack((m_op_op_id_array, np.column_stack((op_master_id_this_task, op_id_this_task))))
-    #
-    #         # create a local dictionary to combine to a global one
-    #         op_keyword_dict_this_task = {ind : op_keywords_this_task[ind] for ind, id in enumerate(op_id_this_task)}
-    #         op_name_dict_this_task = {ind: op_names_this_task[ind] for ind, id in enumerate(op_id_this_task)}
-    #         op_master_id_dict_this_task = {ind: op_master_id_this_task[ind] for ind, id in enumerate(op_id_this_task)}
-    #
-    #         # combine dictionaries across tasks
-    #         op_keyword_dict = dict(op_keyword_dict, **op_keyword_dict_this_task)
-    #         op_name_dict = dict(op_name_dict, **op_name_dict_this_task)
-    #         op_master_id_dict = dict(op_master_id_dict, **op_master_id_dict_this_task)
-    #
-    #         print 'After task %s with %i operations, we now have %i operations overall.\n' % (task.name, len(op_id_this_task), len(op_name_dict))
-    #
-    #         # read master operation dictionary to associate master_id with a name
-    #         m_op_this_task = np.array(task.m_op['id'])
-    #         m_op_name_this_task = np.array(task.m_op['name'])
-    #
-    #         m_op_name_dict_this_task = {id: m_op_name_this_task[ind] for ind, id in enumerate(m_op_this_task)}
-    #
-    #         m_op_name_dict = dict(m_op_name_dict, **m_op_name_dict_this_task)
-    #
-    #
-    #     self.op_IDs_HCTSA = op_name_dict.keys()
-    #     self.op_name_dict = op_name_dict
-    #     self.op_keyword_dict = op_keyword_dict
-    #     self.op_master_id_dict = op_master_id_dict
-    #
-    #     self.m_op_name_dict = m_op_name_dict
-    #     self.m_op_op_id_array = np.unique(m_op_op_id_array, axis=0)
 
     def list_bad_and_non_significant_ops(self):
         """
@@ -399,78 +348,6 @@ class Workflow:
         axarr[0].legend()
         mpl.pyplot.show()
 
-        # f, axarr = mpl.pyplot.subplots(2,2, sharex='col', sharey='row')
-        #
-        # ax = axarr[1][0]
-        # ax.imshow(self.pvals_good_op[:, sortedOpInds[0:maxInd]], aspect='auto')
-        # ax.set_yticks(np.arange(len(self.task_names)))
-        # ax.set_yticklabels(self.task_names, fontdict={'fontsize':3})
-        # ax.set_xticks(np.arange(maxInd))
-        # ax.set_xticklabels(op_IDs_HCTSA[self.good_op_ids[sortedOpInds[0:maxInd]]], fontdict={'fontsize':6}, rotation='90')
-        #
-        # ax = axarr[0][0]
-        # ax.plot(range(maxInd), self.pvals_good_op_comb[sortedOpInds[0:maxInd]], label='Fisher')
-        # ax.errorbar(range(maxInd), np.ma.mean(self.pvals_good_op[:,sortedOpInds[0:maxInd]],0), np.ma.std(self.pvals_good_op[:,sortedOpInds[0:maxInd]],0), label='mean and std')
-        # #ax.set_yscale('log')
-        # ax.set_ylabel('p-Value')
-        # ax.legend()
-        # ax.set_title('least significant')
-        #
-        # nEnd = 100
-        # ax = axarr[1][1]
-        # ax.imshow(self.pvals_good_op[:, sortedOpInds[-nEnd-1:-1]], aspect='auto', )
-        # ax.set_yticks(np.arange(len(self.task_names)))
-        # ax.set_yticklabels(self.task_names, fontdict={'fontsize': 3})
-        #
-        # ax = axarr[0][1]
-        # ax.plot(range(nEnd), self.pvals_good_op_comb[sortedOpInds[-nEnd-1:-1]], label='Fisher')
-        # ax.errorbar(range(nEnd), np.ma.mean(self.pvals_good_op[:, sortedOpInds[-nEnd-1:-1]], 0),
-        #             np.ma.std(self.pvals_good_op[:, sortedOpInds[-nEnd-1:-1]], 0), label='mean')
-        # #ax.set_yscale('log')
-        # #ax.set_yticks([])
-        # ax.legend()
-        # ax.set_title('most significant')
-        #
-        # mpl.pyplot.show()
-
-
-        # # get the master op ids for those two failing classes
-        # bad_op_m_op_ids = [self.op_master_id_dict[op_id] for op_id in bad_op_ids]
-        # non_sign_op_m_op_ids = [self.op_master_id_dict[op_id] for op_id in non_sign_op_ids]
-        #
-        # # count master op ids in whole data set and bad and insignificant
-        # m_id_count_all = collections.Counter(self.op_master_id_dict.values())
-        # m_id_count_bad = collections.Counter(bad_op_m_op_ids)
-        # m_id_count_non_sign = collections.Counter(non_sign_op_m_op_ids)
-        #
-        # # calculate the share of not cool features per master operation id
-        # m_id_bad_share = {id: float(m_id_count_bad[id]) / m_id_count_all[id] for id in m_id_count_bad.keys()}
-        # m_id_non_sign_share = {id: float(m_id_count_non_sign[id]) / m_id_count_all[id] for id in m_id_count_non_sign.keys()}
-        #
-        # # sort and print
-        # print 'Bad master operations'
-        # for w in sorted(m_id_bad_share, key=m_id_bad_share.get, reverse=True):
-        #     print '(%i/%i) %1.3f %s' % (m_id_count_bad[w], m_id_count_all[w], m_id_bad_share[w], self.m_op_name_dict[w])
-        #     # print '(', m_id_count_bad[w], '/', m_id_count_all[w], ')', m_id_bad_share[w], ', ', self.m_op_name_dict[w]
-        #
-        # print '\nInsignificant master operations'
-        # for w in sorted(m_id_non_sign_share, key=m_id_non_sign_share.get, reverse=True):
-        #     print '(%i/%i) %1.3f %s' % (m_id_count_non_sign[w], m_id_count_all[w], m_id_non_sign_share[w], self.m_op_name_dict[w])
-        #
-        #     # # print the single operations, too
-        #     # op_ids_this_m_op = self.m_op_op_id_array[self.m_op_op_id_array[:,0]==w,1]
-        #     # for op_id_this_m_op in op_ids_this_m_op:
-        #     #     print '%s' % self.op_name_dict[op_id_this_m_op]
-        #     # print '(', m_id_count_non_sign[w], '/', m_id_count_all[w], ')', m_id_non_sign_share[w], ', ', self.m_op_name_dict[w]
-        #
-        #
-        # # # write to file
-        # # with open('/Users/carl/PycharmProjects/op_importance/bad_operations_and_tasks_they_fail_on.txt', 'w') as f:
-        # #     for item in sorted(bad_op_dict.items(), key=lambda t: len(t[1]), reverse=True):
-        # #         f.write("%s: %i bad tasks\n" % (item[0], len(item[1])))
-        # #         for bad_task in item[1]:
-        # #                 f.write("%s," % bad_task)
-        # #         f.write("\n\n")
 
     def load_task_attribute(self,attribute_name,in_path_pattern):
         """
@@ -592,9 +469,9 @@ class Workflow:
         # filenameSuffix = '_' + self.select_good_perf_ops_norm + '_' + \
         #            self.select_good_perf_ops_combination + '_' + accuracyErrorString + '.txt'
         #
-        # np.savetxt('/Users/carl/PycharmProjects/op_importance/performance_all_ops_tasks_normed' + filenameSuffix,
+        # np.savetxt(locations.rootDir() + '/performance_all_ops_tasks_normed' + filenameSuffix,
         #            1 - all_classes_good_norm)
-        # np.savetxt('/Users/carl/PycharmProjects/op_importance/performance_all_ops_tasks_raw' + filenameSuffix,
+        # np.savetxt(locations.rootDir() + '/performance_all_ops_tasks_raw' + filenameSuffix,
         #            self.stats_good_op)
 
     def select_good_perf_ops_sort_asc_input_params_to_file(self, norm='zscore', comb='mean', accuracyNorm=False):
@@ -658,7 +535,7 @@ class Workflow:
         # write to file
         filename = 'topTops_' + norm + '_' + comb  +  '_' + accuracyErrorString + '_788.txt'
 
-        np.savetxt('/Users/carl/PycharmProjects/op_importance/topOps/' + filename, np.column_stack((good_perf_op_ids, stats_good_op_comb)))
+        np.savetxt(locations.rootDir() + '/topOps/' + filename, np.column_stack((good_perf_op_ids, stats_good_op_comb)))
 
     def plot_perf_histograms(self, norm='zscore', comb='mean'):
         """
@@ -700,7 +577,7 @@ class Workflow:
         mpl.pyplot.xlabel('error')
         mpl.pyplot.ylabel('feature frequency')
         mpl.pyplot.title(norm + '_' + comb)
-        mpl.pyplot.savefig('/Users/carl/PycharmProjects/op_importance/results/figures/norm='+norm+' comb='+comb+'.png')
+        mpl.pyplot.savefig(locations.rootDir() + '/results/figures/norm='+norm+' comb='+comb+'.png')
         mpl.pyplot.close(f)
 
     def mask_pvals_too_few_unique_outputs(self):
@@ -714,7 +591,7 @@ class Workflow:
         for task_ind, task in enumerate(self.tasks):
 
             # load number of unique values per operations from file
-            n_uniques = np.loadtxt('/Users/carl/PycharmProjects/op_importance/uniqueValues/' + task.name + '.txt')
+            n_uniques = np.loadtxt(locations.rootDir() + '/uniqueValues/' + task.name + '.txt')
 
             # keep the ones of the good operations
             n_uniques_good = n_uniques[np.isin(task.op_ids, self.good_op_ids)];
@@ -743,7 +620,7 @@ class Workflow:
         for task_ind, task in enumerate(self.tasks):
 
             # load number of unique values per operations from file
-            n_uniques = np.load('/Users/carl/PycharmProjects/op_importance/results/intermediate_results_dectree_maxmin_unique_nulls_npy/task_' + task.name + '_tot_stats_all_runs.npy')
+            n_uniques = np.load(locations.rootDir() + '/results/intermediate_results_dectree_maxmin_unique_nulls_npy/task_' + task.name + '_tot_stats_all_runs.npy')
 
             # keep the ones of the good operations
             n_uniques_good = n_uniques[np.isin(task.op_ids, self.good_op_ids)];
@@ -763,7 +640,7 @@ class Workflow:
         from scipy import stats
         from matplotlib.pyplot import cm
 
-        nullFigDir = '/Users/carl/PycharmProjects/op_importance/nullHists/'
+        nullFigDir = locations.rootDir() + '/nullHists/'
         if not os.path.exists(nullFigDir):
             os.makedirs(nullFigDir)
 
@@ -772,7 +649,7 @@ class Workflow:
         print 'loading null stats'
         for task_ind, task in enumerate(self.tasks):
             # null_stats_all_tasks.append(self.stats_method.get_null_stats(task.name))
-            null_stats_all_tasks.append(np.load('/Users/carl/PycharmProjects/op_importance/results/intermediate_results_dectree_maxmin_null_npy/task_'+task.name+'_tot_stats_all_runs.npy'))
+            null_stats_all_tasks.append(np.load(locations.rootDir() + '/results/intermediate_results_dectree_maxmin_null_npy/task_'+task.name+'_tot_stats_all_runs.npy'))
             print 'null stats for task %s loaded. (%i/%i)' % (task.name, task_ind, len(self.tasks))
 
         # print non significant ops
@@ -850,25 +727,6 @@ class Workflow:
 
                 mpl.pyplot.close(f)
 
-            #
-            # for task_ind, task in enumerate(self.tasks):
-            #     null_stats = self.stats_method.get_null_stats(task.name)
-            #
-            #     null_stats_good_ops = null_stats[np.isin(task.op_ids, self.good_op_ids),:]
-            #
-            #     density = stats.kde.gaussian_kde(null_stats_good_ops[~np.isnan(null_stats_good_ops)])
-            #     x = np.arange(0., 1, .001)
-            #
-            #     c = next(color)
-            #
-            #     mpl.pyplot.plot(x, density(x), color=c)
-            #
-            #     stats_this_op = self.stats_good_op[task_ind, sortedOpInds[ind]]
-            #     ax.axvline(stats_this_op, color=c)
-            #
-            # mpl.pyplot.xlabel('error')
-            # mpl.pyplot.ylabel('frequency')
-
             ind += 1
 
     def kstest_null_distributions(self):
@@ -876,14 +734,14 @@ class Workflow:
         from scipy import stats
         from matplotlib.pyplot import cm
 
-        saveDir = '/Users/carl/PycharmProjects/op_importance/'
+        saveDir = locations.rootDir() + '/'
 
         # get all null stats
         null_stats_all_tasks = []
         print 'loading null stats'
         for task_ind, task in enumerate(self.tasks):
             # null_stats_all_tasks.append(self.stats_method.get_null_stats(task.name))
-            null_stats_all_tasks.append(np.load('/Users/carl/PycharmProjects/op_importance/results/intermediate_results_dectree_maxmin_null_npy/task_'+task.name+'_tot_stats_all_runs.npy'))
+            null_stats_all_tasks.append(np.load(locations.rootDir() + '/results/intermediate_results_dectree_maxmin_null_npy/task_'+task.name+'_tot_stats_all_runs.npy'))
             print 'null stats for task %s loaded. (%i/%i)' % (task.name, task_ind, len(self.tasks))
 
 
@@ -937,18 +795,7 @@ class Workflow:
         task = self.tasks[self.task_names == task_name]
         null_stats_this_op = null_stats[task.op_ids == op_ID, :]
 
-        print 'hm'
 
-        # f, ax = mpl.pyplot.subplots(1)
-        # mpl.pyplot.hist(np.squeeze(null_stats_this_op), 100,
-        #                 label="%s, p=%1.3f, N=%i" % (task.name, pvals_all_tasks_filled[task_ind], len(task.labels)))
-        #
-        # stats_this_op = self.stats_good_op[task_ind, sortedOpInds[ind]]
-        # ax.axvline(stats_this_op, linestyle=':', color=c)
-        #
-        # # mpl.pyplot.legend()
-        # mpl.pyplot.xlabel('error')
-        # mpl.pyplot.ylabel('frequency')
 
     def select_good_pval_ops_sort_asc(self):
         """
@@ -1059,7 +906,7 @@ class Workflow:
 
             print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
 
-        np.savetxt('/Users/carl/PycharmProjects/op_importance/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_new710.txt', perfmat)
+        np.savetxt(locations.rootDir() + '/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_new710.txt', perfmat)
 
         # mpl.pyplot.legend((p1, p2), ('500 top ops', 'only cluster centers'))
         # # mpl.pyplot.xlim((0, 1))
@@ -1107,7 +954,7 @@ class Workflow:
 
             print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
 
-        np.savetxt('/Users/carl/PycharmProjects/op_importance/peformance_canonical_linear.txt', perfmat)
+        np.savetxt(locations.rootDir() + '/peformance_canonical_linear.txt', perfmat)
 
     def classify_good_perf_ops_vs_super_vs_good_ops(self):
 
@@ -1178,7 +1025,7 @@ class Workflow:
 
             print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
 
-        np.savetxt('/Users/carl/PycharmProjects/op_importance/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd.txt', perfmat)
+        np.savetxt(locations.rootDir() + '/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd.txt', perfmat)
 
         mpl.pyplot.legend((p1, p2, p3), ('500 top ops', 'only cluster centers', 'super operations'))
         # mpl.pyplot.xlim((0, 1))
@@ -1208,7 +1055,7 @@ class Workflow:
             # mpl.pyplot.title(titleString)
             # mpl.pyplot.tight_layout()
             #
-            # lowDim.savefig('/Users/carl/PycharmProjects/op_importance/UMAP/' + titleString + '.png')
+            # lowDim.savefig(locations.rootDir() + '/UMAP/' + titleString + '.png')
 
             # top ops
             embedding = reducer.fit_transform(task.data[:, np.isin(task.op_ids, self.good_perf_op_ids)])
@@ -1220,7 +1067,7 @@ class Workflow:
             mpl.pyplot.title(titleString)
             mpl.pyplot.tight_layout()
 
-            lowDim.savefig('/Users/carl/PycharmProjects/op_importance/UMAP/' + titleString + '.png')
+            lowDim.savefig(locations.rootDir() + '/UMAP/' + titleString + '.png')
 
             # only cluster centers
             embedding = reducer.fit_transform(task.data[:, np.isin(task.op_ids, self.good_perf_cluster_center_op_ids)])
@@ -1233,7 +1080,7 @@ class Workflow:
             mpl.pyplot.title(titleString)
             mpl.pyplot.tight_layout()
 
-            lowDim.savefig('/Users/carl/PycharmProjects/op_importance/UMAP/' + titleString + '.png')
+            lowDim.savefig(locations.rootDir() + '/UMAP/' + titleString + '.png')
 
             mpl.pyplot.close('all')
 
@@ -1306,7 +1153,7 @@ class Workflow:
 
             print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
 
-        np.savetxt('/Users/carl/PycharmProjects/op_importance/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710.txt', perfmat)
+        np.savetxt(locations.rootDir() + '/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710.txt', perfmat)
 
     def classify_selectedOps_givenSplit(self):
 
@@ -1376,7 +1223,7 @@ class Workflow:
 
             print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
 
-        np.savetxt('/Users/carl/PycharmProjects/op_importance/peformance_mat_canonical_givenSplit_nonBalanced_linear.txt', perfmat)
+        np.savetxt(locations.rootDir() + '/peformance_mat_canonical_givenSplit_nonBalanced_linear.txt', perfmat)
 
     def classify_N_clusters(self):
 
@@ -1482,7 +1329,7 @@ class Workflow:
                 print 'Done. Took %1.1f minutes.' % ((time.time() - t) / 60)
 
         np.savetxt(
-            '/Users/carl/PycharmProjects/op_importance/peformance_mat_n_clusters_new_variableNTopOps_noRaw.txt',
+            locations.rootDir() + '/peformance_mat_n_clusters_new_variableNTopOps_noRaw.txt',
             perfmat)
 
         # mpl.pyplot.legend((p1, p2), ('500 top ops', 'only cluster centers'))
@@ -1529,7 +1376,7 @@ class Workflow:
 
             # mpl.pyplot.show()
 
-            mpl.pyplot.savefig('/Users/carl/PycharmProjects/op_importance/errorHistogramsHighPerformers/' + op_name + ',' + taskName + '.png')
+            mpl.pyplot.savefig(locations.rootDir() + '/errorHistogramsHighPerformers/' + op_name + ',' + taskName + '.png')
 
             mpl.pyplot.close(f)
 
@@ -1551,7 +1398,7 @@ class Workflow:
         # mpl.pyplot.show()
 
         mpl.pyplot.savefig(
-            '/Users/carl/PycharmProjects/op_importance/errorHistogramsHighPerformers/' + op_name + ',_allTasks.png')
+            locations.rootDir() + '/errorHistogramsHighPerformers/' + op_name + ',_allTasks.png')
 
         mpl.pyplot.close(f)
 
@@ -1671,7 +1518,7 @@ class Workflow:
         mpl.rcParams['pdf.fonttype'] = 42
         mpl.rcParams['ps.fonttype'] = 42
         mpl.pyplot.savefig(
-            '/Users/carl/PycharmProjects/op_importance/catch22_performance_zscore_clustered.pdf')
+            locations.rootDir() + '/catch22_performance_zscore_clustered.pdf')
         mpl.pyplot.show()
 
 
@@ -1746,7 +1593,7 @@ class Workflow:
         mpl.rcParams['pdf.fonttype'] = 42
         mpl.rcParams['ps.fonttype'] = 42
         mpl.pyplot.savefig(
-            '/Users/carl/PycharmProjects/op_importance/catch22_performance_corr.pdf')
+            locations.rootDir() + '/catch22_performance_corr.pdf')
 
         mpl.pyplot.show()
 
@@ -1827,10 +1674,11 @@ if __name__ == '__main__':
         #               "UWaveGestureLibraryAll", "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ",
         #               "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
 
-    n_good_perf_ops = 710 # 811 #
-    compute_features = False # True #
-    max_dist_cluster = 0.2
+    n_good_perf_ops = 710 # intermediate number of good performers to cluster
+    compute_features = False # False or True : compute classification accuracies?
+    max_dist_cluster = 0.2 # gamma in paper, maximum allowed correlation distance within a cluster
 
+    # normalisation of features as done in hctsa TS_normalize
     if 'maxmin' in runtype:
         datatype = 'maxmin'
     elif 'scaledrobustsigmoid' in runtype:
@@ -1840,8 +1688,15 @@ if __name__ == '__main__':
         runtype = runtype + '_maxmin'
         raise Warning('normalisation not specified! Using maxmin')
 
-    basePath = '/Users/carl/PycharmProjects/op_importance/'
+    basePath = locations.rootDir() + '/'
 
+    # select runtype by analysis done:
+    # - null for repeated runs with shuffled labels
+    # - otherwise only one run with valid labels
+    # classifier type
+    # - dectree,
+    # - svm, or
+    # - linear
     if 'dectree' in runtype:
         if 'null' in runtype:
             ranking_method = Feature_Stats.Null_Decision_Tree()
@@ -1866,7 +1721,7 @@ if __name__ == '__main__':
 
     intermediateResultsDir = basePath + 'results/intermediate_results_' + runtype + '/'
 
-    # outputDir = '../output/'+runtype+'/'
+    # create directories if not there
     outputDir = basePath + 'output/' + runtype + '/'
     if not os.path.exists(inputDir):
         os.makedirs(inputDir)
@@ -1875,25 +1730,18 @@ if __name__ == '__main__':
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
 
-
     print "runtype = {}, datatype = {}, inputDir = {}".format(runtype,datatype,inputDir)
 
     path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
     old_matlab = False
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
 
-    #path_pattern = '../phil_matlab/HCTSA_{:s}_N_70_100_reduced.mat'
-    #old_matlab = True
-    #label_regex_pattern = label_regex_pattern = '.*,(.*)$' # LAST VALUE
-
     path_pattern_task_attrib = intermediateResultsDir + 'task_{:s}_{:s}'
     plot_out_path = outputDir + 'out_figure.eps'
     result_txt_outpath = outputDir + 'result_txt.txt'
     masking_method = 'NaN'
 
-    # combine_pair_method = 'mean'
-    # combine_tasks_method = 'mean'
-    # combine_tasks_norm = None
+    # other parameters for feature classification accuracy normalisation, combination, selection
     select_good_perf_ops_norm = 'mean-norm' # 'zscore' # 'median-diff' # 'none' #
     select_good_perf_ops_method = 'sort_asc'
     select_good_perf_ops_combination = 'mean' # 'pos_sum' #
@@ -1929,197 +1777,24 @@ if __name__ == '__main__':
 
     print 'loaded everything'
 
-    # # -- exclude operations with 'raw' keyword
-    # workflow.exclude_ops_keyword_per_task('raw')
     # -- find the features which are calculated for at least min_calc_tasks tasks
     workflow.find_good_op_ids(min_calc_tasks)
     # -- exclude operations with 'raw' keyword
     workflow.exclude_good_ops_keyword('raw')
     # -- Collect all combined stats for each task and take stats for good (non-NaN) operations only
     workflow.collect_stats_good_op_ids()
-    # combination now done in selection step.
-    # # -- Combine the stats of all the tasks (mean of classification error, not p-value)
-    # workflow.combine_tasks()
     # -- Select a subset of well performing operations (z-score across tasks, take n best)
     workflow.select_good_perf_ops()
 
-    # np.savetxt('/Users/carl/PycharmProjects/op_importance/performance_all_ops_tasks_normed_mean_noRaw.txt', workflow.stats_good_op_norm)
-    # quit()
-
-    # np.savetxt('/Users/carl/PycharmProjects/op_importance/good_op_ids.txt', workflow.good_op_ids)
-    # quit()
-
-    # lostOps = []
-    # for task in workflow.tasks:
-    #     # print "%s: %i/7658" % (task.name, len(task.op_ids))
-    #     lostOpsThisDataset = 7658 - 766 - len(task.op_ids)
-    #     lostOps.append(lostOpsThisDataset)
-    #
-    #     print "%s: %i" % (task.name, lostOpsThisDataset)
-    # print "lost operations in normalisation: min %i, max %i, mean %i, std %i" %(np.min(lostOps), np.max(lostOps), np.mean(lostOps), np.std(lostOps))
-    # quit()
-
-    # workflow.kstest_null_distributions()
-    # quit()
-
-    # print 'ID, name'
-    # for i, opId in enumerate(workflow.good_op_ids):
-    #     print opId, ', ', workflow.good_op_names[i]
-    # quit()
-
-    # workflow.show_high_performer_dist('DN_HistogramMode_10')
-    # quit()
-
-    # np.savetxt('/Users/carl/PycharmProjects/op_importance/statsGoodPerfOps_noFailureAllowed.txt', workflow.stats_good_op[:, np.isin(workflow.good_op_ids, workflow.good_perf_op_ids)])
-
-    # # -- just for analysis, print out the operation ids and performances
-    # for accuracyError in [True, False]:
-    #     for comb in ['mean', 'min', 'pos_sum']:
-    #         for norm in ['z-score', 'mean-norm', 'median-norm', 'median-diff', 'none']:
-    #             # workflow.plot_perf_histograms(norm, comb)
-    #             workflow.select_good_perf_ops_sort_asc_input_params_to_file(norm, comb, accuracyError)
-    # quit()
-    # # mpl.pyplot.show()
-
-    # # plot the correlation between tasks
-    # mpl.pyplot.imshow(np.ma.corrcoef(workflow.stats_good_op), cmap=mpl.pyplot.cm.get_cmap('jet', 10))
-    # cb = mpl.pyplot.colorbar()
-    # mpl.pyplot.clim(0, 1);
-    # cb.set_label('Pearson correlation')
-    # mpl.pyplot.yticks(np.arange(len(workflow.task_names)), workflow.task_names, fontsize=8)
-    # mpl.pyplot.savefig('/Users/carl/PycharmProjects/op_importance/Fig2A_taskCorrelation.eps')
-    #
-    # # mpl.pyplot.imshow(np.ma.corrcoef(workflow.stats_good_op.T))
-    # # cb = mpl.pyplot.colorbar()
-    # # cb.set_label('Pearson correlation')
-    # mpl.pyplot.show()
-
-    # # -- just for analysis, print which operations failed on what tasks
-    # workflow.list_bad_op_ids_and_tasks()
-
-    # # -- checking if distribution of classification errors are normal
-    # from scipy import stats
-    # #
-    # # mpl.pyplot.figure()
-    # # for i in range(np.size(workflow.stats_good_op, 0)-1):
-    # #     data = workflow.stats_good_op[i,:]
-    # #     density = stats.kde.gaussian_kde(data[~np.isnan(data)])
-    # #     x = np.arange(0., 1, .001)
-    # #     mpl.pyplot.plot(x, density(x))
-    # # mpl.pyplot.xlabel('error')
-    # # mpl.pyplot.ylabel('frequency')
-    # # mpl.pyplot.title('non-normalised')
-    # #
-    # # all_classes_good_norm = fap.normalise_masked_array(workflow.stats_good_op, axis=1, norm_type='zscore')[0]
-    # # mpl.pyplot.figure()
-    # # for i in range(np.size(workflow.stats_good_op, 0) - 1):
-    # #     data = all_classes_good_norm[i, :]
-    # #     density = stats.kde.gaussian_kde(data[~np.isnan(data)])
-    # #     x = np.arange(-4, 4, .001)
-    # #     mpl.pyplot.plot(x, density(x))
-    # # mpl.pyplot.xlabel('error')
-    # # mpl.pyplot.ylabel('frequency')
-    # # mpl.pyplot.title('z-scored')
-    # #
-    # # all_classes_good_mean = np.ma.masked_invalid(np.ma.mean(workflow.stats_good_op, axis=1))
-    # # all_classes_good_norm = (workflow.stats_good_op.T / all_classes_good_mean).T
-    # # mpl.pyplot.figure()
-    # # for i in range(np.size(workflow.stats_good_op, 0) - 1):
-    # #     data = all_classes_good_norm[i, :]
-    # #     density = stats.kde.gaussian_kde(data[~np.isnan(data)])
-    # #     x = np.arange(0., 10, .001)
-    # #     mpl.pyplot.plot(x, density(x))
-    # # mpl.pyplot.xlabel('error')
-    # # mpl.pyplot.ylabel('frequency')
-    # # mpl.pyplot.title('divided by mean')
-    # #
-    #
-    # print 'started the distribution plot'
-    # all_classes_good_norm = fap.normalise_masked_array(workflow.stats_good_op, axis=1, norm_type='zscore_median')[0]
-    # mpl.pyplot.figure()
-    # for i in range(np.size(workflow.stats_good_op, 0) - 1):
-    #     data = all_classes_good_norm[i, :]
-    #     density = stats.kde.gaussian_kde(data[~np.isnan(data)])
-    #     x = np.arange(-4., 4, .001)
-    #     mpl.pyplot.plot(x, density(x))
-    # mpl.pyplot.xlabel('error')
-    # mpl.pyplot.ylabel('frequency')
-    # mpl.pyplot.title('zscore with median')
-    #
-    # all_classes_good_norm = fap.normalise_masked_array(workflow.stats_good_op, axis=1, norm_type='median-div')[0]
-    # mpl.pyplot.figure()
-    # for i in range(np.size(workflow.stats_good_op, 0) - 1):
-    #     data = all_classes_good_norm[i, :]
-    #     density = stats.kde.gaussian_kde(data[~np.isnan(data)])
-    #     x = np.arange(-0., 3, .001)
-    #     mpl.pyplot.plot(x, density(x))
-    # mpl.pyplot.xlabel('error')
-    # mpl.pyplot.ylabel('frequency')
-    # mpl.pyplot.title('divided by median')
-    #
-    # all_classes_good_norm = fap.normalise_masked_array(workflow.stats_good_op, axis=1, norm_type='median-diff')[0]
-    # mpl.pyplot.figure()
-    # for i in range(np.size(workflow.stats_good_op, 0) - 1):
-    #     data = all_classes_good_norm[i, :]
-    #     density = stats.kde.gaussian_kde(data[~np.isnan(data)])
-    #     x = np.arange(-3., 3, .001)
-    #     mpl.pyplot.plot(x, density(x))
-    # mpl.pyplot.xlabel('error')
-    # mpl.pyplot.ylabel('frequency')
-    # mpl.pyplot.title('median subtracted')
-
-    # from scipy import stats
-    # # all_classes_good_norm = fap.normalise_masked_array(workflow.stats_good_op, axis=1, norm_type='median-diff')[0]
-    # mpl.pyplot.figure()
-    # for i in range(np.size(workflow.stats_good_op, 0) - 1):
-    #     data = workflow.stats_good_op[i, :]
-    #     density = stats.kde.gaussian_kde(data[~np.isnan(data)])
-    #     x = np.arange(-3., 3, .001)
-    #     mpl.pyplot.plot(x, density(x))
-    # mpl.pyplot.xlabel('error')
-    # mpl.pyplot.ylabel('frequency')
-    # mpl.pyplot.title('raw')
-    #
-    # mpl.pyplot.show()
-
-    # -- mask p-values of operations with too few outputs
-    # workflow.mask_pvals_too_few_unique_outputs()
-    workflow.mask_pvals_too_few_unique_nulls()
-    # -- Combine the p-values of all the tasks
-    workflow.combine_task_pvals(min_p=0.05)
-    # -- Correct for multiple hyptothesis testing
-    workflow.correct_pvals_multiple_testing()
-    # # -- Select a subset of well performing operations (p-value-based)
-    # workflow.select_good_pval_ops_sort_asc()
-
-    # # -- see how the different sets of operations overlap (p-value vs. mean error selection)
-    # pval_good_perf_op_ids_set = set(workflow.pval_good_perf_op_ids)
-    # good_perf_op_ids_set = set(workflow.good_perf_op_ids)
-    # good_id_intersection = pval_good_perf_op_ids_set.intersection(good_perf_op_ids_set)
-    # print "%i/%i overlap between p-value and mean performance selected ops." % (len(good_id_intersection), n_good_perf_ops)
-
-    # # -- see if features classify inconsistently
-    # all_classes_good_norm = fap.normalise_masked_array(workflow.stats_good_op, axis=1, norm_type='zscore')[0]
-    # stdOfError = np.std(all_classes_good_norm, 0)
-    # zscoredStdOfError = (stdOfError - np.mean(stdOfError)) / np.std(stdOfError)
-    # inconsistent_op_ids = workflow.good_op_ids[zscoredStdOfError > 1]
-    #
-    # mpl.pyplot.hist(
-    #     (np.std(all_classes_good_norm[:, np.isin(workflow.good_op_ids, workflow.good_perf_op_ids)], axis=0)),
-    #     bins=50), mpl.pyplot.xlabel('std of normalised error for 500 good features (mean perf)'), mpl.pyplot.ylabel(
-    #     'frequency')
-    # mpl.pyplot.scatter(np.std(all_classes_good_norm, axis=0),
-    #                    np.mean(all_classes_good_norm, axis=0)), \
-    # mpl.pyplot.xlabel('std of normalised error')
-    # mpl.pyplot.ylabel('mean of normalised error')
-    # inconsistent_but_good_op_ids = pval_good_perf_op_ids_set.intersection(set(inconsistent_op_ids))
-
-    # -- creat a dictionary of information about each feature to analyse the failing ones
-    # workflow.create_op_keyword_and_name_dict()
-    # workflow.list_bad_and_non_significant_ops()
-    # quit()
-    # workflow.plot_null_distributions(0.01)
-    # workflow.plot_one_null_distribution(5702, "SmallKitchenAppliances")
+    # # -- IMPORTANT depends on knowledge on nulls
+    # # -- mask p-values of operations with too few outputs
+    # workflow.mask_pvals_too_few_unique_nulls()
+    # # -- Combine the p-values of all the tasks
+    # workflow.combine_task_pvals(min_p=0.05)
+    # # -- Correct for multiple hyptothesis testing
+    # workflow.correct_pvals_multiple_testing()
+    # # # -- Select a subset of well performing operations (p-value-based)
+    # # workflow.select_good_pval_ops_sort_asc()
 
     # -----------------------------------------------------------------
     # -- Do the redundancy calculations -------------------------------
@@ -2134,14 +1809,6 @@ if __name__ == '__main__':
     #
     # # -- single features for each cluster
     workflow.select_good_perf_cluster_center_ops()
-
-    # # just for testing, show which super-operations ends up in which cluster:
-    # for i, cluster_op_ids in enumerate(workflow.redundancy_method.cluster_op_id_list):
-    #     superIndicator = np.isin(workflow.super_perf_op_ids, cluster_op_ids)
-    #
-    #     print 'cluster ' + str(i) + ' :'
-    #     for name in workflow.good_op_names[np.isin(workflow.good_op_ids, workflow.super_perf_op_ids[superIndicator])]:
-    #         print name
 
     # -----------------------------------------------------------------
     # -- Classification perf with feature subsets ---------------------
@@ -2203,8 +1870,8 @@ if __name__ == '__main__':
     mpl.pyplot.show()
 
     # -- write not reduced top performing features to text file
-#     with open(result_txt_outpath,'wb') as out_result_txt_file:
-#         for op_id,op_name,op_U in zip(workflow.good_perf_op_ids,
-#                                       hlp.ind_map_subset(op_id_name_map[0],op_id_name_map[1], workflow.good_perf_op_ids),
-#                                       workflow.stats_good_perf_op_comb):
-#             out_result_txt_file.write("{:d} {:s} {:f}\n".format(op_id,op_name,op_U))
+    with open(result_txt_outpath,'wb') as out_result_txt_file:
+        for op_id,op_name,op_U in zip(workflow.good_perf_op_ids,
+                                      hlp.ind_map_subset(op_id_name_map[0],op_id_name_map[1], workflow.good_perf_op_ids),
+                                      workflow.stats_good_perf_op_comb):
+            out_result_txt_file.write("{:d} {:s} {:f}\n".format(op_id,op_name,op_U))

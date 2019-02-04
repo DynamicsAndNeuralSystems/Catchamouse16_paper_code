@@ -90,10 +90,11 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     axdendro = fig.add_axes(rect_dendro)
     corr_linkage = idtop.calc_linkage(abs_corr_array)[0]
       
-    corr_dendrogram = hierarchy.dendrogram(corr_linkage, orientation='left')
+    corr_dendrogram = hierarchy.dendrogram(corr_linkage, orientation='left', color_threshold=max_dist_cluster)
     #axdendro.set_xticks([])
     axdendro.set_yticks([])
     axdendro.axvline(max_dist_cluster,ls='--',c='k')
+    axdendro.set_xlabel('correlation distance')
     # Plot distance matrix.
     axmatrix = fig.add_axes(rect_matrix)
     index = corr_dendrogram['leaves']
@@ -113,7 +114,8 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
 
     # Plot colorbar.
     axcolor = fig.add_axes(rect_color)
-    plt.colorbar(im, cax=axcolor) 
+    cbar = plt.colorbar(im, cax=axcolor)
+    cbar.set_label('Pearson correlation')
     
     
     # Plot the quality measures
@@ -129,7 +131,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     axmeasure2.set_xlim([0,measures.shape[-1]])
 
     [label.set_color('r') for label in axmeasure2.get_yticklabels()]
-    axmeasure2.set_ylabel('z-scored avg classification stat')
+    axmeasure2.set_ylabel('z-scored avg classification error')
     axmeasure2.yaxis.label.set_color('r')
 
     # -----------------------------------------------------------------

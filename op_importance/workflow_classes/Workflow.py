@@ -2001,7 +2001,7 @@ if __name__ == '__main__':
         #               "UWaveGestureLibraryAll", "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ",
         #               "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
 
-    n_good_perf_ops = 710 # intermediate number of good performers to cluster
+    n_good_perf_ops = 500 # intermediate number of good performers to cluster
     compute_features = False # False or True : compute classification accuracies?
     max_dist_cluster = 0.2 # gamma in paper, maximum allowed correlation distance within a cluster
 
@@ -2200,9 +2200,3 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     mpl.pyplot.show()
 
-    # -- write not reduced top performing features to text file
-    with open(result_txt_outpath,'wb') as out_result_txt_file:
-        for op_id,op_name,op_U in zip(workflow.good_perf_op_ids,
-                                      hlp.ind_map_subset(op_id_name_map[0],op_id_name_map[1], workflow.good_perf_op_ids),
-                                      workflow.stats_good_perf_op_comb):
-            out_result_txt_file.write("{:d} {:s} {:f}\n".format(op_id,op_name,op_U))

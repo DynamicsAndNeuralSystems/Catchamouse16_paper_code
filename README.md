@@ -1,5 +1,5 @@
 # Selection pipeline for _hctsa_ features
-This pipeline for tayloring small feature sets from a comprehensive collection of time-series features contained in the [_hctsa_](https://github.com/benfulcher/hctsa) toolbox. Features are selected by their classification performance across a collection of time-series classification problems. This pipeline was used to generate the small feature set [_catch22_](https://github.com/chlubba/catch22) - CAnonical Time-series CHaracteristics based on the problems contained in the UEA/UCR time-series classification repository.
+This is a pipeline for selecting small time-series feature sets from the comprehensive feature collection contained in the [_hctsa_](https://github.com/benfulcher/hctsa) toolbox. Features are selected by their classification performance across a collection of time-series classification problems. The pipeline was used to generate the small feature set [_catch22_](https://github.com/chlubba/catch22) - CAnonical Time-series CHaracteristics based on the problems contained in the [UEA/UCR time-series classification repository](http://timeseriesclassification.com).
 
 For information the pipeline and the _catch22_ feature set see our preprint:
 
@@ -26,7 +26,7 @@ The pipeline can be launched from the `op_importance` directory as
 python Workflow.py <runtype>
 ```
 
-Where `<runtype>` is a string composed of 2-3 parts delimited by an underscore: `<classifier>_<normalisation>(_null)`. Where `<classifier>` selects the classifier type used among `svm`, `dectree`, `linear` and `normalisation` either `scaledrobustsigmoid` or `maxmin`. An appended `_null` in the `<runtype>`-string means distributions of accuracy-distributions for each feature are generated in a permutation-based procedure by shuffling the labels of the classification problems.
+Where `<runtype>` is a string composed of 2-3 parts delimited by an underscore: `<classifier>_<normalisation>(_null)`. Where `<classifier>` selects the classifier type used among `svm`, `dectree`, `linear` and `normalisation` is either `scaledrobustsigmoid` or `maxmin`. An appended `_null` in the `<runtype>`-string means that distributions of classification accuracies for each feature are generated in a permutation-based procedure that shuffles the labels of the classification problems.
 
 ### First step: compute null accuracy distributions
 
@@ -38,7 +38,7 @@ python Workflow.py dectree_maxmin_null
 
 This can take long as 1000 classification runs are done on each dataset. It it preferable to do this computation on a cluster. 
 
-Make sure that `compute_features = False` is set in the main function of `Workflow.py`.
+Make sure that `compute_features = True` is set in the main function of `Workflow.py`.
 
 ### Second step: compute valid accuracy distributions
 
@@ -49,5 +49,7 @@ python Workflow.py dectree_maxmin_null
 ### Third step: further analyses
 
 Once the valid and null accuracies have been computed, all following analyses can be run without re-classification by setting `compute_features = False`.
+
+See below for an example output of the pipeline that plots correlations in performance across datasets of the 500 best features as well as the clusters they end up in. 
 
 ![Example output](example_pipeline_output.png?raw=true "Example output")

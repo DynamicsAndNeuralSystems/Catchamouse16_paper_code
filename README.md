@@ -1,11 +1,13 @@
 # Selection pipeline for _hctsa_ features
-This is a pipeline for selecting small time-series feature sets from the comprehensive feature collection contained in the [_hctsa_](https://github.com/benfulcher/hctsa) toolbox. Features are selected by their classification performance across a collection of time-series classification problems. The pipeline was used to generate the small feature set [_catch22_](https://github.com/chlubba/catch22) - CAnonical Time-series CHaracteristics based on the problems contained in the [UEA/UCR time-series classification repository](http://timeseriesclassification.com).
+This is a pipeline for selecting small time-series feature sets from the comprehensive feature collection contained in the [_hctsa_ toolbox](https://github.com/benfulcher/hctsa).
+Features are selected by their classification performance across a collection of time-series classification problems.
+The pipeline was used to generate the small feature set [_catch22_](https://github.com/chlubba/catch22) - CAnonical Time-series CHaracteristics based on the problems contained in the [UEA/UCR time-series classification repository](http://timeseriesclassification.com).
 
 For information the pipeline and the _catch22_ feature set see our preprint:
 
 * C.H. Lubba, S.S. Sethi, P. Knaute, S.R. Schultz, B.D. Fulcher, N.S. Jones. [_catch22_: CAnonical Time-series CHaracteristics](https://doi.org/10.1007/s10618-019-00647-x). *Data Mining and Knowledge Discovery* (2019).
 
-For information on the full set of over 7000 features, see the following (open) publications:
+For information on the full _hctsa_ library of over 7000 features, see the following (open-access) publications:
 
 * B.D. Fulcher and N.S. Jones. [_hctsa_: A computational framework for automated time-series phenotyping using massive feature extraction](http://www.cell.com/cell-systems/fulltext/S2405-4712\(17\)30438-6). *Cell Systems* **5**, 527 (2017).
 * B.D. Fulcher, M.A. Little, N.S. Jones [Highly comparative time-series analysis: the empirical structure of time series and their methods](http://rsif.royalsocietypublishing.org/content/10/83/20130048.full). *J. Roy. Soc. Interface* **10**, 83 (2013).

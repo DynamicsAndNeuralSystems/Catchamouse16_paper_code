@@ -18,7 +18,7 @@ For information on the full _hctsa_ library of over 7000 features, see the follo
 
 The selection process relies on computed and normalized feature-matrices from the _hctsa_ toolbox.
 
-***Computed data (using v0.97 of _hctsa_) that we used for our analysis can be downloaded from [this figshare repository](https://figshare.com/articles/Computed_HCTSA_matrices_for_the_UEA_UCR_2018_time-series_classification_tasks/6865163)***
+:wave::wave::wave: ***Computed data (using v0.97 of _hctsa_) that we used for our analysis can be downloaded from [this figshare repository](https://figshare.com/articles/Computed_HCTSA_matrices_for_the_UEA_UCR_2018_time-series_classification_tasks/6865163).*** :wave::wave::wave:
 
 See [_hctsa_](https://github.com/benfulcher/hctsa) for instructions on how to compute the construct _hctsa_ files from your data, run the features and normalize the matrices (_hctsa_ relies on Matlab).
 The computed, normalized HCTSA mat files should be placed into a folder called `input_data` inside the `op_importance` folder with file names `HCSTA_<dataset name>_N.mat`.

@@ -14,12 +14,12 @@ For information on the full set of over 7000 features, see the following (open) 
 
 ## Computing the _hctsa_-matrices
 
-The selection process relies on computed and normalised feature-matrices from the _hctsa_ toolbox.
+The selection process relies on computed and normalized feature-matrices from the _hctsa_ toolbox.
 
 ***Computed data (using v0.97 of _hctsa_) that we used for our analysis can be downloaded from [this figshare repository](https://figshare.com/articles/Computed_HCTSA_matrices_for_the_UEA_UCR_2018_time-series_classification_tasks/6865163)***
 
-See [_hctsa_](https://github.com/benfulcher/hctsa) for instructions on how to compute the construct _hctas_ files from your data, run the features and normalize the matrices (_hctsa_ relies on Matlab).
-The computed, normalized HCTSA mat files should be placed into a folder called `input_data` inside the `op_importance` folder with file names `HCSTA_<datset name>_N.mat`.
+See [_hctsa_](https://github.com/benfulcher/hctsa) for instructions on how to compute the construct _hctsa_ files from your data, run the features and normalize the matrices (_hctsa_ relies on Matlab).
+The computed, normalized HCTSA mat files should be placed into a folder called `input_data` inside the `op_importance` folder with file names `HCSTA_<dataset name>_N.mat`.
 
 
 ## Running the `op_importance` pipeline

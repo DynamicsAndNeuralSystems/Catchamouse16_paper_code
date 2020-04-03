@@ -20,6 +20,8 @@ import scipy.stats
 
 from pathos.multiprocessing import ThreadPool as Pool # ProcessingPool
 
+# To support Python2.7 functions from statsmodels, the reference link to the function is added below
+# https://github.com/statsmodels/statsmodels/blob/master/statsmodels/stats/multitest.py#L65
 def multipletests(pvals, alpha=0.05, method='hs', is_sorted=False,
                   returnsorted=False):
     """

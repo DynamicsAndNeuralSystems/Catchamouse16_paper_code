@@ -10,7 +10,7 @@ class Reducing_Redundancy:
         Parameters:
         -----------
         similarity_method : string
-            String secribing the method used to calculate the distance array
+            String desecribing the method used to calculate the distance array
         compare_space : string
             String describing in which space the distance calculation is going to happen (e.g. problem_stats,feature_vals)
         """

@@ -15,10 +15,203 @@ import modules.feature_importance.PK_feat_array_proc as fap
 import locations
 
 import scipy.stats
-import statsmodels
-import statsmodels.sandbox.stats.multicomp
+# import statsmodels
+# import statsmodels.sandbox.stats.multicomp
 
 from pathos.multiprocessing import ThreadPool as Pool # ProcessingPool
+
+# To support Python2.7 functions from statsmodels, the reference link to the function is added below
+# https://github.com/statsmodels/statsmodels/blob/master/statsmodels/stats/multitest.py#L65
+def multipletests(pvals, alpha=0.05, method='hs', is_sorted=False,
+                  returnsorted=False):
+    """
+    Test results and p-value correction for multiple tests
+    Parameters
+    ----------
+    pvals : array_like, 1-d
+        uncorrected p-values.   Must be 1-dimensional.
+    alpha : float
+        FWER, family-wise error rate, e.g. 0.1
+    method : str
+        Method used for testing and adjustment of pvalues. Can be either the
+        full name or initial letters. Available methods are:
+        - `bonferroni` : one-step correction
+        - `sidak` : one-step correction
+        - `holm-sidak` : step down method using Sidak adjustments
+        - `holm` : step-down method using Bonferroni adjustments
+        - `simes-hochberg` : step-up method  (independent)
+        - `hommel` : closed method based on Simes tests (non-negative)
+        - `fdr_bh` : Benjamini/Hochberg  (non-negative)
+        - `fdr_by` : Benjamini/Yekutieli (negative)
+        - `fdr_tsbh` : two stage fdr correction (non-negative)
+        - `fdr_tsbky` : two stage fdr correction (non-negative)
+    is_sorted : bool
+        If False (default), the p_values will be sorted, but the corrected
+        pvalues are in the original order. If True, then it assumed that the
+        pvalues are already sorted in ascending order.
+    returnsorted : bool
+         not tested, return sorted p-values instead of original sequence
+    Returns
+    -------
+    reject : ndarray, boolean
+        true for hypothesis that can be rejected for given alpha
+    pvals_corrected : ndarray
+        p-values corrected for multiple tests
+    alphacSidak: float
+        corrected alpha for Sidak method
+    alphacBonf: float
+        corrected alpha for Bonferroni method
+    Notes
+    -----
+    There may be API changes for this function in the future.
+    Except for 'fdr_twostage', the p-value correction is independent of the
+    alpha specified as argument. In these cases the corrected p-values
+    can also be compared with a different alpha. In the case of 'fdr_twostage',
+    the corrected p-values are specific to the given alpha, see
+    ``fdrcorrection_twostage``.
+    The 'fdr_gbs' procedure is not verified against another package, p-values
+    are derived from scratch and are not derived in the reference. In Monte
+    Carlo experiments the method worked correctly and maintained the false
+    discovery rate.
+    All procedures that are included, control FWER or FDR in the independent
+    case, and most are robust in the positively correlated case.
+    `fdr_gbs`: high power, fdr control for independent case and only small
+    violation in positively correlated case
+    **Timing**:
+    Most of the time with large arrays is spent in `argsort`. When
+    we want to calculate the p-value for several methods, then it is more
+    efficient to presort the pvalues, and put the results back into the
+    original order outside of the function.
+    Method='hommel' is very slow for large arrays, since it requires the
+    evaluation of n partitions, where n is the number of p-values.
+    """
+    import gc
+    pvals = np.asarray(pvals)
+    alphaf = alpha  # Notation ?
+
+    if not is_sorted:
+        sortind = np.argsort(pvals)
+        pvals = np.take(pvals, sortind)
+
+    ntests = len(pvals)
+    alphacSidak = 1 - np.power((1. - alphaf), 1./ntests)
+    alphacBonf = alphaf / float(ntests)
+    if method.lower() in ['b', 'bonf', 'bonferroni']:
+        reject = pvals <= alphacBonf
+        pvals_corrected = pvals * float(ntests)
+
+    elif method.lower() in ['s', 'sidak']:
+        reject = pvals <= alphacSidak
+        pvals_corrected = 1 - np.power((1. - pvals), ntests)
+
+    elif method.lower() in ['hs', 'holm-sidak']:
+        alphacSidak_all = 1 - np.power((1. - alphaf),
+                                       1./np.arange(ntests, 0, -1))
+        notreject = pvals > alphacSidak_all
+        del alphacSidak_all
+
+        nr_index = np.nonzero(notreject)[0]
+        if nr_index.size == 0:
+            # nonreject is empty, all rejected
+            notrejectmin = len(pvals)
+        else:
+            notrejectmin = np.min(nr_index)
+        notreject[notrejectmin:] = True
+        reject = ~notreject
+        del notreject
+
+        pvals_corrected_raw = 1 - np.power((1. - pvals),
+                                           np.arange(ntests, 0, -1))
+        pvals_corrected = np.maximum.accumulate(pvals_corrected_raw)
+        del pvals_corrected_raw
+
+    elif method.lower() in ['h', 'holm']:
+        notreject = pvals > alphaf / np.arange(ntests, 0, -1)
+        nr_index = np.nonzero(notreject)[0]
+        if nr_index.size == 0:
+            # nonreject is empty, all rejected
+            notrejectmin = len(pvals)
+        else:
+            notrejectmin = np.min(nr_index)
+        notreject[notrejectmin:] = True
+        reject = ~notreject
+        pvals_corrected_raw = pvals * np.arange(ntests, 0, -1)
+        pvals_corrected = np.maximum.accumulate(pvals_corrected_raw)
+        del pvals_corrected_raw
+        gc.collect()
+
+    elif method.lower() in ['sh', 'simes-hochberg']:
+        alphash = alphaf / np.arange(ntests, 0, -1)
+        reject = pvals <= alphash
+        rejind = np.nonzero(reject)
+        if rejind[0].size > 0:
+            rejectmax = np.max(np.nonzero(reject))
+            reject[:rejectmax] = True
+        pvals_corrected_raw = np.arange(ntests, 0, -1) * pvals
+        pvals_corrected = np.minimum.accumulate(pvals_corrected_raw[::-1])[::-1]
+        del pvals_corrected_raw
+
+    elif method.lower() in ['ho', 'hommel']:
+        # we need a copy because we overwrite it in a loop
+        a = pvals.copy()
+        for m in range(ntests, 1, -1):
+            cim = np.min(m * pvals[-m:] / np.arange(1,m+1.))
+            a[-m:] = np.maximum(a[-m:], cim)
+            a[:-m] = np.maximum(a[:-m], np.minimum(m * pvals[:-m], cim))
+        pvals_corrected = a
+        reject = a <= alphaf
+
+    elif method.lower() in ['fdr_bh', 'fdr_i', 'fdr_p', 'fdri', 'fdrp']:
+        # delegate, call with sorted pvals
+        reject, pvals_corrected = fdrcorrection(pvals, alpha=alpha,
+                                                 method='indep',
+                                                 is_sorted=True)
+    elif method.lower() in ['fdr_by', 'fdr_n', 'fdr_c', 'fdrn', 'fdrcorr']:
+        # delegate, call with sorted pvals
+        reject, pvals_corrected = fdrcorrection(pvals, alpha=alpha,
+                                                 method='n',
+                                                 is_sorted=True)
+    elif method.lower() in ['fdr_tsbky', 'fdr_2sbky', 'fdr_twostage']:
+        # delegate, call with sorted pvals
+        reject, pvals_corrected = fdrcorrection_twostage(pvals, alpha=alpha,
+                                                         method='bky',
+                                                         is_sorted=True)[:2]
+    elif method.lower() in ['fdr_tsbh', 'fdr_2sbh']:
+        # delegate, call with sorted pvals
+        reject, pvals_corrected = fdrcorrection_twostage(pvals, alpha=alpha,
+                                                         method='bh',
+                                                         is_sorted=True)[:2]
+
+    elif method.lower() in ['fdr_gbs']:
+        #adaptive stepdown in Gavrilov, Benjamini, Sarkar, Annals of Statistics 2009
+##        notreject = pvals > alphaf / np.arange(ntests, 0, -1) #alphacSidak
+##        notrejectmin = np.min(np.nonzero(notreject))
+##        notreject[notrejectmin:] = True
+##        reject = ~notreject
+
+        ii = np.arange(1, ntests + 1)
+        q = (ntests + 1. - ii)/ii * pvals / (1. - pvals)
+        pvals_corrected_raw = np.maximum.accumulate(q) #up requirementd
+
+        pvals_corrected = np.minimum.accumulate(pvals_corrected_raw[::-1])[::-1]
+        del pvals_corrected_raw
+        reject = pvals_corrected <= alpha
+
+    else:
+        raise ValueError('method not recognized')
+
+    if pvals_corrected is not None: #not necessary anymore
+        pvals_corrected[pvals_corrected>1] = 1
+    if is_sorted or returnsorted:
+        return reject, pvals_corrected, alphacSidak, alphacBonf
+    else:
+        pvals_corrected_ = np.empty_like(pvals_corrected)
+        pvals_corrected_[sortind] = pvals_corrected
+        del pvals_corrected
+        reject_ = np.empty_like(reject)
+        reject_[sortind] = reject
+        return reject_, pvals_corrected_, alphacSidak, alphacBonf
+
 
 class Workflow:
 
@@ -165,8 +358,7 @@ class Workflow:
         Apply Bonferroni-Holm correction on combined p-values to compensate for multiple hypothesis testing
 
         """
-        stats_out = statsmodels.sandbox.stats.multicomp.multipletests(self.pvals_good_op_comb, alpha=0.05, method='h')
-
+	stats_out = multipletests(self.pvals_good_op_comb, alpha=0.05, method='h')
         # pvals_corrected = stats_out[1]
         # print 'no corr: mean p-value %.6f, std p-value %.6f' % (np.mean(self.pvals_good_op_comb), np.std(self.pvals_good_op_comb))
         # print 'corr: mean p-value %.6f, std p-value %.6f' % (

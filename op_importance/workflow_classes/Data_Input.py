@@ -71,13 +71,13 @@ class Data_Input:
     
 class Datafile_Input(Data_Input):
     
-    def __init__(self, path_pattern,masking_method = 'nan',label_regex_pattern = '.*,(.*)$'):
+    def __init__(self,inputDir,masking_method = 'nan',label_regex_pattern = '.*,(.*)$'):
         """
         Constructor
         Parameters:
         -----------
-        path_pattern : string
-            Pattern used to construct the path to the current matlab file.
+        inputDir : string
+            path to the directory where the matlab/csv files are kept
         masking_method : string
             String describing method used for masking invalid entries
         label_regex_pattern : string, optional
@@ -90,7 +90,7 @@ class Datafile_Input(Data_Input):
         """
         Data_Input.__init__(self,masking_method,label_regex_pattern = label_regex_pattern)
         # -- initialise the pattern for the home folder of the data files
-        self.path_pattern = path_pattern
+        self.inputDir = inputDir
         
     def input_task(self,task_name,is_read_feature_data = True, old_matlab = False):
         """
@@ -114,14 +114,14 @@ class Datafile_Input(Data_Input):
             
         """
         # -- assemble the file path
-        mat_file_path = self.path_pattern.format(task_name)
-        print "Reading file {}".format(mat_file_path)
+        #mat_file_path = self.path_pattern.format(task_name)
+        #print "Reading file {}".format(mat_file_path)
 
         # -- load the data,operations and timeseries from the matlab file
         if is_read_feature_data:
-            data , op, ts = mIO.read_from_mat_file(mat_file_path,['TS_DataMat','Operations','TimeSeries'],is_from_old_matlab=old_matlab)
+            data , op, ts = mIO.read_from_mat_file(self.inputDir,task_name,['TS_DataMat','Operations','TimeSeries'],is_from_old_matlab=old_matlab)
         else:
-            op, ts = mIO.read_from_mat_file(mat_file_path,['Operations','TimeSeries'],is_from_old_matlab=old_matlab)
+            op, ts = mIO.read_from_mat_file(self.inputDir,task_name,['Operations','TimeSeries'],is_from_old_matlab=old_matlab)
             data = None
         
         if is_read_feature_data:
@@ -151,15 +151,15 @@ class Datafile_Input(Data_Input):
 
         """
         # -- assemble the file path
-        mat_file_path = self.path_pattern.format(task_name)
-        print "Reading file {}".format(mat_file_path)
+        #mat_file_path = self.path_pattern.format(task_name)
+        #print "Reading file {}".format(mat_file_path)
 
         # -- load the data,operations and timeseries from the matlab file
         if is_read_feature_data:
-            data, op, ts, m_op = mIO.read_from_mat_file(mat_file_path, ['TS_DataMat', 'Operations', 'TimeSeries', 'MasterOperations'],
+            data, op, ts, m_op = mIO.read_from_mat_file(self.inputDir, task_name, ['TS_DataMat', 'Operations', 'TimeSeries', 'MasterOperations'],
                                                   is_from_old_matlab=old_matlab)
         else:
-            op, ts, m_op= mIO.read_from_mat_file(mat_file_path, ['Operations', 'TimeSeries', 'MasterOperations'], is_from_old_matlab=old_matlab)
+            op, ts, m_op= mIO.read_from_mat_file(self.inputDir, task_name, ['Operations', 'TimeSeries', 'MasterOperations'], is_from_old_matlab=old_matlab)
             data = None
 
         if is_read_feature_data:

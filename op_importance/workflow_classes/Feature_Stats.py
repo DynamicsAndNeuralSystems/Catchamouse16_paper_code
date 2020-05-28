@@ -105,6 +105,7 @@ class Null_Linear_Classifier(Feature_Stats):
     def calc_tots(self, labels, data, task_name):
         clf = svm.SVC(class_weight="balanced", decision_function_shape='ovo', kernel='linear', random_state=23)
         op_error_rates, mean_error_rates = calc_null_template(labels,data,clf)
+        
         p_vals = np.empty([])
         return (op_error_rates, mean_error_rates, p_vals)
 

@@ -2152,24 +2152,11 @@ if __name__ == '__main__':
         # PHILS TASKS: task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
         # # insignificance tasks
         # task_names = ["CBF", "Lightning7"] # , "ECGMeditation", "LargeKitchenAppliances", "Lightning2", "MedicalImages"]
-        # UCR 2018:
-        task_names = ["AALTDChallenge", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "CBF", "Car",
-                      "ChlorineConcentration", "CinCECGtorso", "Coffee", "Computers", "CricketX", "CricketY", "CricketZ",
-                      "DiatomSizeReduction", "DistalPhalanxOutlineAgeGroup", "DistalPhalanxOutlineCorrect",
-                      "DistalPhalanxTW", "ECG200", "ECG5000", "ECGFiveDays", "ECGMeditation", "Earthquakes",
-                      "ElectricDeviceOn", "ElectricDevices", "EpilepsyX", "EthanolLevel", "FaceAll", "FaceFour", "FacesUCR",
-                      "FiftyWords", "Fish", "FordA", "FordB", "GunPoint", "Ham", "HandOutlines", "Haptics", "HeartbeatBIDMC",
-                      "Herring", "InlineSkate", "InsectWingbeatSound", "ItalyPowerDemand", "LargeKitchenAppliances",
-                      "Lightning2", "Lightning7", "Mallat", "Meat", "MedicalImages", "MiddlePhalanxOutlineAgeGroup",
-                      "MiddlePhalanxOutlineCorrect", "MiddlePhalanxTW", "MoteStrain", "NonInvasiveFatalECGThorax1",
-                      "NonInvasiveFatalECGThorax2", "NonInvasiveFetalECGThorax1", "NonInvasiveFetalECGThorax2", "OSULeaf",
-                      "OliveOil", "PhalangesOutlinesCorrect", "Phoneme", "Plane", "ProximalPhalanxOutlineAgeGroup",
-                      "ProximalPhalanxOutlineCorrect", "ProximalPhalanxTW", "RefrigerationDevices", "ScreenType",
-                      "ShapeletSim", "ShapesAll", "SmallKitchenAppliances", "SonyAIBORobotSurface1",
-                      "SonyAIBORobotSurface2", "StarLightCurves", "Strawberry", "SwedishLeaf", "Symbols",
-                      "SyntheticControl", "ToeSegmentation1", "ToeSegmentation2", "Trace", "TwoLeadECG", "TwoPatterns",
-                      "UWaveGestureLibraryAll", "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ",
-                      "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
+        # UCR 2018:        
+        task_names = ["Dataset1","Dataset2","Dataset3"]
+        #["RightCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N","LeftCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N",
+        #                "Control_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N"]
+
         # task_names = ["Adiac", 'ArrowHead']
         # # selection of tasks as in old UCR
         # task_names = ["Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "CBF", "Car",
@@ -2194,7 +2181,7 @@ if __name__ == '__main__':
         #               "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
 
     n_good_perf_ops = 500 # intermediate number of good performers to cluster
-    compute_features = False # False or True : compute classification accuracies?
+    compute_features = True # False or True : compute classification accuracies?
     max_dist_cluster = 0.2 # gamma in paper, maximum allowed correlation distance within a cluster
 
     # normalisation of features as done in hctsa TS_normalize
@@ -2251,7 +2238,7 @@ if __name__ == '__main__':
 
     print "runtype = {}, datatype = {}, inputDir = {}".format(runtype,datatype,inputDir)
 
-    path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
+    #path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
     old_matlab = False
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
 
@@ -2272,7 +2259,7 @@ if __name__ == '__main__':
     # -- Initialise Class instances -----------------------------------
     # -----------------------------------------------------------------
 
-    input_method = Data_Input.Datafile_Input(path_pattern,masking_method,label_regex_pattern)
+    input_method = Data_Input.Datafile_Input(inputDir,masking_method,label_regex_pattern)
     redundancy_method = Reducing_Redundancy.Reducing_Redundancy(similarity_method = similarity_method,compare_space = compare_space)
 
     workflow = Workflow(task_names,input_method,ranking_method,
@@ -2391,4 +2378,3 @@ if __name__ == '__main__':
     # -- show the plot as last task of the script
     # -----------------------------------------------------------------
     mpl.pyplot.show()
-

@@ -1,8 +1,8 @@
 import modules.feature_importance.PK_test_stats as fistat
 import numpy as np
 from sklearn import tree, svm
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split, cross_val_score, RepeatedStratifiedKFold
+from sklearn.metrics import accuracy_score, balanced_accuracy_score
 from sklearn.metrics import make_scorer
 import random
 import copy
@@ -129,27 +129,37 @@ def calc_null_template(labels,data,clf):
 
     # Loop through each operation in a threaded manner
     def process_task_threaded(i):
-        null_reps = 1000
+        # total number of train and test splits ~ 1000
+        null_reps = 100*folds 
         op_errs = np.zeros(null_reps)
-        for j in range(null_reps):
-            # Shuffle labels
-            random.shuffle(labels)
-            # data is type float64 by default but Decision tree classifier works with float32
-            operation = np.float32(data[:, i])
-            # Reshape data as we have only one feature at a time
-            operation = operation.reshape(-1, 1)
-            # Split into training and test data
-            t_size = 1/float(folds)
-            op_train, op_test, labels_train, labels_test = train_test_split(operation, labels, test_size=t_size, random_state=23)
-            op_train = op_train.reshape(-1, 1)
-            op_test = op_test.reshape(-1, 1)
-            # Fit classifier on training data
-            use_clf = copy.deepcopy(clf)
-            use_clf = use_clf.fit(op_train, labels_train)
-            # Calculate accuracy on test data
-            labels_test_predicted = use_clf.predict(op_test)
-            op_errs[j] = 1 - accuracy_score(labels_test, labels_test_predicted)
+        operation = np.float32(data[:,i])
+        # Reshape data as we have only one feature at a time
+        operation = operation.reshape(-1, 1)
+        rskf = RepeatedStratifiedKFold(n_splits=folds, n_repeats=100, random_state=23)
+        j = 0
+        for trainIndices, testIndices in rskf.split(operation,labels):
+            trainIndices = trainIndices.tolist()
+            testIndices = testIndices.tolist()
 
+            op_train, op_test = operation[trainIndices,:], operation[testIndices,:]
+            labels_train, labels_test = labels[trainIndices], labels[testIndices]
+
+            # Reshape train and test data as we have only one feature at a time
+            op_train = op_train.reshape(-1, 1)
+            op_test = op_test.reshape(-1, 1)   
+    
+            try:
+                use_clf = copy.deepcopy(clf)
+                use_clf = use_clf.fit(op_train, labels_train)
+            except ValueError as e:
+                print("ValueError while doing 10 fold CV and training. Labels are: ")
+                print(np.unique(labels_train))
+                print("Error message:", e)
+                exit()
+            labels_test_predicted = use_clf.predict(op_test)
+            accuracy = balanced_accuracy_score(labels_test, labels_test_predicted)
+            op_errs[j] = 1 - accuracy
+            j += 1
         return op_errs
 
     random.seed(25)

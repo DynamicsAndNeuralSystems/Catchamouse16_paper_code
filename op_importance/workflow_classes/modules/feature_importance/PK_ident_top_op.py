@@ -28,10 +28,10 @@ def calc_linkage(abs_corr_array, linkage_method='complete'):#'average'):#
     # -- XXX The correlation sometime is larger than 1. not sure if that is a negligible or has to
     # -- be sorted out
     abs_corr_dist_arr[(abs_corr_dist_arr < 0)] = 0
-
+    #np.fill_diagonal(abs_corr_dist_arr, 0)
     # -- transform the correlation matrix into condensed distance matrix
     dist_corr = spdst.squareform(abs_corr_dist_arr)
-
+    
     # -- calculate the linkage
     link_arr = hierarchy.linkage(dist_corr, method=linkage_method)
 

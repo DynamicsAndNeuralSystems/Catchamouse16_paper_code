@@ -56,7 +56,7 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
     """
 
     LTv7_3 = False # lesser than mat v7.3
-    # Input for false case not implemented yet
+    # Input for true case not implemented yet
     
 
     # try:
@@ -70,7 +70,7 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
     retval = tuple()
     for item in hctsa_struct_names:
         if item == 'TimeSeries':
-            path_pattern = inputDir+'{:s}_TSInfo.txt'
+            path_pattern = inputDir+'{:s}/hctsa_timeseries-info.csv'
             ts_info_path = path_pattern.format(task_name)
             timeseries = dict()
             if is_from_old_matlab:
@@ -101,7 +101,7 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
                 # ------------ to this
                 ts_filename = lambda i: str(mat_file['TimeSeries'][i][0][0][0])
                 ts_kw = lambda i: str(mat_file['TimeSeries'][i][0][1][0])
-                ts_n_samples = lambda i: int(mat_file['TimeSeries'][i][0][2][0])
+                #ts_n_samples = lambda i: int(mat_file['TimeSeries'][i][0][2][0])
                 # -- data is not included in the returned dictionary as it seem a waste of space
                 # ts_data = lambda i : mat_file['TimeSeries'][i][0][3]
                 for extractor, key in zip([ts_filename, ts_kw, ts_n_samples], ['filename', 'keywords', 'n_samples']):
@@ -112,18 +112,16 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
                     ts_info = []
                     for row in reader:
                         ts_info.append(row)
-                    del ts_info[0]
                 ts_filename = lambda i: str(ts_info[i][0])
-                ts_kw = lambda i: str(ts_info[i][1])
-                ts_n_samples = lambda i: int(ts_info[i][2])
+                ts_kw = lambda i: str(ts_info[i][2])
+                ts_n_samples = lambda i: int(ts_info[i][1])
 
                 for extractor, key in zip([ts_filename, ts_kw, ts_n_samples], ['filename', 'keywords', 'n_samples']):
                     timeseries[key] = [extractor(i) for i in range(len(ts_info))]
-                
             retval = retval + (timeseries,)
             
         if item == 'Operations':
-            path_pattern = inputDir+'{:s}_Operations.txt'
+            path_pattern = inputDir+'{:s}/hctsa_features.csv'
             op_path = path_pattern.format(task_name)
             operations = dict()
             if is_from_old_matlab:
@@ -149,13 +147,12 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
                     op = []
                     for row in reader:
                         op.append(row)
-                    del op[0]
-                op_id = lambda i : int(op[i][3])
-                op_name = lambda i : str(op[i][1])
-                op_kw = lambda i : str(op[i][2])
-                op_code = lambda i : str(op[i][0])
-                op_mopid = lambda i : int(op[i][4])
-                for extractor,key in zip([op_id,op_name ,op_kw,op_code,op_mopid],['id','name','keywords','code_string','master_id']):
+                op_id = lambda i : int(op[i][2])
+                op_name = lambda i : str(op[i][0])
+                op_code = lambda i : str(op[i][1])
+                op_mopid = lambda i : int(op[i][3])
+                op_kw = lambda i : str(op[i][4])
+                for extractor,key in zip([op_id,op_name,op_kw,op_code,op_mopid],['id','name','keywords','code_string','master_id']):
                     operations[key] =[extractor(i) for i in range(len(op))]
             retval = retval + (operations,)
 
@@ -163,13 +160,17 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
             if LTv7_3:
                 raise ValueError("Not Implemented yet")
             else:
-                path_pattern = inputDir + '{:s}_TSData.mat'
+                path_pattern = inputDir + '{:s}/hctsa_datamatrix.csv'
                 mat_file_path = path_pattern.format(task_name)
-                mat_file = sio.loadmat(mat_file_path)
-                retval = retval + (mat_file['data'],)
+                with open(mat_file_path,'r') as f:
+                    reader = csv.reader(f)
+                    mat_file = []
+                    for row in reader:
+                        mat_file.append([float(elem) for elem in row])
+                retval = retval + (mat_file,)
 
         if item == 'MasterOperations':
-            path_pattern = inputDir+'{:s}_MasterOperations.txt'
+            path_pattern = inputDir+'{:s}/hctsa_masterfeatures.csv'
             m_op_path = path_pattern.format(task_name)
             m_operations = dict()
             if is_from_old_matlab:
@@ -187,8 +188,7 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
                     m_op = []
                     for row in reader:
                         m_op.append(row)
-                    del m_op[0]
-                m_op_id = lambda i: int(m_op[i][2])
+                m_op_id = lambda i: int(m_op[i][0])
                 m_op_name = lambda i: str(m_op[i][1])
                 for extractor, key in zip([m_op_id, m_op_name],
                                         ['id', 'name']):

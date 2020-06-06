@@ -2153,7 +2153,10 @@ if __name__ == '__main__':
         # # insignificance tasks
         # task_names = ["CBF", "Lightning7"] # , "ECGMeditation", "LargeKitchenAppliances", "Lightning2", "MedicalImages"]
         # UCR 2018:        
-        task_names = ["Dataset1","Dataset2","Dataset3"]
+        task_names = ["Left_CAMK_excitatory","Left_CAMK_PVCre","Left_CAMK_SHAM",
+                      "Left_excitatory_PVCre","Left_excitatory_SHAM","Left_PVCre_SHAM",
+                      "Right_CAMK_excitatory","Right_CAMK_PVCre","Right_CAMK_SHAM",
+                      "Right_excitatory_PVCre","Right_excitatory_SHAM","Right_PVCre_SHAM"]
         #["RightCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N","LeftCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N",
         #                "Control_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N"]
 
@@ -2329,12 +2332,14 @@ if __name__ == '__main__':
     # workflow.classify_selectedOps_givenSplit()
     # workflow.classify_selected_ops_internalSet()
     # workflow.greedy_selectedOps()
-    workflow.classify_random_features()
-    # quit()
+
+    #workflow.classify_random_features()
+
+    #quit()
 
     # -- show performance matrix of catch22-features only
     # workflow.show_catch22_perfmat()
-    quit()
+    #quit()
 
     # -----------------------------------------------------------------
     # -- Do the plotting ----------------------------------------------

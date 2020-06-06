@@ -45,6 +45,7 @@ class Decision_Tree(Feature_Stats):
         clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
         op_error_rates, mean_error_rates = train_model_template(labels, data, clf)
 
+        '''
         null_stats = np.loadtxt(self.null_pattern.format(task_name))
         num_ops = np.size(mean_error_rates)
         if np.size(null_stats,0) != num_ops:
@@ -56,8 +57,8 @@ class Decision_Tree(Feature_Stats):
             null_dist = null_stats[i,:]
             p_vals[i] = scipy.stats.norm(np.mean(null_dist), np.std(null_dist)).cdf(mean_error_rates[i])
             #num_null_more_accurate = (null_dist < mean_error_rates[i]).sum()
-            #p_vals[i] = np.float(num_null_more_accurate) / np.float(num_null_reps)
-
+            #p_vals[i] = np.float(num_null_more_accurate) / np.float(num_null_reps)'''
+        p_vals = np.zeros( mean_error_rates.shape )
         return (op_error_rates, mean_error_rates, p_vals)
 
     def get_null_stats(self, task_name):
@@ -91,7 +92,7 @@ class Linear_Classifier(Feature_Stats):
         print "SVM: true calculations - labels have not been shuffled"
         clf = svm.SVC(class_weight="balanced", decision_function_shape='ovo', kernel='linear', random_state=23)
         op_error_rates, mean_error_rates = train_model_template(labels, data, clf)
-        p_vals = np.empty([])
+        p_vals = np.zeros( mean_error_rates.shape )
         return (op_error_rates, mean_error_rates, p_vals)
 
 class Null_Linear_Classifier(Feature_Stats):

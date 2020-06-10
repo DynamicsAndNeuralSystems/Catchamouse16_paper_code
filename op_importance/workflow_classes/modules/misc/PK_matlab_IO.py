@@ -72,6 +72,8 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
         if item == 'TimeSeries':
             path_pattern = inputDir+'{:s}/hctsa_timeseries-info.csv'
             ts_info_path = path_pattern.format(task_name)
+            path_pattern = inputDir+'{:s}/hctsa_grouplabel-info.csv'
+            ts_grp_info_path = path_pattern.format(task_name)
             timeseries = dict()
             if is_from_old_matlab:
                 # lambda function used to populate the dictionary with the appropriate data lists
@@ -107,13 +109,13 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
                 for extractor, key in zip([ts_filename, ts_kw, ts_n_samples], ['filename', 'keywords', 'n_samples']):
                     timeseries[key] = [extractor(i) for i in range(mat_file['TimeSeries'].shape[0])]
             else:
-                with open(ts_info_path,'r') as f:
-                    reader = csv.reader(f)
-                    ts_info = []
-                    for row in reader:
-                        ts_info.append(row)
+                with open(ts_info_path,'r') as f1, open(ts_grp_info_path,'r') as f2:
+                    info_reader = csv.reader(f1)
+                    grp_info_reader = csv.reader(f2)
+                    ts_info = list(info_reader)
+                    ts_grp_info = list(grp_info_reader)
                 ts_filename = lambda i: str(ts_info[i][0])
-                ts_kw = lambda i: str(ts_info[i][2])
+                ts_kw = lambda i: str(ts_grp_info[i][1])
                 ts_n_samples = lambda i: int(ts_info[i][1])
 
                 for extractor, key in zip([ts_filename, ts_kw, ts_n_samples], ['filename', 'keywords', 'n_samples']):

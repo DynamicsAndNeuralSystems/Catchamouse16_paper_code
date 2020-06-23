@@ -58,7 +58,10 @@ class Plotting:
         # -- number of problems for which each good performing feature has been calculated
         measures[0,:] = (~self.workflow.stats_good_op[:,tmp_ind].mask).sum(axis=0)
         # -- z scored classification stats (for all features) for top features
-        stats_good_op_z_score = fap.normalise_masked_array(self.workflow.stats_good_op_comb, axis= 0,norm_type = 'zscore')[0]
+        print(self.workflow.stats_good_op.shape)
+        print(self.workflow.stats_good_op_comb.shape)
+        stats_good_op_z_score = 1 - np.mean(self.workflow.stats_good_op, axis = 0)
+        #fap.normalise_masked_array(self.workflow.stats_good_op_comb, axis= 0,norm_type = 'zscore')[0]
         measures[1,:] = stats_good_op_z_score[tmp_ind]
         
         fiplt.plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster=self.max_dist_cluster,measures = measures)
@@ -70,22 +73,25 @@ class Plotting:
         fig = plt.figure(figsize = ((15,15)))
         # -- plot layout ------------------------------------------------------
         
-        rect_ustat_arr = [0.25,0.175,.5,.5]
-        rect_dendr = [0.755,0.175,.145,.5]
-        rect_measures0 = [0.25,0.68,0.5,0.1]
+        #rect_ustat_arr = [0.01,0.01,0.75,0.75] #[0.25,0.175,.5,.5]
+        #rect_dendr = [0.76,0.01,.2175,.75] #[0.755,0.175,.145,.5]
+        rect_ustat_arr = fig.add_axes([0.1, 0.1, 0.7, 0.8])
+        rect_dendr = fig.add_axes([0.7, 0.1, 0.145, 0.8])
+
+        '''rect_measures0 = [0.25,0.68,0.5,0.1]
         rect_measures1 = [0.25,0.785,0.5,0.1]
-        rect_measures2 = [0.25,0.89,0.5,0.1]
+        rect_measures2 = [0.25,0.89,0.5,0.1]'''
         
         ax_ustat_arr = fig.add_axes(rect_ustat_arr)
         ax_dendr = fig.add_axes(rect_dendr)
-        ax_measures00 = fig.add_axes(rect_measures0)
+        '''ax_measures00 = fig.add_axes(rect_measures0)
         ax_measures01 = plt.twinx(ax_measures00) 
         ax_measures10 = fig.add_axes(rect_measures1)
         ax_measures10.set_xticklabels([])
         ax_measures20 = fig.add_axes(rect_measures2)
         
         ax_measures20.set_xticklabels([])
-        ax_measures21 = plt.twinx(ax_measures20)
+        ax_measures21 = plt.twinx(ax_measures20)'''
         
         # -- calculate and plot the dendrogram
         dist_dendrogram = hierarchy.dendrogram(self.linkage, orientation='left',no_plot=True)
@@ -101,7 +107,6 @@ class Plotting:
         # -- sort the good performant features so they have the same order as the similarity array
         sort_ind = hlp.ismember(self.workflow.redundancy_method.similarity_array_op_ids,self.workflow.redundancy_method.good_perf_op_ids)
         self.ops_base_perf_vals = self.ops_base_perf_vals[:,sort_ind]
-        
         # -- create index that sort columns with respect to their mean value
         task_sort_ind = np.argsort(self.ops_base_perf_vals[:,feat_sort_ind].mean(axis=1))
         
@@ -110,7 +115,7 @@ class Plotting:
         all_classes_avg_top = self.ops_base_perf_vals
         # -- plot the operation names as y-axis tick labels
         aspect = all_classes_avg_top.shape[0] / float(all_classes_avg_top.shape[1])
-        ax_ustat_arr.matshow(all_classes_avg_top[task_sort_ind,:][:,feat_sort_ind].T,aspect=aspect,origin='bottom')
+        im = ax_ustat_arr.matshow(all_classes_avg_top[task_sort_ind,:][:,feat_sort_ind].T,aspect=aspect,origin='bottom')
 
 
         ax_ustat_arr.set_yticks(range(len(feat_sort_ind)))
@@ -123,9 +128,11 @@ class Plotting:
         ax_ustat_arr.set_xticks(range(all_classes_avg_top.shape[0]))
         ax_ustat_arr.set_xticklabels(self.task_names[task_sort_ind],rotation='vertical')
 
+        fig.colorbar(im)
+
         # -- plot clusters ----------------------------------
         
-        cluster_bounds = np.nonzero(np.diff(self.workflow.redundancy_method.cluster_inds[feat_sort_ind]))[0]+0.5
+        '''cluster_bounds = np.nonzero(np.diff(self.workflow.redundancy_method.cluster_inds[feat_sort_ind]))[0]+0.5
         for cluster_bound in cluster_bounds:
             ax_ustat_arr.axhline(cluster_bound,c='w',lw=2)
     
@@ -178,7 +185,7 @@ class Plotting:
         # -- mean average classification stat for all features
         ax_measures20.plot(x_loc,np.ma.mean(self.workflow.stats_good_op[task_sort_ind,:],axis=1),marker='o')
         [label.set_color('b') for label in ax_measures20.get_yticklabels()]
-        ax_measures20.set_ylabel('avrg classification stat all feat')
+        ax_measures20.set_ylabel('avg classification stat all feat')
         ax_measures20.yaxis.label.set_color('b')
         
         # -- number of successfully calculated features
@@ -188,5 +195,5 @@ class Plotting:
         ax_measures21.set_ylabel('nr calc feat')
         ax_measures21.yaxis.label.set_color('r')
         
-        ax_measures20.set_xlim([0,len(self.workflow.tasks)])
+        ax_measures20.set_xlim([0,len(self.workflow.tasks)])'''
         

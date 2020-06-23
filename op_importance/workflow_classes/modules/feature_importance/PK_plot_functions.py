@@ -131,7 +131,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     axmeasure2.set_xlim([0,measures.shape[-1]])
 
     [label.set_color('r') for label in axmeasure2.get_yticklabels()]
-    axmeasure2.set_ylabel('z-scored avg classification error')
+    axmeasure2.set_ylabel('avg classification accuracy')
     axmeasure2.yaxis.label.set_color('r')
 
     # -----------------------------------------------------------------

@@ -2118,13 +2118,15 @@ class Workflow:
 
         mpl.pyplot.show()
     
-    def classify_using_features(self, feature): # get the feature ids (numpy array)
+    def classify_using_features(self, feature, mode, do_random = False): # mode = 'selection' or 'evaluate'
 
         import time
+        import random
         from sklearn.svm import LinearSVC
         from sklearn.model_selection import cross_val_score
         from sklearn.metrics import accuracy_score
-
+        from sklearn.model_selection import StratifiedShuffleSplit
+        from scipy.stats import truncnorm
         # initialise tree
         #clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
         clf = LinearSVC(random_state=23)
@@ -2137,19 +2139,42 @@ class Workflow:
         for task_ind, task in enumerate(self.tasks):
 
             #print 'classifying task %s' % task.name
+            # random_data = np.random.randn(...).. same shape as task.data
+            # replace all task.data with random_data
+            sss = StratifiedShuffleSplit(n_splits=1, test_size=0.1, random_state=23) # leave 10% data for final evaluation
+
+            if do_random:
+                shape = task.data.shape
+                random_data = np.reshape(truncnorm(a=0, b=1, scale=1).rvs(size=s[0]*s[1]), s )
+                for train_index, test_index in sss.split(random_data, task.labels):
+                    X_train, X_test = random_data[train_index,:], random_data[test_index,:]
+                    y_train, y_test = task.labels[train_index], task.labels[test_index]
+            else:
+                for train_index, test_index in sss.split(task.data, task.labels):
+                    X_train, X_test = task.data[train_index,:], task.data[test_index,:]
+                    y_train, y_test = task.labels[train_index], task.labels[test_index]
 
             # decide on number of folds
-            un, counts = np.unique(task.labels, return_counts=True)
+            if mode == 'selection':
+                un, counts = np.unique(y_train, return_counts=True)
+            else:
+                un, counts = np.unique(task.labels, return_counts=True)
             max_folds = 10
             min_folds = 2
             folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
 
             # -- do cross-validated scoring for full matrix
             # # whole matrix
-            score_this_task_whole = cross_val_score(clf, task.data[:, np.isin( task.op_ids, feature ) ], task.labels, cv=folds, scoring=scorer)
-            
+            # select only 90% data for train
+            if mode == 'selection':
+                score_this_task_whole = cross_val_score(clf, X_train[:, np.isin( task.op_ids, feature ) ], y_train, cv=folds, scoring=scorer)
+            else:
+                #score_this_task_whole = cross_val_score(clf, task.data[:, np.isin( task.op_ids, feature ) ], task.labels, cv=folds, scoring=scorer)
+                clf.fit(X_train, y_train)
+                y_pred = clf.predict(X_test)
+                score_this_task_whole = Feature_Stats.accuracy_score_class_balanced(y_test,y_pred)
             task_acc.append( np.mean( score_this_task_whole ) ) # append mean of cross validation accuracy
-        return np.min( task_acc )
+        return np.mean( task_acc ) # min or mean
 
     def greedy_fwd_selection(self): # think of using 'min' instead of 'mean'
 
@@ -2165,7 +2190,7 @@ class Workflow:
         best_op_id = 0
         best_acc = 0
         for id in rest_ids: # to get first best single feature
-            overall_acc = self.classify_using_features( np.array([id]) )
+            overall_acc = self.classify_using_features( np.array([id]), 'selection' )
             if overall_acc > best_acc:
                 best_acc = overall_acc
                 best_op_id = id
@@ -2190,7 +2215,7 @@ class Workflow:
                 #avg_acc = calculate_avg_performance_alltask(rest_of_the_features)
                 candidate_ids = list(selected_ids) # copy
                 candidate_ids.append(id)
-                avg_acc = self.classify_using_features( np.array(candidate_ids) )
+                avg_acc = self.classify_using_features( np.array(candidate_ids), 'selection' )
                 if avg_acc > max_acc:
                     max_acc = avg_acc
                     best_id = id
@@ -2209,9 +2234,15 @@ class Workflow:
     def plot_greedy(self):
         # using mean accuracy
         selected_ids = [7257, 117, 3161, 6968, 3662, 7784, 2883, 4062, 2743, 728, 3789, 3902, 2072, 6839, 6970, 4707, 204]
-        acc = [0.6958333333333334,0.7645833333333334,0.7958333333333333,0.8083333333333331,0.8104166666666667,0.8250000000000002,0.8562500000000002,0.8729166666666668,0.8791666666666668,0.8812500000000001,0.8854166666666666,0.8937499999999999,0.9020833333333332,0.9104166666666668,0.9125,0.9166666666666666,0.9166666666666666]
+        current_ids = []
+        acc = []
+        
+        for id in selected_ids:
+            current_ids.append(id)
+            acc.append( self.classify_using_features( np.array(current_ids) ,'evaluate'))
+        #acc = [0.6958333333333334,0.7645833333333334,0.7958333333333333,0.8083333333333331,0.8104166666666667,0.8250000000000002,0.8562500000000002,0.8729166666666668,0.8791666666666668,0.8812500000000001,0.8854166666666666,0.8937499999999999,0.9020833333333332,0.9104166666666668,0.9125,0.9166666666666666,0.9166666666666666]
         #acc = [0.525,0.6,0.65,0.7,0.7]
-        mpl.pyplot.plot(np.arange(1,18), acc) #np.arange(1,6)
+        mpl.pyplot.plot(np.arange(1,len(selected_ids)+1), acc) #np.arange(1,6)
         mpl.pyplot.xlabel('no of features')
         mpl.pyplot.ylabel('validation accuracy')
         mpl.pyplot.show()
@@ -2601,11 +2632,14 @@ if __name__ == '__main__':
 
     #workflow.classify_random_features()
     
-    workflow.testing_parameters()
+    #workflow.testing_parameters()
+    #print(workflow.classify_using_features( np.array([7257]), 'selection' ) )
+    #print(workflow.classify_using_features( np.array([7257]), 'evaluate' ) )
+    # workflow.plot_greedy()
+    feat = workflow.greedy_fwd_selection()
+    print(feat)
+    print(len(feat))
     #workflow.plot_greedy()
-    #feat = workflow.greedy_fwd_selection()
-    #print(feat)
-    #print(len(feat))
 
     quit()
 

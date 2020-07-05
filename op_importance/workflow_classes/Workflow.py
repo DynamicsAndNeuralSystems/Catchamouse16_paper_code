@@ -2118,15 +2118,33 @@ class Workflow:
 
         mpl.pyplot.show()
     
-    def classify_using_features(self, feature, mode, do_random = False): # mode = 'selection' or 'evaluate'
+    def classify_using_features(self, feature, mode, which_split = 1 ): # mode = 'selection' or 'evaluate'
+        '''
+        Classify the dataset using the given feature set
+
+        Parameters:
+        -----------
+        feature : numpy array
+            The set of features to be used
+
+        mode : string
+            Selection or Evaluation of features on the dataset
+
+        which_split : integer
+            Different splits
+        
+        Returns:
+        --------
+            Mean task accuracy
+        '''
 
         import time
         import random
         from sklearn.svm import LinearSVC
         from sklearn.model_selection import cross_val_score
+        from sklearn.model_selection import train_test_split
         from sklearn.metrics import accuracy_score
         from sklearn.model_selection import StratifiedShuffleSplit
-        from scipy.stats import truncnorm
         # initialise tree
         #clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
         clf = LinearSVC(random_state=23)
@@ -2138,21 +2156,15 @@ class Workflow:
         task_acc = []
         for task_ind, task in enumerate(self.tasks):
 
-            #print 'classifying task %s' % task.name
-            # random_data = np.random.randn(...).. same shape as task.data
-            # replace all task.data with random_data
-            sss = StratifiedShuffleSplit(n_splits=1, test_size=0.1, random_state=23) # leave 10% data for final evaluation
-
-            if do_random:
-                shape = task.data.shape
-                random_data = np.reshape(truncnorm(a=0, b=1, scale=1).rvs(size=s[0]*s[1]), s )
-                for train_index, test_index in sss.split(random_data, task.labels):
-                    X_train, X_test = random_data[train_index,:], random_data[test_index,:]
-                    y_train, y_test = task.labels[train_index], task.labels[test_index]
-            else:
-                for train_index, test_index in sss.split(task.data, task.labels):
+            # One split of data into 90% and 10%
+            # -- uses random_state to get split
+            sss = StratifiedShuffleSplit(n_splits=3, test_size=0.1, random_state=23) # leave 10% data for final evaluation
+            count = 1
+            for train_index, test_index in sss.split(task.data, task.labels): # mutually exclusive splits
+                if count == which_split:
                     X_train, X_test = task.data[train_index,:], task.data[test_index,:]
                     y_train, y_test = task.labels[train_index], task.labels[test_index]
+                count = count + 1
 
             # decide on number of folds
             if mode == 'selection':
@@ -2163,92 +2175,185 @@ class Workflow:
             min_folds = 2
             folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
 
-            # -- do cross-validated scoring for full matrix
-            # # whole matrix
-            # select only 90% data for train
+            with_cv = False # do cross-validation or not ?
             if mode == 'selection':
-                score_this_task_whole = cross_val_score(clf, X_train[:, np.isin( task.op_ids, feature ) ], y_train, cv=folds, scoring=scorer)
+                if with_cv:
+                    # -- do cross-validated scoring for 90% data (in-sample testing)
+                    score_this_task_whole = cross_val_score(clf, X_train[:, np.isin( task.op_ids, feature ) ], y_train, cv=folds, scoring=scorer)
+                else:
+                    #train_test_split --- to implement
+                    #train_data, test_data, train_label, test_label = train_test_split(X_train, y_train, test_size=0.2, random_state=23, stratify = y_train)
+                    sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=23)
+                    for train_index, test_index in sss.split(X_train, y_train): # mutually exclusive splits
+                        train_data, test_data = X_train[train_index,:], X_train[test_index,:]
+                        train_label, test_label = y_train[train_index], y_train[test_index]
+                    clf.fit(train_data[:, np.isin( task.op_ids, feature ) ], train_label)
+                    pred_label = clf.predict(test_data[:, np.isin( task.op_ids, feature ) ])
+                    score_this_task_whole = Feature_Stats.accuracy_score_class_balanced(test_label,pred_label)
             else:
-                #score_this_task_whole = cross_val_score(clf, task.data[:, np.isin( task.op_ids, feature ) ], task.labels, cv=folds, scoring=scorer)
-                clf.fit(X_train, y_train)
-                y_pred = clf.predict(X_test)
+                # -- Train on 90% data and test it on 10% (out-of-sample testing)
+                clf.fit(X_train[:, np.isin( task.op_ids, feature ) ], y_train)
+                y_pred = clf.predict(X_test[:, np.isin( task.op_ids, feature ) ])
                 score_this_task_whole = Feature_Stats.accuracy_score_class_balanced(y_test,y_pred)
             task_acc.append( np.mean( score_this_task_whole ) ) # append mean of cross validation accuracy
-        return np.mean( task_acc ) # min or mean
+        return ( task_acc ) # min or mean
 
-    def greedy_fwd_selection(self): # think of using 'min' instead of 'mean'
+    def greedy_fwd_selection(self, which_split): # think of using 'min' instead of 'mean'
+        '''
+        Greedy forward selection algorithm to select the features based it's performance on the given dataset
 
+        Parameters:
+        -----------
+        which_split: integer
+            To get different splits
+
+        Returns:
+        --------
+        selected_ids: list
+            The feature ids of selected features 
+        selected_acc: list
+            Iteration wise best accuracy in greedy algo
+        dataplot: list 2d
+            Contains accuracy across the tasks
+        '''
         import time
-
-        #ids = self.good_op_ids
+        from pathos.multiprocessing import ThreadPool as Pool
         
         # get ids for 7000 features
         rest_ids = self.good_op_ids.tolist() # np array
         #rest_ids = rest_ids[0:8] ## comment later to get it working
-
+        dataplot = []
         # select best performing feature initially
-        best_op_id = 0
+        best_id = 0
         best_acc = 0
+        best_overall_acc = []
         for id in rest_ids: # to get first best single feature
-            overall_acc = self.classify_using_features( np.array([id]), 'selection' )
-            if overall_acc > best_acc:
-                best_acc = overall_acc
-                best_op_id = id
-        print('selected features are: ')
-        print(best_op_id, best_acc)
+            overall_acc = self.classify_using_features( np.array([id]), 'selection', which_split )
+            avg_acc = np.mean(overall_acc)
+            if avg_acc > best_acc:
+                best_acc = avg_acc
+                best_id = id
+                best_overall_acc = overall_acc
+        dataplot.append(best_overall_acc)
+        #print('selected features are: ')
+        #print(best_op_id, best_acc)
+
         selected_ids = []
+        selected_acc = []
         #selected_ids = [7257, 117, 3161, 6968, 3662, 7784, 2883, 4062, 2743, 728, 3789, 3902, 2072, 6839, 6970, 4707, 204] # []
         #best_acc = self.classify_using_features(np.array(selected_ids))
-        print(best_acc)
+        
+        #print(best_acc)
         new_acc = best_acc
         prev_acc = 0
-        selected_ids.append(best_op_id) # and rest_ids
-        '''for elem in selected_ids:
-            rest_ids.remove(elem)'''
-        rest_ids.remove(best_op_id)
+        selected_ids.append(best_id)
+        rest_ids.remove(best_id)
+        selected_acc.append(best_acc)
         # threshold = 0.00001 # in percentage: 10^-3 error
-        while new_acc > prev_acc: #abs(prev_acc - new_acc) > threshold: #new_acc > prev_acc
-            max_acc = 0
+        for r in range(5):# upto 5 features only #while new_acc > prev_acc: 
+            best_acc = 0
             best_id = 0
-            
-            for id in rest_ids:
-                #avg_acc = calculate_avg_performance_alltask(rest_of_the_features)
+            def find_best_feat(id): # Find best
                 candidate_ids = list(selected_ids) # copy
                 candidate_ids.append(id)
-                avg_acc = self.classify_using_features( np.array(candidate_ids), 'selection' )
-                if avg_acc > max_acc:
-                    max_acc = avg_acc
-                    best_id = id
+                overall_acc = self.classify_using_features( np.array(candidate_ids), 'selection', which_split )
+                avg_acc = np.mean(overall_acc)
+                return avg_acc, id, overall_acc
+            p = Pool(processes=8)
+            arr = [ id for id in rest_ids]
+            t = p.map(find_best_feat, arr)
+            pair = sorted(t,key=lambda x: x[0], reverse=True)[0] # three return values?? how does this changes code?
+            best_acc = pair[0]
+            best_id = pair[1]
+            best_overall_acc = pair[2]
+            dataplot.append(best_overall_acc)
             #Add the best performing feature to selected_feature_set
-            print(best_id,max_acc)
+            #print(best_id,max_acc)
             selected_ids.append( best_id )
-            #Remove it from rest_of_the_features set
+
+            # Remove it from rest_of_the_features set
             rest_ids.remove( best_id )
             if len(rest_ids)==0:
                 break
             prev_acc = new_acc
-            new_acc = max_acc
-            print(abs(prev_acc - new_acc))
-        return selected_ids
+            new_acc = best_acc
+            selected_acc.append(new_acc)
+            #print(abs(prev_acc - new_acc))
+        return selected_ids, selected_acc, dataplot # row for a feature
+    
+    def test_greedy(self):
+        
+        for i in range(1,4): # different splits
+            print('Split',i)
+            ids, acc, dataplot = self.greedy_fwd_selection(i)
+            print(ids)
+            print(acc)
+            fig = mpl.pyplot.figure(figsize=(13,6))
+            mpl.pyplot.matshow( np.array(dataplot).T.tolist(), cmap = 'OrRd', fignum=1)
+            clb = mpl.pyplot.colorbar()
+            clb.ax.set_title('accuracy')
+            mpl.pyplot.xticks(range(0,len(ids)), range(1,len(ids)+1), rotation = 45 ) 
+            mpl.pyplot.yticks(np.arange(0,len(self.task_names)), self.task_names )
+
+            mpl.pyplot.title('Selection performance matrix for split '+str(i)+'\n', fontsize= 16, horizontalalignment='center')
+            mpl.pyplot.xlabel('\nfeature (or iterations)')
+            #mpl.pyplot.show()
+
+            mpl.pyplot.savefig('Plots/Select_Split_'+str(i)+'_performance_plot.png')
+            mpl.pyplot.close()
+            eval_acc = []
+            avg_eval_acc = []
+            current_ids = []
+            for id in ids:
+                current_ids.append(id)
+                temp = self.classify_using_features( np.array(current_ids), mode = 'evaluate', which_split = i )
+                eval_acc.append(temp)
+                avg_eval_acc.append( np.mean(temp))
+            print(avg_eval_acc)
+            print('\n')
+            mpl.pyplot.figure(figsize=(13,6))
+            mpl.pyplot.matshow( np.array(eval_acc).T.tolist(), cmap = 'OrRd', fignum=1)
+            clb = mpl.pyplot.colorbar()
+            clb.ax.set_title('accuracy')
+            mpl.pyplot.xticks(range(0,len(ids)), range(1,len(ids)+1), rotation = 45 ) 
+            mpl.pyplot.yticks(np.arange(0,len(self.task_names)), self.task_names )
+            mpl.pyplot.title('Evaluation performance matrix for split '+str(i)+'\n', fontsize= 16, horizontalalignment='center')
+            mpl.pyplot.xlabel('\nfeature (or iterations)')
+            #mpl.pyplot.show()
+            mpl.pyplot.savefig('Plots/Eval_Split_'+str(i)+'_performance_plot.png')
+            mpl.pyplot.close()
 
     def plot_greedy(self):
+        '''
+        Plot the result obtained from greedy algo
+
+        '''
         # using mean accuracy
-        selected_ids = [7257, 117, 3161, 6968, 3662, 7784, 2883, 4062, 2743, 728, 3789, 3902, 2072, 6839, 6970, 4707, 204]
-        current_ids = []
-        acc = []
+        #selected_ids = [7257, 117, 3161, 6968, 3662, 7784, 2883, 4062, 2743, 728, 3789, 3902, 2072, 6839, 6970, 4707, 204]
+
+        # -- Hard Coded features selected for real data
+        selected_ids = [7257, 3233, 1260, 2005, 117, 342, 2267, 2435, 2110, 4297, 1805, 2462, 765, 4663, 2812, 7373, 5482, 7418, 5726, 579, 3297]
         
-        for id in selected_ids:
-            current_ids.append(id)
-            acc.append( self.classify_using_features( np.array(current_ids) ,'evaluate'))
-        #acc = [0.6958333333333334,0.7645833333333334,0.7958333333333333,0.8083333333333331,0.8104166666666667,0.8250000000000002,0.8562500000000002,0.8729166666666668,0.8791666666666668,0.8812500000000001,0.8854166666666666,0.8937499999999999,0.9020833333333332,0.9104166666666668,0.9125,0.9166666666666666,0.9166666666666666]
-        #acc = [0.525,0.6,0.65,0.7,0.7]
-        mpl.pyplot.plot(np.arange(1,len(selected_ids)+1), acc) #np.arange(1,6)
+        current_ids = []
+        eval_acc = []
+        select_acc = []
+        for ids in selected_ids:
+            current_ids.append(ids)
+            eval_acc.append( self.classify_using_features( np.array(current_ids) ,'evaluate'))
+            select_acc.append( self.classify_using_features( np.array(current_ids) ,'selection'))
+        #incorrect from here...
+        #mpl.pyplot.plot(np.arange(1,len(selected_ids)+1), select_acc) #np.arange(1,6)
+        #mpl.pyplot.plot(np.arange(1,len(selected_ids)+1), eval_acc) #np.arange(1,6)
+        mpl.pyplot.legend(['selection','evaluation'])
         mpl.pyplot.xlabel('no of features')
         mpl.pyplot.ylabel('validation accuracy')
         mpl.pyplot.show()
 
     def testing_parameters(self):
+        '''
+        Testing the parameters of hierarchical clustering
 
+        '''
         from sklearn.svm import LinearSVC
         from sklearn.model_selection import cross_val_score
         import matplotlib.cm as cm
@@ -2258,7 +2363,6 @@ class Workflow:
         import time
         import random
 
-        # initialise tree
         clf = LinearSVC(random_state=23)
 
         # load class balanced scorer
@@ -2268,27 +2372,20 @@ class Workflow:
         # # reference line (below other data)
         # mpl.pyplot.plot((0, 1.5), (0, 1.5), '--', color=np.array((1, 1, 1)) * 0.7)
         
-        which_plot = 'scatter' # or 'datamat'
+        which_plot = 'scatter' # 'scatter' or 'datamat'
         calculate_mat = False
         
-        '''n_clust_array = []
-        for i in range(0, 100):
-            x = round(random.uniform(0.1, 0.55), 2)
-            n_clust_array.append(x)'''
-        
-        n_clust_max = 0.7
+        n_clust_max = 1.0
         n_clust_step = 0.05
-        n_clust_array = np.arange(0.05,n_clust_max+0.05,n_clust_step) #np.array([0.05, 0.1, 0.25, 0.4, 0.5, ])
+        n_clust_array = np.arange(0,n_clust_max+0.05,n_clust_step) #np.array([0.05, 0.1, 0.25, 0.4, 0.5, ])
         n_clust_array = np.around(n_clust_array,2)
         n_clust_steps = len(n_clust_array) # 5
 
-        # 100 to 6000
-        n_topOps_array = np.array([10, 50, 100, 200, 500, 1000, 2000, 4000, 6000]) #np.arange(1,11)*100 # [815] # [200, 300, 400, 500, 700, 800, 900] # [100, 250, 500, 750, 1000]
+        # 10 to 6356
+        n_topOps_array = np.array([10, 50, 100, 200, 500, 1000, 2000, 4000, 5000, 5464])#, 6000, 6356]) #np.arange(1,11)*100 # [815] # [200, 300, 400, 500, 700, 800, 900] # [100, 250, 500, 750, 1000]
         result_mat = np.empty((len(n_topOps_array), n_clust_steps))
         std_result_mat = np.empty((len(n_topOps_array), n_clust_steps))
         reduced = np.empty((len(n_topOps_array), n_clust_steps))
-        # format: 4 lines per number of clusters: (0) n_topOps (1) op ids (2) mean accuracy (3) std accuracy
-        perfmat = np.full((n_clust_steps*len(n_topOps_array)*4, len(self.tasks)), np.nan)
 
         if calculate_mat:
             for n_topOpsInd, n_topOps in enumerate(n_topOps_array):
@@ -2320,88 +2417,75 @@ class Workflow:
                     cv_acc = np.empty( ( 0, 0) )
                     for task_ind, task in enumerate(self.tasks):
 
-                        #print 'classifying task %s' % task.name
-
                         # decide on number of folds
                         un, counts = np.unique(task.labels, return_counts=True)
                         max_folds = 10
                         min_folds = 2
                         folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
 
-                        # -- do cross-validated scoring for full and reduced matrix
-
+                        # -- do cross-validated scoring
                         # only cluster centers
-                        thisClusterData = task.data[:, np.isin(task.op_ids,self.good_perf_cluster_center_op_ids)];
+                        thisClusterData = task.data[:, np.isin(task.op_ids,self.good_perf_cluster_center_op_ids)]
+
                         if np.size(thisClusterData) == 0:
                             score_this_task_cluster_ops = np.full((1,2), np.nan)
                         else:
                             score_this_task_cluster_ops = cross_val_score(clf, task.data[:, np.isin(task.op_ids,
-                                                                                                    self.good_perf_cluster_center_op_ids)],
+                                                                        self.good_perf_cluster_center_op_ids)],
                                                                         task.labels, cv=folds, scoring=scorer)
 
-                        task_acc.append( np.mean( score_this_task_cluster_ops ) )
-                        cv_acc = np.append(cv_acc, score_this_task_cluster_ops)
+                        task_acc.append( np.mean( score_this_task_cluster_ops ) ) # Mean of cv accuracy
+                        cv_acc = np.append(cv_acc, score_this_task_cluster_ops) # append all cv accuracies -- 2D array
                     result_mat[n_topOpsInd][clust_ind] = np.mean( task_acc )
                     std_result_mat[n_topOpsInd][clust_ind] = np.std( cv_acc )
 
                     no_of_reduced_feat = len(self.good_perf_cluster_center_op_ids) # x axis plot
                     reduced[n_topOpsInd][clust_ind] = no_of_reduced_feat
-                    put_in_x = np.ones((len(task_acc),))*no_of_reduced_feat
-                    put_in_y = task_acc
-                    print(no_of_reduced_feat)
-                    #colors = cm.rainbow(np.linspace(0, 1, len(task_acc)))
-                    #for y, c in zip(task_acc, colors):
-                        #mpl.pyplot.scatter(no_of_reduced_feat, y, color=c)
-
-                    '''mpl.pyplot.scatter(np.mean(put_in_x), np.mean(put_in_y), color = 'blue')'''
-
-                    # y axis - cross validation accuracies of tasks --- which is in task_acc
-                    # no of cluster centers or feature ... n_clust - threshold
-                    # and plot the column points in scatter plot
-
-                    #print 'Done. Took %1.1f minutes.' % ((time.time() - t) / 60)
+                    
             np.save('result_mat.npy', result_mat) # save
             np.save('std_result_mat.npy', std_result_mat) # save
             np.save('reduced.npy', reduced) # save
+            '''np.save('rand_result_mat.npy', result_mat) # save
+            np.save('rand_std_result_mat.npy', std_result_mat) # save
+            np.save('rand_reduced.npy', reduced) # save'''
         else:
             result_mat = np.load('result_mat.npy') # load
             std_result_mat = np.load('std_result_mat.npy') # load
             reduced = np.load('reduced.npy') # load
+            '''result_mat = np.load('rand_result_mat.npy') # load
+            std_result_mat = np.load('rand_std_result_mat.npy') # load
+            reduced = np.load('rand_reduced.npy') # load'''
 
         # SCATTER PLOT:
         if which_plot == 'scatter':
-            colors = cm.rainbow(np.linspace(0, 1, len(n_topOps_array)-4 ))
-            for i in range(len(n_topOps_array)-4): # different colors
+            colors = cm.rainbow(np.linspace(0, 1, len(n_topOps_array) ))
+            for i in range(len(n_topOps_array)): # different colors
                 # scatter plot
-                #mpl.pyplot.scatter(reduced[i,:], result_mat[i,:], color = colors[i] , alpha = 0.8 )
+                mpl.pyplot.scatter(reduced[i,:], result_mat[i,:], color = colors[i] , alpha = 0.8 )
                 # error bar
-                mpl.pyplot.errorbar(reduced[i,:], result_mat[i,:], yerr = std_result_mat[i,:], fmt = 'o')
+                #mpl.pyplot.errorbar(reduced[i,:], result_mat[i,:], yerr = std_result_mat[i,:], fmt = 'o')
             mpl.pyplot.legend(labels=n_topOps_array.astype('int32') )
             mpl.pyplot.xlabel('no. of features')
             mpl.pyplot.ylabel('validated accuracy')
             mpl.pyplot.show()
         else:
-            # mpl.pyplot.legend((p1, p2), ('500 top ops', 'only cluster centers'))
-            # # mpl.pyplot.xlim((0, 1))
-            # # mpl.pyplot.ylim((0, 1))
             
             # DATA PLOT
-            #np.arange(0,5) -- for data matrix plot uncomment this part
-            mpl.pyplot.figure(figsize=(11,7))
-            mpl.pyplot.matshow( np.array(result_mat), cmap = 'inferno', fignum=1)
+            # -- for data matrix plot uncomment this part
+            mpl.pyplot.figure(figsize=(12,7))
+            mpl.pyplot.matshow( np.array(result_mat), cmap = 'OrRd', fignum=1)
             #mpl.pyplot.colorbar()
             clb = mpl.pyplot.colorbar()
             clb.ax.set_title('avg task accuracy')
             mpl.pyplot.xticks(np.arange(0,len(n_clust_array)), n_clust_array, rotation = 45 ) 
             mpl.pyplot.yticks(np.arange(0,len(n_topOps_array)), n_topOps_array )
-            #mpl.pyplot.setp(n_clust_array, rotation=45, ha="right", rotation_mode="anchor")
-            # Loop over data dimensions and create text annotations.
+            # -- Loop over data dimensions and create text annotations
             for i in range(len(n_topOps_array)):
                 for j in range(len(n_clust_array)):
                     text = mpl.pyplot.text(j, i, int(reduced[i, j]),
                                 ha="center", va="center", color="w")
 
-            mpl.pyplot.title('No. of reduced features for different combination of parameter values\n\n\n\n', fontsize= 16, horizontalalignment='center')
+            mpl.pyplot.title('No. of reduced features for different combination of parameter values\n\n\n\n\n', fontsize= 16, horizontalalignment='center')
             mpl.pyplot.xlabel('\nthreshold applied')
             mpl.pyplot.ylabel('number of top features')
             mpl.pyplot.show()
@@ -2445,6 +2529,9 @@ if __name__ == '__main__':
                       "Left_excitatory_PVCre","Left_excitatory_SHAM","Left_PVCre_SHAM",
                       "Right_CAMK_excitatory","Right_CAMK_PVCre","Right_CAMK_SHAM",
                       "Right_excitatory_PVCre","Right_excitatory_SHAM","Right_PVCre_SHAM"]
+        '''task_names = ["HCTSA_1800001_C3-A2","HCTSA_1800005_C3-A2","HCTSA_1800458_C3-A2",
+                "HCTSA_1800596_C3-A2","HCTSA_1800604_C3-A2","HCTSA_1800748_C3-A2",
+                "HCTSA_1800749_C3-A2","HCTSA_1800807_C3-A2","HCTSA_1800821_C3-A2"]'''
         #["RightCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N","LeftCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N",
         #                "Control_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N"]
 
@@ -2631,14 +2718,28 @@ if __name__ == '__main__':
     # workflow.greedy_selectedOps()
 
     #workflow.classify_random_features()
-    
+    workflow.test_greedy()
+    quit()
     #workflow.testing_parameters()
-    #print(workflow.classify_using_features( np.array([7257]), 'selection' ) )
-    #print(workflow.classify_using_features( np.array([7257]), 'evaluate' ) )
-    # workflow.plot_greedy()
-    feat = workflow.greedy_fwd_selection()
-    print(feat)
-    print(len(feat))
+    #print(workflow.classify_using_features( np.array([7257]), 'selection', 1 ) )
+    #print(workflow.classify_using_features( np.array([117]), 'selection', 1 ) )
+    #print(workflow.classify_using_features( np.array([117]), 'selection', 2 ) )
+    for i in range(1,11): # 10 iterations
+        print('Iteration: %d'%i)
+        ids, acc = workflow.greedy_fwd_selection( i )
+        eval_acc = []
+        iter_ids = []
+        print('Selected features are : {}'.format(ids))
+        for j in range(len(ids)):
+            iter_ids.append(ids[j])
+            temp = workflow.classify_using_features( np.array(iter_ids), 'evaluation', i )
+            eval_acc.append(temp)
+        print('Selection accuracy is {}'.format(acc))
+        print('Evaluation accuracy is {}'.format(eval_acc))
+    #workflow.plot_greedy()
+    #feat = workflow.greedy_fwd_selection()
+    #print(feat)
+    #print(len(feat))
     #workflow.plot_greedy()
 
     quit()

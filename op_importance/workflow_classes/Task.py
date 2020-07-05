@@ -64,10 +64,14 @@ class Task:
         is_read_feature_data : bool
             Is the feature data to be read or not
         """
+        from scipy.stats import truncnorm
         #self.data, keywords_ts, self.op_ids = self.input_method.input_task(self.name,is_read_feature_data = is_read_feature_data)
         # self.data, self.ts, self.op = self.input_method.input_task(self.name,is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
         self.data, self.ts, self.op, self.m_op = self.input_method.input_task_master(self.name,is_read_feature_data=is_read_feature_data, old_matlab=old_matlab)
-
+        '''s = self.data.shape
+        np.random.seed(seed=42)
+        # choose real or RANDOM data
+        self.data = np.reshape(truncnorm(a=0, b=1, scale=1).rvs(size=s[0]*s[1]), s )'''
         self.op_ids = np.array(self.op['id'])
         self.keywords_op = self.op['keywords']
         self.keywords_ts = self.ts['keywords']

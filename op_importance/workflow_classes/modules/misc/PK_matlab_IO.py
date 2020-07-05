@@ -72,8 +72,6 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
         if item == 'TimeSeries':
             path_pattern = inputDir+'{:s}/hctsa_timeseries-info.csv'
             ts_info_path = path_pattern.format(task_name)
-            path_pattern = inputDir+'{:s}/hctsa_grouplabel-info.csv'
-            ts_grp_info_path = path_pattern.format(task_name)
             timeseries = dict()
             if is_from_old_matlab:
                 # lambda function used to populate the dictionary with the appropriate data lists
@@ -109,14 +107,14 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
                 for extractor, key in zip([ts_filename, ts_kw, ts_n_samples], ['filename', 'keywords', 'n_samples']):
                     timeseries[key] = [extractor(i) for i in range(mat_file['TimeSeries'].shape[0])]
             else:
-                with open(ts_info_path,'r') as f1, open(ts_grp_info_path,'r') as f2:
+                import re
+                with open(ts_info_path,'r') as f1:
                     info_reader = csv.reader(f1)
-                    grp_info_reader = csv.reader(f2)
                     ts_info = list(info_reader)
-                    ts_grp_info = list(grp_info_reader)
+                    del ts_info[0]
                 ts_filename = lambda i: str(ts_info[i][0])
-                ts_kw = lambda i: str(ts_grp_info[i][1])
-                ts_n_samples = lambda i: int(ts_info[i][1])
+                ts_kw = lambda i: re.sub("SHAM_|DREDD_|rsfMRI_|mouse\d+",'',str(ts_info[i][1].replace(',','_') ) )
+                ts_n_samples = lambda i: int(ts_info[i][2])
 
                 for extractor, key in zip([ts_filename, ts_kw, ts_n_samples], ['filename', 'keywords', 'n_samples']):
                     timeseries[key] = [extractor(i) for i in range(len(ts_info))]
@@ -149,11 +147,12 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
                     op = []
                     for row in reader:
                         op.append(row)
-                op_id = lambda i : int(op[i][2])
-                op_name = lambda i : str(op[i][0])
-                op_code = lambda i : str(op[i][1])
-                op_mopid = lambda i : int(op[i][3])
-                op_kw = lambda i : str(op[i][4])
+                    del op[0]
+                op_id = lambda i : int(op[i][3])
+                op_name = lambda i : str(op[i][1])
+                op_code = lambda i : str(op[i][0])
+                op_mopid = lambda i : int(op[i][4])
+                op_kw = lambda i : str(op[i][2])
                 for extractor,key in zip([op_id,op_name,op_kw,op_code,op_mopid],['id','name','keywords','code_string','master_id']):
                     operations[key] =[extractor(i) for i in range(len(op))]
             retval = retval + (operations,)
@@ -190,7 +189,8 @@ def read_from_mat_file(inputDir,task_name,hctsa_struct_names,is_from_old_matlab 
                     m_op = []
                     for row in reader:
                         m_op.append(row)
-                m_op_id = lambda i: int(m_op[i][0])
+                    del m_op[0]
+                m_op_id = lambda i: int(m_op[i][2])
                 m_op_name = lambda i: str(m_op[i][1])
                 for extractor, key in zip([m_op_id, m_op_name],
                                         ['id', 'name']):

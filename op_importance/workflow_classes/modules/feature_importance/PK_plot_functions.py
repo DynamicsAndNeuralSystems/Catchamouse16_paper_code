@@ -83,9 +83,9 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     figsize=(18,12)    
     #figsize=(46.81,33.11) 
     rect_measures = [0.25,0.8075,0.5,0.15]
-    rect_dendro = [0.755,0.05,0.15,0.75]
-    rect_matrix = [0.25,0.05,0.5,0.75]
-    rect_color = [0.92,0.05,0.02,0.75]
+    rect_dendro = [0.755,0.02,0.15,0.94]
+    rect_matrix = [0.175,0.02,0.55,0.94]
+    rect_color = [0.92,0.02,0.02,0.94]
     
 
     # Compute and plot dendrogram.
@@ -113,7 +113,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     axmatrix.set_xticks([])
     axmatrix.set_yticks(range(len(index)))
     #axmatrix.set_yticklabels(np.array(names)[index],fontsize=5)
-    axmatrix.set_yticklabels(np.array(names)[index])
+    axmatrix.set_yticklabels(np.array(names)[index], fontsize =5.6)#,rotation =45)
 
     # Plot colorbar.
     axcolor = fig.add_axes(rect_color)
@@ -122,7 +122,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     
     
     # Plot the quality measures
-    axmeasure = fig.add_axes(rect_measures)
+    '''axmeasure = fig.add_axes(rect_measures)
     axmeasure.xaxis.set_ticklabels([]) 
     axmeasure.scatter(np.arange(0,measures.shape[-1])+0.5,measures[0,index])
     axmeasure.set_xlim([0,measures.shape[-1]])
@@ -135,7 +135,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
 
     [label.set_color('r') for label in axmeasure2.get_yticklabels()]
     axmeasure2.set_ylabel('avg classification accuracy')
-    axmeasure2.yaxis.label.set_color('r')
+    axmeasure2.yaxis.label.set_color('r')'''
 
     # -----------------------------------------------------------------
     # -- calculate and plot clusters ----------------------------------
@@ -145,8 +145,8 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
                                      
     # -- plot delimiters for measures
     cluster_bounds = np.hstack((-1,np.nonzero(np.diff(cluster_ind[index]))[0],abs_corr_array.shape[0]-1))+1
-    for bound in cluster_bounds:
-        axmeasure.axvline(bound,linestyle='--',color='k')                            
+    '''for bound in cluster_bounds:
+        axmeasure.axvline(bound,linestyle='--',color='k')'''                            
                                      
     # -- calculate the locations for the cluster squares
     patch_bounds = cluster_bounds - .5

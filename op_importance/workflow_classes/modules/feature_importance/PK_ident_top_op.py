@@ -7,7 +7,7 @@ import numpy as np
 import scipy.spatial.distance as spdst
 import scipy.cluster.hierarchy as hierarchy
 
-def calc_linkage(abs_corr_array, linkage_method='complete'):#'average'):#
+def calc_linkage(abs_corr_array, linkage_method='average'):#'average'):# complete
     """
     Calculate the linkage for a absolute correlation array
     Parameters:

@@ -291,7 +291,7 @@ class Workflow:
             task.calc_stats(is_keep_data = is_keep_data)
             task.save_attribute(save_attribute_name, out_path_pattern)
 
-    def collect_stats_good_op_ids(self):
+    def collect_stats_good_op_ids(self, leave_task):
         """
         Collect all combined stats for each task and take stats for good operations only
         """
@@ -299,7 +299,10 @@ class Workflow:
         stats_good_op_tmp = []
         pvals_good_op_tmp = []
         #stats_good_op_ma[:] = np.NaN
-        for task in self.tasks:
+
+        for taskIndex, task in enumerate(self.tasks):
+            if taskIndex == leave_task:
+                continue
             # -- create tmp array for good stats for current task. For sake of simplicity when dealing with different
             # dimensions of task.tot_stats we transpose stats_good_op_ma_tmp so row corresponds to feature temporarily
             if task.tot_stats.ndim > 1:
@@ -1038,9 +1041,9 @@ class Workflow:
 
         print 'Cluster centers:'
         print cluster_center_op_ids
-        #print 'with names:'
-        #for id in cluster_center_op_ids:
-        #    print '%i, %s' % (id, self.good_op_names[self.good_op_ids == id])
+        print 'with names:'
+        for id in cluster_center_op_ids:
+            print '%s,' % (self.good_op_names[self.good_op_ids == id][0])
 
     def classify_good_perf_ops_vs_good_ops(self):
 
@@ -2368,54 +2371,50 @@ class Workflow:
         # load class balanced scorer
         from sklearn.metrics import make_scorer
         scorer = make_scorer(Feature_Stats.accuracy_score_class_balanced)
-
-        # # reference line (below other data)
-        # mpl.pyplot.plot((0, 1.5), (0, 1.5), '--', color=np.array((1, 1, 1)) * 0.7)
         
-        which_plot = 'scatter' # 'scatter' or 'datamat'
-        calculate_mat = False
+        which_plot = 'dist' # 'scatter' or 'datamat' or 'dist'
+        calculate_mat = True
         
-        n_clust_max = 1.0
-        n_clust_step = 0.05
-        n_clust_array = np.arange(0,n_clust_max+0.05,n_clust_step) #np.array([0.05, 0.1, 0.25, 0.4, 0.5, ])
-        n_clust_array = np.around(n_clust_array,2)
-        n_clust_steps = len(n_clust_array) # 5
+        n_clust_max = 0.5
+        n_clust_step = 0.1
+        n_clust_array = np.array([0.05, 0.1, 0.2, 0.3, 0.4, 0.5 ])#np.arange(0.2,n_clust_max+0.001,n_clust_step) #np.array([0.05, 0.1, 0.25, 0.4, 0.5, ])
+        n_clust_array = np.around(n_clust_array,3)
+        n_clust_steps = len(n_clust_array)
 
-        # 10 to 6356
-        n_topOps_array = np.array([10, 50, 100, 200, 500, 1000, 2000, 4000, 5000, 5464])#, 6000, 6356]) #np.arange(1,11)*100 # [815] # [200, 300, 400, 500, 700, 800, 900] # [100, 250, 500, 750, 1000]
-        result_mat = np.empty((len(n_topOps_array), n_clust_steps))
-        std_result_mat = np.empty((len(n_topOps_array), n_clust_steps))
-        reduced = np.empty((len(n_topOps_array), n_clust_steps))
+        n_topOps_array = np.array([100])#np.array([10, 50, 100, 200, 500])#, 1000, 2000, 4000, 5000])#, 6000, 6356]) #np.arange(1,11)*100 # [815] # [200, 300, 400, 500, 700, 800, 900] # [100, 250, 500, 750, 1000]
+        #result_mat = np.empty((len(n_topOps_array), n_clust_steps))
+        #std_result_mat = np.empty((len(n_topOps_array), n_clust_steps))
+        result_mat = []
+        reduced = np.empty((len(self.tasks), n_clust_steps))
 
         if calculate_mat:
             for n_topOpsInd, n_topOps in enumerate(n_topOps_array):
 
                 print "\nNow taking %i topOps." % n_topOps
-
-                # re-select the top ops
-                self.n_good_perf_ops = n_topOps
-                self.select_good_perf_ops()
-
-                # -- intitialise the redundancy method with the calculated results
-                self.init_redundancy_method_problem_space()
-                # re-calculate the correlation matrix between top ops
-                self.redundancy_method.calc_similarity()
-
                 for clust_ind, n_clust in enumerate(n_clust_array):
-
-                    t = time.time()
-
-                    print '\n%f cluster threshold' % n_clust
-
-                    # -- create n_clust clusters
-                    self.redundancy_method.calc_hierch_cluster(t=n_clust)#, criterion='distance') 
-
-                    # -- select single features for each cluster
-                    self.select_good_perf_cluster_center_ops()
                     
-                    task_acc = [] # collects all mean accuracy of tasks
-                    cv_acc = np.empty( ( 0, 0) )
-                    for task_ind, task in enumerate(self.tasks):
+                    t = time.time()
+                    print '\n%f cluster threshold' % n_clust
+                    left_out_task_acc = []
+                    for task_ind, task in enumerate(self.tasks): # leave-one-task-out -- leave one task and calculate performance, avg over all such perf.
+                        
+                        # leave task_ind 
+                        # calc performance with left task
+                        self.collect_stats_good_op_ids(leave_task = task_ind)
+                        # re-select the top ops
+                        self.n_good_perf_ops = n_topOps
+                        self.select_good_perf_ops()
+
+                        # -- intitialise the redundancy method with the calculated results
+                        self.init_redundancy_method_problem_space()
+                        # re-calculate the correlation matrix between top ops
+                        self.redundancy_method.calc_similarity()
+                        # -- create n_clust clusters
+                        print(n_clust)
+                        self.redundancy_method.calc_hierch_cluster(t=n_clust)#, criterion='distance') 
+
+                        # -- select single features for each cluster
+                        self.select_good_perf_cluster_center_ops()
 
                         # decide on number of folds
                         un, counts = np.unique(task.labels, return_counts=True)
@@ -2434,25 +2433,26 @@ class Workflow:
                                                                         self.good_perf_cluster_center_op_ids)],
                                                                         task.labels, cv=folds, scoring=scorer)
 
-                        task_acc.append( np.mean( score_this_task_cluster_ops ) ) # Mean of cv accuracy
-                        cv_acc = np.append(cv_acc, score_this_task_cluster_ops) # append all cv accuracies -- 2D array
-                    result_mat[n_topOpsInd][clust_ind] = np.mean( task_acc )
+                        left_out_task_acc.append( np.mean( score_this_task_cluster_ops ) ) # Mean of cv accuracy
+                        reduced[task_ind][clust_ind] = len(self.good_perf_cluster_center_op_ids)
+                        #cv_acc = np.append(cv_acc, score_this_task_cluster_ops) # append all cv accuracies -- 2D array
+                    result_mat.append(left_out_task_acc) # no of clusters (y-axis) x no of tasks (x-axis)
+                    '''result_mat[n_topOpsInd][clust_ind] = np.mean( task_acc )
                     std_result_mat[n_topOpsInd][clust_ind] = np.std( cv_acc )
-
                     no_of_reduced_feat = len(self.good_perf_cluster_center_op_ids) # x axis plot
-                    reduced[n_topOpsInd][clust_ind] = no_of_reduced_feat
+                    reduced[n_topOpsInd][clust_ind] = no_of_reduced_feat'''
                     
             np.save('result_mat.npy', result_mat) # save
-            np.save('std_result_mat.npy', std_result_mat) # save
             np.save('reduced.npy', reduced) # save
-            '''np.save('rand_result_mat.npy', result_mat) # save
-            np.save('rand_std_result_mat.npy', std_result_mat) # save
-            np.save('rand_reduced.npy', reduced) # save'''
+            '''np.save('std_result_mat.npy', std_result_mat) # save
+            np.save('rand_result_mat.npy', result_mat) # save
+            np.save('rand_reduced.npy', reduced) # save
+            np.save('rand_std_result_mat.npy', std_result_mat) # save'''
         else:
             result_mat = np.load('result_mat.npy') # load
-            std_result_mat = np.load('std_result_mat.npy') # load
             reduced = np.load('reduced.npy') # load
-            '''result_mat = np.load('rand_result_mat.npy') # load
+            '''std_result_mat = np.load('std_result_mat.npy') # load
+            result_mat = np.load('rand_result_mat.npy') # load
             std_result_mat = np.load('rand_std_result_mat.npy') # load
             reduced = np.load('rand_reduced.npy') # load'''
 
@@ -2468,26 +2468,40 @@ class Workflow:
             mpl.pyplot.xlabel('no. of features')
             mpl.pyplot.ylabel('validated accuracy')
             mpl.pyplot.show()
-        else:
+        elif which_plot == 'datamat':
             
             # DATA PLOT
             # -- for data matrix plot uncomment this part
+            result_mat = np.array(result_mat).T
+            sorted_ind = result_mat[:,1].argsort()[::-1]
+            result_mat = result_mat[sorted_ind]
             mpl.pyplot.figure(figsize=(12,7))
-            mpl.pyplot.matshow( np.array(result_mat), cmap = 'OrRd', fignum=1)
+            mpl.pyplot.matshow( result_mat, cmap = 'OrRd', fignum=1)
             #mpl.pyplot.colorbar()
             clb = mpl.pyplot.colorbar()
-            clb.ax.set_title('avg task accuracy')
+            clb.ax.set_title('accuracy') # before = 'avg task accuracy'
             mpl.pyplot.xticks(np.arange(0,len(n_clust_array)), n_clust_array, rotation = 45 ) 
-            mpl.pyplot.yticks(np.arange(0,len(n_topOps_array)), n_topOps_array )
+            mpl.pyplot.yticks(np.arange(0,len(self.tasks)), np.array(self.task_names)[sorted_ind] )
             # -- Loop over data dimensions and create text annotations
-            for i in range(len(n_topOps_array)):
+            for i in range(len(self.tasks)):
                 for j in range(len(n_clust_array)):
                     text = mpl.pyplot.text(j, i, int(reduced[i, j]),
                                 ha="center", va="center", color="w")
-
-            mpl.pyplot.title('No. of reduced features for different combination of parameter values\n\n\n\n\n', fontsize= 16, horizontalalignment='center')
+            mpl.pyplot.title('Left-out-task performance matrix (Top 200 features taken)\n', fontsize= 16, horizontalalignment='center')
             mpl.pyplot.xlabel('\nthreshold applied')
-            mpl.pyplot.ylabel('number of top features')
+            mpl.pyplot.ylabel('Left-out-task')
+            mpl.pyplot.show()
+        else:
+            import seaborn as sns
+            result_mat = np.array(result_mat).T
+            print(result_mat.shape)
+            colors = cm.rainbow(np.linspace(0, 1, len(n_clust_array) ))
+            sns.violinplot(data=result_mat, color ="0.8")
+            sns.stripplot(data=result_mat, jitter=True, zorder=1)
+            mpl.pyplot.title("'Average' Distribution Plot")
+            mpl.pyplot.xticks(range(n_clust_steps),n_clust_array)
+            mpl.pyplot.xlabel('thresholds')
+            mpl.pyplot.ylabel('Accuracy')
             mpl.pyplot.show()
 
 if __name__ == '__main__':
@@ -2530,8 +2544,8 @@ if __name__ == '__main__':
                       "Right_CAMK_excitatory","Right_CAMK_PVCre","Right_CAMK_SHAM",
                       "Right_excitatory_PVCre","Right_excitatory_SHAM","Right_PVCre_SHAM"]
         '''task_names = ["HCTSA_1800001_C3-A2","HCTSA_1800005_C3-A2","HCTSA_1800458_C3-A2",
-                "HCTSA_1800596_C3-A2","HCTSA_1800604_C3-A2","HCTSA_1800748_C3-A2",
-                "HCTSA_1800749_C3-A2","HCTSA_1800807_C3-A2","HCTSA_1800821_C3-A2"]'''
+                    "HCTSA_1800596_C3-A2","HCTSA_1800604_C3-A2","HCTSA_1800748_C3-A2",
+                    "HCTSA_1800749_C3-A2","HCTSA_1800807_C3-A2","HCTSA_1800821_C3-A2"]'''
         #["RightCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N","LeftCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N",
         #                "Control_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N"]
 
@@ -2558,9 +2572,9 @@ if __name__ == '__main__':
         #               "UWaveGestureLibraryAll", "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ",
         #               "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
 
-    n_good_perf_ops = 500 # intermediate number of good performers to cluster
+    n_good_perf_ops = 100 # intermediate number of good performers to cluster
     compute_features = False # False or True : compute classification accuracies?
-    max_dist_cluster = 0.20 # gamma in paper, maximum allowed correlation distance within a cluster
+    max_dist_cluster = 0.2 # gamma in paper, maximum allowed correlation distance within a cluster
 
     # normalisation of features as done in hctsa TS_normalize
     if 'maxmin' in runtype:
@@ -2666,14 +2680,16 @@ if __name__ == '__main__':
     # -- exclude operations with 'raw' keyword
     workflow.exclude_good_ops_keyword('raw')
     # -- Collect all combined stats for each task and take stats for good (non-NaN) operations only
-    workflow.collect_stats_good_op_ids()
+    workflow.collect_stats_good_op_ids(leave_task = -1) # leave no task
     # -- Select a subset of well performing operations (z-score across tasks, take n best)
     workflow.select_good_perf_ops()
     # workflow.select_good_perf_ops_sort_asc_input_params_to_file()
     #print ( ( workflow.stats_good_op_comb - np.nanmean(workflow.stats_good_op_comb) ) / np.nanstd(workflow.stats_good_op_comb) ) 
     # workflow.test()
     print( workflow.stats_good_op_comb.shape )
-    # quit()
+    print(len(workflow.tasks))
+    #workflow.testing_parameters()
+    #quit()
 
     # # -- IMPORTANT depends on knowledge on nulls
     # # -- mask p-values of operations with too few outputs
@@ -2688,21 +2704,16 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- Do the redundancy calculations -------------------------------
     # -----------------------------------------------------------------
-    '''all_avg = []
-    all_threshold = []
-    for i in np.arange(0.05,0.51,0.05):
-        print 'Cluster Threshold: %f' %(i)
-        all_threshold.append(i)'''
     # -- intitialise the redundancy method with the calculated results
-    '''workflow.init_redundancy_method_problem_space()
+    workflow.init_redundancy_method_problem_space()
     # -- calculate the correlation matrix saved in workflow.redundancy_method.similarity_array
     workflow.redundancy_method.calc_similarity()
     # -- calculate the linkage, the cluster indices and the clustering in self.corr_linkage,self.cluster_inds,self.cluster_op_id_list,respectively
     workflow.redundancy_method.calc_hierch_cluster(t = max_dist_cluster)
     #
     # # -- single features for each cluster
-    workflow.select_good_perf_cluster_center_ops()'''
-
+    workflow.select_good_perf_cluster_center_ops()
+    #quit()
     # -----------------------------------------------------------------
     # -- Classification perf with feature subsets ---------------------
     # -----------------------------------------------------------------
@@ -2718,31 +2729,24 @@ if __name__ == '__main__':
     # workflow.greedy_selectedOps()
 
     #workflow.classify_random_features()
-    workflow.test_greedy()
-    quit()
+    
+    # -----------------------------------------------------------------
+    # -- Testing param of clustering and Greedy algorithm -------------
+    # -----------------------------------------------------------------
+
+    #workflow.testing_parameters()
+    #quit()
     #workflow.testing_parameters()
     #print(workflow.classify_using_features( np.array([7257]), 'selection', 1 ) )
     #print(workflow.classify_using_features( np.array([117]), 'selection', 1 ) )
     #print(workflow.classify_using_features( np.array([117]), 'selection', 2 ) )
-    for i in range(1,11): # 10 iterations
-        print('Iteration: %d'%i)
-        ids, acc = workflow.greedy_fwd_selection( i )
-        eval_acc = []
-        iter_ids = []
-        print('Selected features are : {}'.format(ids))
-        for j in range(len(ids)):
-            iter_ids.append(ids[j])
-            temp = workflow.classify_using_features( np.array(iter_ids), 'evaluation', i )
-            eval_acc.append(temp)
-        print('Selection accuracy is {}'.format(acc))
-        print('Evaluation accuracy is {}'.format(eval_acc))
     #workflow.plot_greedy()
     #feat = workflow.greedy_fwd_selection()
     #print(feat)
     #print(len(feat))
     #workflow.plot_greedy()
 
-    quit()
+    #quit()
 
     # -- show performance matrix of catch22-features only
     # workflow.show_catch22_perfmat()
@@ -2780,7 +2784,7 @@ if __name__ == '__main__':
     # measures[2, :] = (meanErrors - np.nanmean(meanErrors))/np.nanstd(meanErrors)
     measures[2, :] = (workflow.stats_good_op_comb - np.nanmean(workflow.stats_good_op_comb))/np.nanstd(workflow.stats_good_op_comb)
     # # -- the normalised combined error as selected
-    # measures[2, :] = workflow.stats_good_op_comb
+    # measures[2, :] = -workflow.stats_good_op_comb
 
     # -- write textfile containing the information as shown in the plot
     workflow.redundancy_method.write_cluster_file(result_txt_outpath,op_id_name_map,measures)

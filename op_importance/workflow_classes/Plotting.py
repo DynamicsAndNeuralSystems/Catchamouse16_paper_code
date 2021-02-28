@@ -64,7 +64,7 @@ class Plotting:
         # -- z scored classification stats (for all features) for top features
         print(self.workflow.stats_good_op.shape)
         print(self.workflow.stats_good_op_comb.shape)
-        stats_good_op_z_score = 1 - np.mean(self.workflow.stats_good_op, axis = 0)
+        stats_good_op_z_score = fap.normalise_masked_array(self.workflow.stats_good_op_comb, axis= 0,norm_type = 'zscore')[0]#1 - np.mean(self.workflow.stats_good_op, axis = 0)
         #fap.normalise_masked_array(self.workflow.stats_good_op_comb, axis= 0,norm_type = 'zscore')[0]
         measures[1,:] = stats_good_op_z_score[tmp_ind]
         

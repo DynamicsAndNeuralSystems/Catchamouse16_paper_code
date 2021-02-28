@@ -1291,12 +1291,63 @@ class Workflow:
 
     def classify_good_perf_ops_vs_super_vs_good_ops(self):
 
-        import sklearn.tree as tree
+        featureNamesCatch16 = ['SY_DriftingMean50.min',
+                                'CO_TranslateShape_circle_35_pts.statav4_m',
+                                'FC_LoopLocalSimple_mean.stderr_chn',
+                                'SC_FluctAnal_2_dfa_50_2_logi.r2_se2',
+                                'DN_RemovePoints_absclose_05.ac2rat',
+                                'ST_LocalExtrema_n100.diffmaxabsmin',
+                                'AC_nl_036',
+                                'AC_nl_035',
+                                'AC_nl_112',
+                                'MF_CompareAR_1_10_05.stddiff',
+                                'IN_AutoMutualInfoStats_diff_20_gaussian.ami8',
+                                'PH_Walker_momentum_5.w_propzcross',
+                                'PH_Walker_biasprop_05_01.sw_meanabsdiff',
+                                'CO_HistogramAMI_even_10.ami3',
+                                'CO_HistogramAMI_even_2.ami3',
+                                'CO_AddNoise_1_even_10.ami_at_10']
+    
+        featureNamesCatch22 = ['CO_Embed2_Basic_tau.incircle_1',
+                                'CO_Embed2_Basic_tau.incircle_2',
+                                'FC_LocalSimple_mean1.taures',
+                                'SY_SpreadRandomLocal_ac2_100.meantaul',
+                                'DN_HistogramMode_10',
+                                'SY_StdNthDer_1',
+                                'AC_9',
+                                'SB_MotifTwo_mean.hhh',
+                                'EN_SampEn_5_03.sampen1',
+                                'CO_FirstMin_ac',
+                                'DN_OutlierInclude_abs_001.mdrmd',
+                                'CO_trev_1.num',
+                                'FC_LocalSimple_lfittau.taures',
+                                'SY_SpreadRandomLocal_50_100.meantaul',
+                                'SC_FluctAnal_2_rsrangefit_50_1_logi.prop_r1',
+                                'PH_ForcePotential_sine_1_1_1.proppos',
+                                'SP_Summaries_pgram_hamm.maxw',
+                                'SP_Summaries_welch_rect.maxw']
+
+        # catch16 feature indicator
+        catch16Indicator = [item in featureNamesCatch16 for item in self.good_op_names]
+        catch16IDs = [self.good_op_ids[i] for i in range(len(self.good_op_ids)) if
+                      self.good_op_names[i] in featureNamesCatch16]
+        print(len(catch16IDs))
+        print(catch16IDs)
+        
+        catch22Indicator = [item in featureNamesCatch22 for item in self.good_op_names]
+        catch22IDs = [self.good_op_ids[i] for i in range(len(self.good_op_ids)) if
+                      self.good_op_names[i] in featureNamesCatch22]
+        
+        #import sklearn.tree as tree
+        import sklearn.svm as svm
         from sklearn.model_selection import cross_val_score
         import time
+        import numpy as np
+        import operator
 
         # initialise tree
-        clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
+        #clf = tree.DecisionTreeClassifier(class_weight="balanced", random_state=23)
+        clf = svm.LinearSVC(random_state=23)
 
         # load class balanced scorer
         from sklearn.metrics import make_scorer
@@ -1307,6 +1358,8 @@ class Workflow:
 
 
         perfmat = np.zeros((len(self.tasks), 8))
+        # sort_dict = dict()
+        # mf_id = 7385
         for task_ind, task in enumerate(self.tasks):
 
             t = time.time()
@@ -1319,12 +1372,21 @@ class Workflow:
             folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
 
             # -- do cross-validated scoring for full and reduced matrix
+            # To find highly correlated features w.r.t. MF (mf_id = 7385):
+            # print(task.data.shape)
+            # for i in range(len(self.good_op_ids)):
+            #     r = np.corrcoef(task.data[:, np.isin(task.op_ids, mf_id)].T, task.data[:, np.isin(task.op_ids, self.good_op_ids[i])].T)
+            #     #r[0, 1]
+            #     if (self.good_op_names[i],self.good_op_ids[i]) not in sort_dict:
+            #         sort_dict[self.good_op_names[i],self.good_op_ids[i]] = - abs(r[0, 1])
+            #     else:
+            #         sort_dict[self.good_op_names[i],self.good_op_ids[i]] = sort_dict[self.good_op_names[i],self.good_op_ids[i]] - abs(r[0, 1])
 
             # only good operations
             score_this_task_top_ops = cross_val_score(clf, task.data[:, np.isin(task.op_ids, self.good_perf_op_ids)], task.labels, cv=folds, scoring=scorer)
 
             # only cluster centers
-            score_this_task_cluster_ops = cross_val_score(clf, task.data[:, np.isin(task.op_ids, self.good_perf_cluster_center_op_ids)],
+            score_this_task_cluster_ops = cross_val_score(clf, task.data[:, np.isin(task.op_ids, catch16IDs)],#self.good_perf_cluster_center_op_ids)],
                                                       task.labels, cv=folds, scoring=scorer)
 
             # only super ops
@@ -1336,15 +1398,15 @@ class Workflow:
             score_this_task_whole = cross_val_score(clf, task.data, task.labels, cv=folds, scoring=scorer)
 
             # plot immediately
-            p1 = mpl.pyplot.errorbar(np.mean(score_this_task_whole), np.mean(score_this_task_top_ops),
-                                xerr=np.std(score_this_task_whole), yerr=np.std(score_this_task_top_ops), fmt='o', color='b', ecolor='b')
+            '''p1 = mpl.pyplot.errorbar(np.mean(score_this_task_whole), np.mean(score_this_task_top_ops),
+                                xerr=np.std(score_this_task_whole), yerr=np.std(score_this_task_top_ops), fmt='o', color='b', ecolor='b')'''
             p2 = mpl.pyplot.errorbar(np.mean(score_this_task_whole), np.mean(score_this_task_cluster_ops),
                                 xerr=np.std(score_this_task_whole), yerr=np.std(score_this_task_cluster_ops), fmt='o',
                                 color='r', ecolor='r')
-            p3 = mpl.pyplot.errorbar(np.mean(score_this_task_whole), np.mean(score_this_task_super_ops),
+            '''p3 = mpl.pyplot.errorbar(np.mean(score_this_task_whole), np.mean(score_this_task_super_ops),
                                      xerr=np.std(score_this_task_whole), yerr=np.std(score_this_task_super_ops),
                                      fmt='o',
-                                     color='g', ecolor='g')
+                                     color='g', ecolor='g')'''
 
             # save scores
             perfmat[task_ind, 0] = np.mean(score_this_task_whole)
@@ -1358,14 +1420,25 @@ class Workflow:
 
             print 'Done. Took %1.1f minutes.' % ((time.time() - t)/60)
 
-        np.savetxt(locations.rootDir() + '/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd.txt', perfmat)
-
-        mpl.pyplot.legend((p1, p2, p3), ('500 top ops', 'only cluster centers', 'super operations'))
-        # mpl.pyplot.xlim((0, 1))
-        # mpl.pyplot.ylim((0, 1))
+        # sorted_tuple = sorted(sort_dict.items(), key=operator.itemgetter(1))
+        # print(sorted_tuple[:30])
+        # measures0 =  self.good_op_ids
+        # measures2 = (self.stats_good_op_comb - np.nanmean(self.stats_good_op_comb))/np.nanstd(self.stats_good_op_comb)
+        # count = 30
+        # for elem in sorted_tuple:
+        #     count = count - 1
+        #     if count == 0:
+        #         break
+        #     op = elem[0][1] # id
+        #     ind_tmp = np.nonzero(measures0==op)[0]
+        #     norm_ustats = measures2[ind_tmp]
+        #     print(elem[0][1], elem[0][0], -elem[1]/12, norm_ustats[0])
+        
         mpl.pyplot.xlabel('performance on whole feature set')
-        mpl.pyplot.ylabel('performance only selected features')
-        mpl.pyplot.show()
+        mpl.pyplot.ylabel('performance with catchaMouse16') # catchaMouse16
+        
+        mpl.pyplot.savefig("svgs/perf_compare_corr.svg", format = 'svg', dpi=400, bbox_inches='tight', pad_inches = 0.25, transparent=True)
+        #mpl.pyplot.show()
 
     def UMAP_all_topOps_clusters(self):
 
@@ -2326,31 +2399,6 @@ class Workflow:
             mpl.pyplot.savefig('Plots/Eval_Split_'+str(i)+'_performance_plot.png')
             mpl.pyplot.close()
 
-    def plot_greedy(self):
-        '''
-        Plot the result obtained from greedy algo
-
-        '''
-        # using mean accuracy
-        #selected_ids = [7257, 117, 3161, 6968, 3662, 7784, 2883, 4062, 2743, 728, 3789, 3902, 2072, 6839, 6970, 4707, 204]
-
-        # -- Hard Coded features selected for real data
-        selected_ids = [7257, 3233, 1260, 2005, 117, 342, 2267, 2435, 2110, 4297, 1805, 2462, 765, 4663, 2812, 7373, 5482, 7418, 5726, 579, 3297]
-        
-        current_ids = []
-        eval_acc = []
-        select_acc = []
-        for ids in selected_ids:
-            current_ids.append(ids)
-            eval_acc.append( self.classify_using_features( np.array(current_ids) ,'evaluate'))
-            select_acc.append( self.classify_using_features( np.array(current_ids) ,'selection'))
-        #incorrect from here...
-        #mpl.pyplot.plot(np.arange(1,len(selected_ids)+1), select_acc) #np.arange(1,6)
-        #mpl.pyplot.plot(np.arange(1,len(selected_ids)+1), eval_acc) #np.arange(1,6)
-        mpl.pyplot.legend(['selection','evaluation'])
-        mpl.pyplot.xlabel('no of features')
-        mpl.pyplot.ylabel('validation accuracy')
-        mpl.pyplot.show()
 
     def testing_parameters(self):
         '''
@@ -2372,18 +2420,27 @@ class Workflow:
         from sklearn.metrics import make_scorer
         scorer = make_scorer(Feature_Stats.accuracy_score_class_balanced)
         
-        which_plot = 'dist' # 'scatter' or 'datamat' or 'dist'
-        calculate_mat = True
+        #----- Set the hyperparameters ------
+        
+        # Which plot to show?
+        which_plot = 'datamat' # options --> ('datamat', 'dist')
+        
+        # Compute the matrix? If matrix already computed, then put false
+        calculate_mat = False 
         
         n_clust_max = 0.5
         n_clust_step = 0.1
-        n_clust_array = np.array([0.05, 0.1, 0.2, 0.3, 0.4, 0.5 ])#np.arange(0.2,n_clust_max+0.001,n_clust_step) #np.array([0.05, 0.1, 0.25, 0.4, 0.5, ])
+        
+        # Threshold values
+        n_clust_array = np.array([0.05, 0.1, 0.2, 0.3, 0.4, 0.5 ])
         n_clust_array = np.around(n_clust_array,3)
         n_clust_steps = len(n_clust_array)
 
-        n_topOps_array = np.array([100])#np.array([10, 50, 100, 200, 500])#, 1000, 2000, 4000, 5000])#, 6000, 6356]) #np.arange(1,11)*100 # [815] # [200, 300, 400, 500, 700, 800, 900] # [100, 250, 500, 750, 1000]
-        #result_mat = np.empty((len(n_topOps_array), n_clust_steps))
-        #std_result_mat = np.empty((len(n_topOps_array), n_clust_steps))
+        # Number of Top features
+        n_topOps_array = np.array([100])
+        
+        #-------------------------------------
+        
         result_mat = []
         reduced = np.empty((len(self.tasks), n_clust_steps))
 
@@ -2437,45 +2494,35 @@ class Workflow:
                         reduced[task_ind][clust_ind] = len(self.good_perf_cluster_center_op_ids)
                         #cv_acc = np.append(cv_acc, score_this_task_cluster_ops) # append all cv accuracies -- 2D array
                     result_mat.append(left_out_task_acc) # no of clusters (y-axis) x no of tasks (x-axis)
-                    '''result_mat[n_topOpsInd][clust_ind] = np.mean( task_acc )
-                    std_result_mat[n_topOpsInd][clust_ind] = np.std( cv_acc )
-                    no_of_reduced_feat = len(self.good_perf_cluster_center_op_ids) # x axis plot
-                    reduced[n_topOpsInd][clust_ind] = no_of_reduced_feat'''
                     
             np.save('result_mat.npy', result_mat) # save
             np.save('reduced.npy', reduced) # save
-            '''np.save('std_result_mat.npy', std_result_mat) # save
-            np.save('rand_result_mat.npy', result_mat) # save
-            np.save('rand_reduced.npy', reduced) # save
-            np.save('rand_std_result_mat.npy', std_result_mat) # save'''
-        else:
+        else: 
+            # Load the computed data
             result_mat = np.load('result_mat.npy') # load
             reduced = np.load('reduced.npy') # load
-            '''std_result_mat = np.load('std_result_mat.npy') # load
-            result_mat = np.load('rand_result_mat.npy') # load
-            std_result_mat = np.load('rand_std_result_mat.npy') # load
-            reduced = np.load('rand_reduced.npy') # load'''
 
-        # SCATTER PLOT:
+        '''# SCATTER PLOT:
         if which_plot == 'scatter':
             colors = cm.rainbow(np.linspace(0, 1, len(n_topOps_array) ))
             for i in range(len(n_topOps_array)): # different colors
                 # scatter plot
-                mpl.pyplot.scatter(reduced[i,:], result_mat[i,:], color = colors[i] , alpha = 0.8 )
+                print(reduced.shape)
+                print(result_mat.shape)
+                mpl.pyplot.scatter(reduced[i,:], result_mat[:,i], color = colors[i] , alpha = 0.8 )
                 # error bar
                 #mpl.pyplot.errorbar(reduced[i,:], result_mat[i,:], yerr = std_result_mat[i,:], fmt = 'o')
             mpl.pyplot.legend(labels=n_topOps_array.astype('int32') )
             mpl.pyplot.xlabel('no. of features')
             mpl.pyplot.ylabel('validated accuracy')
-            mpl.pyplot.show()
-        elif which_plot == 'datamat':
+            mpl.pyplot.show()'''
+        if which_plot == 'datamat':
             
             # DATA PLOT
-            # -- for data matrix plot uncomment this part
             result_mat = np.array(result_mat).T
             sorted_ind = result_mat[:,1].argsort()[::-1]
             result_mat = result_mat[sorted_ind]
-            mpl.pyplot.figure(figsize=(12,7))
+            mpl.pyplot.figure(figsize=(5,7))
             mpl.pyplot.matshow( result_mat, cmap = 'OrRd', fignum=1)
             #mpl.pyplot.colorbar()
             clb = mpl.pyplot.colorbar()
@@ -2487,11 +2534,14 @@ class Workflow:
                 for j in range(len(n_clust_array)):
                     text = mpl.pyplot.text(j, i, int(reduced[i, j]),
                                 ha="center", va="center", color="w")
-            mpl.pyplot.title('Left-out-task performance matrix (Top 200 features taken)\n', fontsize= 16, horizontalalignment='center')
+            mpl.pyplot.title('Left-out-task performance matrix (Top 100 features taken)\n', fontsize= 16, horizontalalignment='center')
             mpl.pyplot.xlabel('\nthreshold applied')
             mpl.pyplot.ylabel('Left-out-task')
-            mpl.pyplot.show()
-        else:
+            #mpl.pyplot.show()
+            mpl.pyplot.savefig("svgs/datamat.svg",dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
+        else: 
+            
+            # DISTRIBUTION PLOT ('dist')
             import seaborn as sns
             result_mat = np.array(result_mat).T
             print(result_mat.shape)
@@ -2502,7 +2552,8 @@ class Workflow:
             mpl.pyplot.xticks(range(n_clust_steps),n_clust_array)
             mpl.pyplot.xlabel('thresholds')
             mpl.pyplot.ylabel('Accuracy')
-            mpl.pyplot.show()
+            #mpl.pyplot.show()
+            mpl.pyplot.savefig("svgs/dist.svg",dpi=400, bbox_inches='tight', pad_inches=0.25, transparent=True)
 
 if __name__ == '__main__':
 
@@ -2643,7 +2694,7 @@ if __name__ == '__main__':
     select_good_perf_ops_norm = 'mean-norm' # 'zscore' # 'median-diff' # 'none' #
     select_good_perf_ops_method = 'sort_asc'
     select_good_perf_ops_combination = 'mean' # 'pos_sum' #
-    similarity_method = 'abscorr' # 'abscorr', 'corr', 'cos', 'euc'
+    similarity_method = 'corr'#'abscorr' # 'abscorr', 'corr', 'cos', 'euc'
     compare_space = 'problem_stats'
     min_calc_tasks = np.ceil(float(len(task_names)) * 0.8) # np.ceil(float(len(task_names)) / float(1.25))
 
@@ -2720,7 +2771,7 @@ if __name__ == '__main__':
 
     # workflow.UMAP_all_topOps_clusters()
     # workflow.classify_good_perf_ops_vs_good_ops()
-    # workflow.classify_good_perf_ops_vs_super_vs_good_ops()
+    workflow.classify_good_perf_ops_vs_super_vs_good_ops()
     # workflow.classify_N_clusters()
     # workflow.classify_good_perf_ops_vs_good_ops_givenSplit()
     # workflow.classify_selected_ops([0011, 0012, 0134, 0135, 0241, 1121, 7543, 3477, 1406, 1585, 1965, 0310, 2997, 3264, 3294, 4492, 3467, 3604, 4036, 4156, 4421, 3010])
@@ -2731,22 +2782,12 @@ if __name__ == '__main__':
     #workflow.classify_random_features()
     
     # -----------------------------------------------------------------
-    # -- Testing param of clustering and Greedy algorithm -------------
+    # -- Testing param of Hierarchical clustering algorithm  ----------
     # -----------------------------------------------------------------
-
-    #workflow.testing_parameters()
-    #quit()
-    #workflow.testing_parameters()
-    #print(workflow.classify_using_features( np.array([7257]), 'selection', 1 ) )
-    #print(workflow.classify_using_features( np.array([117]), 'selection', 1 ) )
-    #print(workflow.classify_using_features( np.array([117]), 'selection', 2 ) )
-    #workflow.plot_greedy()
-    #feat = workflow.greedy_fwd_selection()
-    #print(feat)
-    #print(len(feat))
-    #workflow.plot_greedy()
-
-    #quit()
+    quit()
+    workflow.testing_parameters()
+    
+    quit()
 
     # -- show performance matrix of catch22-features only
     # workflow.show_catch22_perfmat()
@@ -2776,6 +2817,7 @@ if __name__ == '__main__':
     measures = np.zeros((3,len(workflow.good_op_ids)))
     # -- op_ids
     measures[0,:] =  workflow.good_op_ids
+    print(measures[0,:].shape)
     # -- number of problems calculated
     measures[1,:] = (~workflow.stats_good_op.mask).sum(axis=0)
     # -- z scored u-stat
@@ -2793,4 +2835,5 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- show the plot as last task of the script
     # -----------------------------------------------------------------
-    mpl.pyplot.show()
+    mpl.pyplot.savefig("svgs/cluster.svg",dpi=400, bbox_inches='tight', pad_inches=0.25, transparent=True)
+    #mpl.pyplot.show()

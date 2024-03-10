@@ -76,7 +76,8 @@ class Task:
         self.keywords_op = self.op['keywords']
         self.keywords_ts = self.ts['keywords']
         self.labels = self.input_method.extract_labels(self.keywords_ts)
-    
+        print "data loaded successfully"
+
     def load_attribute(self,attribute_name,in_path_pattern):
         """
         Load an attribute of the instance from a file

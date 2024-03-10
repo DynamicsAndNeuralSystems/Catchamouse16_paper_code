@@ -10,7 +10,7 @@ import scipy.stats
 import collections
 
 from pathos.multiprocessing import ThreadPool as Pool
-
+from tqdm import tqdm
 class Feature_Stats:
     
     def __init__(self, is_pairwise_stat = False, combine_pair_method = 'mean'):
@@ -59,6 +59,7 @@ class Decision_Tree(Feature_Stats):
             #num_null_more_accurate = (null_dist < mean_error_rates[i]).sum()
             #p_vals[i] = np.float(num_null_more_accurate) / np.float(num_null_reps)'''
         p_vals = np.zeros( mean_error_rates.shape )
+        print "finished decision tree"
         return (op_error_rates, mean_error_rates, p_vals)
 
     def get_null_stats(self, task_name):
@@ -187,6 +188,7 @@ def train_model_template(labels,data,clf):
     max_folds = 10
     min_folds = 2
     folds = np.min([max_folds, np.max([min_folds, np.min(counts)])])
+    # print un
     print "Calculating classification error, {} fold cross validation, {} classes, {} samples".format(
         folds, len(un), len(labels))
 
@@ -205,7 +207,22 @@ def train_model_template(labels,data,clf):
         return 1 - scores
 
     pool = Pool(processes=8)
-    error_rates = pool.map(process_task_threaded, range(data.shape[1]))
+    # error_rates = pool.map(process_task_threaded, range(data.shape[1]))
+
+
+    error_rates=[]
+    for i in tqdm(range(0,data.shape[1])):
+        error_rates.append(process_task_threaded(i))
+
+    # with tqdm(total=data.shape[1]) as pbar:
+    #     results = []
+        
+
+    #     for result in pool.imap(process_task_threaded, range(data.shape[1])):
+    #         results.append(result)
+    #         pbar.update(1)
+
+
     op_error_rates = np.vstack(error_rates)
     mean_error_rates = np.mean(op_error_rates, axis=1)
     print "Mean classification error is {}".format(np.mean(mean_error_rates))

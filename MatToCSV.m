@@ -1,17 +1,31 @@
-function [] = MatToCSV(name)
-% name = 'Dataset1'; 
-% RightCtx -- Dataset1, LeftCtx -- Dataset2, Control -- Dataset3
+hemisphere = {'Right','Left'};
+conditions = {'CAMK','excitatory','SHAM','PVCre'};
+numConditions = length(conditions);
 
-normalizedData = load('HCTSA_N.mat');
-writetable(normalizedData.Operations,strcat(name,'_Operations.txt'));
-writetable(normalizedData.MasterOperations,strcat(name,'_MasterOperations.txt'));
+dirs = [];
+for h = 1:2
+    theHemisphere = hemisphere{h};
+    if strcmp(theHemisphere,'Right')
+        matFile = 'HCTSA_CalculatedData/HCTSA_data_CerCtx/RightCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N.mat';
+    elseif strcmp(theHemisphere,'Left')
+        matFile = 'HCTSA_CalculatedData/HCTSA_data_CerCtx/LeftCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N.mat';
+    else
+        error("Hemisphere was set to %s which is not 'r' or 'l' for right and left brain hemispheres, respectively",theHemisphere);
+    end
+    for i = 1:numConditions
+        for j = i+1:numConditions
+            % (make new directory)
+            writedir = sprintf('op_importance/input_data/maxmin/%s_%s_%s',theHemisphere,conditions{i},conditions{j});
+            mkdir(writedir);
+            % (specify output filename to put into new directory)
 
-for i = 1:size(normalizedData.TimeSeries,1)
-    normalizedData.TimeSeries.Data{i,1}=i;
-end
-
-data = normalizedData.TS_DataMat;
-save(strcat(name,'_TSData.mat'),'data');
-writetable(normalizedData.TimeSeries,strcat(name,'_TSInfo.txt'));
-
+            [IDs,notIDs] = TS_GetIDs({conditions{i},conditions{j}},matFile,'ts','Keywords');
+            TS_Subset(matFile,IDs,[],1,append(writedir,'/hctsa_datamatrix.mat'));
+            % TS_LabelGroups(outputFileName,{conditions{i},conditions{j}});
+            % (if python code uses the .Group column of the TimeSeries Table, the above LabelGroups will be needed to e.g., label the two conditions as 0 and 1)
+            oldfolder = cd(writedir);
+            OutputToCSV(append(writedir,'/hctsa_datamatrix.mat'),true,true);
+            cd(oldfolder);
+        end
+    end
 end

@@ -2624,7 +2624,7 @@ if __name__ == '__main__':
         #               "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
 
     n_good_perf_ops = 100 # intermediate number of good performers to cluster
-    compute_features = False # False or True : compute classification accuracies?
+    compute_features = True # False or True : compute classification accuracies?
     max_dist_cluster = 0.2 # gamma in paper, maximum allowed correlation distance within a cluster
 
     # normalisation of features as done in hctsa TS_normalize

@@ -24,6 +24,9 @@ paperDrafts
 plottedTS*
 probeFailingFeatures
 results*
+svgs*
+reduced.npy
+result_mat.npy
 topOps*
 tsfeatures_comparison
 UCR*

@@ -113,8 +113,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     axmatrix.set_xticks([])
     axmatrix.set_yticks(range(len(index)))
     #axmatrix.set_yticklabels(np.array(names)[index],fontsize=5)
-    axmatrix.set_yticklabels(np.array(names)[index], fontsize =5.6)#,rotation =45)
-
+    axmatrix.set_yticklabels(np.array(names)[index], fontsize =10)#,rotation =45)
     # Plot colorbar.
     axcolor = fig.add_axes(rect_color)
     cbar = plt.colorbar(im, cax=axcolor)

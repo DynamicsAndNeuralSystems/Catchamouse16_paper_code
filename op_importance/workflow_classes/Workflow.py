@@ -1354,6 +1354,7 @@ class Workflow:
         scorer = make_scorer(Feature_Stats.accuracy_score_class_balanced)
 
         # reference line (below other data)
+        mpl.pyplot.figure()
         mpl.pyplot.plot((0, 1.5), (0, 1.5), '--', color=np.array((1, 1, 1)) * 0.7)
 
 
@@ -1436,7 +1437,8 @@ class Workflow:
         
         mpl.pyplot.xlabel('performance on whole feature set')
         mpl.pyplot.ylabel('performance with catchaMouse16') # catchaMouse16
-        
+        if not os.path.isdir('svgs'):
+            os.mkdir('svgs')
         mpl.pyplot.savefig("svgs/perf_compare_corr.svg", format = 'svg', dpi=400, bbox_inches='tight', pad_inches = 0.25, transparent=True)
         #mpl.pyplot.show()
 
@@ -2502,9 +2504,10 @@ class Workflow:
             result_mat = np.load('result_mat.npy') # load
             reduced = np.load('reduced.npy') # load
 
-        '''# SCATTER PLOT:
-        if which_plot == 'scatter':
+        # SCATTER PLOT:
+        if (which_plot == 'scatter') or True:
             colors = cm.rainbow(np.linspace(0, 1, len(n_topOps_array) ))
+            mpl.pyplot.figure(figsize=(5,7))
             for i in range(len(n_topOps_array)): # different colors
                 # scatter plot
                 print(reduced.shape)
@@ -2515,15 +2518,17 @@ class Workflow:
             mpl.pyplot.legend(labels=n_topOps_array.astype('int32') )
             mpl.pyplot.xlabel('no. of features')
             mpl.pyplot.ylabel('validated accuracy')
-            mpl.pyplot.show()'''
-        if which_plot == 'datamat':
+            mpl.pyplot.savefig("svgs/scatter.svg",dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
+            # mpl.pyplot.show()
+        if (which_plot == 'datamat') or True:
             
             # DATA PLOT
             result_mat = np.array(result_mat).T
             sorted_ind = result_mat[:,1].argsort()[::-1]
             result_mat = result_mat[sorted_ind]
             mpl.pyplot.figure(figsize=(5,7))
-            mpl.pyplot.matshow( result_mat, cmap = 'OrRd', fignum=1)
+            mpl.pyplot.matshow( result_mat, cmap = 'OrRd', fignum=None)
+            # mpl.pyplot.imshow(result_mat,cmap='OrRd')
             #mpl.pyplot.colorbar()
             clb = mpl.pyplot.colorbar()
             clb.ax.set_title('accuracy') # before = 'avg task accuracy'
@@ -2532,20 +2537,24 @@ class Workflow:
             # -- Loop over data dimensions and create text annotations
             for i in range(len(self.tasks)):
                 for j in range(len(n_clust_array)):
-                    text = mpl.pyplot.text(j, i, int(reduced[i, j]),
-                                ha="center", va="center", color="w")
+                    xpos,ypos,textval,colorval = j, i, int(reduced[i, j]),float(result_mat[i, j])
+                    if colorval<=0.425:
+                        text = mpl.pyplot.text(xpos,ypos,textval, ha="center", va="center", color="k")
+                    else:           
+                        text = mpl.pyplot.text(xpos,ypos,textval, ha="center", va="center", color="w")
             mpl.pyplot.title('Left-out-task performance matrix (Top 100 features taken)\n', fontsize= 16, horizontalalignment='center')
             mpl.pyplot.xlabel('\nthreshold applied')
             mpl.pyplot.ylabel('Left-out-task')
             #mpl.pyplot.show()
             mpl.pyplot.savefig("svgs/datamat.svg",dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
-        else: 
+        if True:  # Originally Else: 
             
             # DISTRIBUTION PLOT ('dist')
             import seaborn as sns
-            result_mat = np.array(result_mat).T
+            result_mat = np.array(result_mat)#.T
             print(result_mat.shape)
             colors = cm.rainbow(np.linspace(0, 1, len(n_clust_array) ))
+            mpl.pyplot.figure(figsize=(7,5))
             sns.violinplot(data=result_mat, color ="0.8")
             sns.stripplot(data=result_mat, jitter=True, zorder=1)
             mpl.pyplot.title("'Average' Distribution Plot")
@@ -2624,7 +2633,7 @@ if __name__ == '__main__':
         #               "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
 
     n_good_perf_ops = 100 # intermediate number of good performers to cluster
-    compute_features = True # False or True : compute classification accuracies?
+    compute_features = False # False or True : compute classification accuracies?
     max_dist_cluster = 0.2 # gamma in paper, maximum allowed correlation distance within a cluster
 
     # normalisation of features as done in hctsa TS_normalize
@@ -2784,10 +2793,10 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- Testing param of Hierarchical clustering algorithm  ----------
     # -----------------------------------------------------------------
-    quit()
+    # quit()
     workflow.testing_parameters()
     
-    quit()
+    # quit()
 
     # -- show performance matrix of catch22-features only
     # workflow.show_catch22_perfmat()
@@ -2797,6 +2806,7 @@ if __name__ == '__main__':
     # -- Do the plotting ----------------------------------------------
     # -----------------------------------------------------------------
     # -- initialise the plotting class
+
     plotting = Plotting.Plotting(workflow,max_dist_cluster = max_dist_cluster)
 
     if False:

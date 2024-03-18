@@ -165,8 +165,14 @@ def calc_null_template(labels,data,clf):
         return op_errs
 
     random.seed(25)
-    pool = Pool(processes=8)
-    error_rates = pool.map(process_task_threaded, range(data.shape[1]))
+    # pool = Pool(processes=8)
+    # error_rates = pool.map(process_task_threaded, range(data.shape[1]))
+
+    error_rates=[]
+    for i in tqdm(range(0,data.shape[1])):
+        error_rates.append(process_task_threaded(i))
+
+
     op_error_rates = np.vstack(error_rates)
     mean_error_rates = np.mean(op_error_rates, axis=1)
     print "Mean classification error is {}".format(np.mean(mean_error_rates))
@@ -206,7 +212,7 @@ def train_model_template(labels,data,clf):
         scores = cross_val_score(clf, operation, labels, scoring=scorer, cv=folds, n_jobs=1)
         return 1 - scores
 
-    pool = Pool(processes=8)
+    # pool = Pool(processes=8)
     # error_rates = pool.map(process_task_threaded, range(data.shape[1]))
 
 

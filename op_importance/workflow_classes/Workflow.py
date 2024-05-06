@@ -1,15 +1,100 @@
 import numpy as np
 import matplotlib as mpl
+import os
+import sys
 mpl.use("TkAgg")
 #mpl.plt.ion()
+
+#region 
+# -----------------------------------------------------------------
+# -- Set Parameters -----------------------------------------------
+# -----------------------------------------------------------------
+if len(sys.argv) > 1:
+    runtype = sys.argv[1]
+else:
+    runtype = 'dectree_maxmin' # 'dectree_maxmin'
+
+if len(sys.argv) > 2:
+    task_names = sys.argv[2].split(",")
+else:
+    # old 2015 data
+    # task_names = ["50words", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "CBF", "Car",
+    #               "ChlorineConcentration", "CinC_ECG_torso", "Coffee", "Computers", "Cricket_X", "Cricket_Y",
+    #               "Cricket_Z", "DiatomSizeReduction", "DistalPhalanxOutlineAgeGroup", "DistalPhalanxOutlineCorrect",
+    #               "DistalPhalanxTW", "ECG200", "ECG5000", "ECGFiveDays", "Earthquakes", "ElectricDevices", "FISH",
+    #               "FaceAll", "FaceFour", "FacesUCR", "FordA", "FordB", "Gun_Point", "Ham", "HandOutlines",
+    #               "Haptics", "Herring", "InlineSkate", "InsectWingbeatSound", "ItalyPowerDemand",
+    #               "LargeKitchenAppliances", "Lighting2", "Lighting7", "MALLAT", "Meat", "MedicalImages",
+    #               "MiddlePhalanxOutlineAgeGroup", "MiddlePhalanxOutlineCorrect", "MiddlePhalanxTW", "MoteStrain",
+    #               "NonInvasiveFatalECG_Thorax1", "NonInvasiveFatalECG_Thorax2", "OSULeaf", "OliveOil",
+    #               "PhalangesOutlinesCorrect", "Phoneme", "Plane", "ProximalPhalanxOutlineAgeGroup",
+    #               "ProximalPhalanxOutlineCorrect", "ProximalPhalanxTW", "RefrigerationDevices", "ScreenType",
+    #               "ShapeletSim", "ShapesAll", "SmallKitchenAppliances", "SonyAIBORobotSurface",
+    #               "SonyAIBORobotSurfaceII", "StarLightCurves", "Strawberry", "SwedishLeaf", "Symbols",
+    #               "ToeSegmentation1", "ToeSegmentation2", "Trace", "TwoLeadECG", "Two_Patterns",
+    #               "UWaveGestureLibraryAll", "Wine", "WordsSynonyms", "Worms", "WormsTwoClass", "synthetic_control",
+    #               "uWaveGestureLibrary_X", "uWaveGestureLibrary_Y", "uWaveGestureLibrary_Z", "wafer", "yoga"]
+    # task_names = ["Adiac", "ArrowHead", "Beef"] # ["BirdChicken", "50words"] # ["Wine","50words"]
+    # PHILS TASKS: task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
+    # # insignificance tasks
+    # task_names = ["CBF", "Lightning7"] # , "ECGMeditation", "LargeKitchenAppliances", "Lightning2", "MedicalImages"]
+    # UCR 2018:        
+    task_names = ["Left_CAMK_excitatory","Left_CAMK_PVCre","Left_CAMK_SHAM",
+                    "Left_excitatory_PVCre","Left_excitatory_SHAM","Left_PVCre_SHAM",
+                    "Right_CAMK_excitatory","Right_CAMK_PVCre","Right_CAMK_SHAM",
+                    "Right_excitatory_PVCre","Right_excitatory_SHAM","Right_PVCre_SHAM"]
+    '''task_names = ["HCTSA_1800001_C3-A2","HCTSA_1800005_C3-A2","HCTSA_1800458_C3-A2",
+                "HCTSA_1800596_C3-A2","HCTSA_1800604_C3-A2","HCTSA_1800748_C3-A2",
+                "HCTSA_1800749_C3-A2","HCTSA_1800807_C3-A2","HCTSA_1800821_C3-A2"]'''
+    #["RightCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N","LeftCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N",
+    #                "Control_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N"]
+
+    # task_names = ["Adiac", 'ArrowHead']
+    # # selection of tasks as in old UCR
+    # task_names = ["Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "CBF", "Car",
+    #               "ChlorineConcentration", "CinCECGtorso", "Coffee", "Computers", "CricketX", "CricketY",
+    #               "CricketZ",
+    #               "DiatomSizeReduction", "DistalPhalanxOutlineAgeGroup", "DistalPhalanxOutlineCorrect",
+    #               "DistalPhalanxTW", "ECG200", "ECG5000", "ECGFiveDays", "Earthquakes",
+    #               "ElectricDevices", "FaceAll", "FaceFour",
+    #               "FacesUCR",
+    #               "FiftyWords", "Fish", "FordA", "FordB", "GunPoint", "Ham", "HandOutlines", "Haptics",
+    #               "Herring", "InlineSkate", "InsectWingbeatSound", "ItalyPowerDemand", "LargeKitchenAppliances",
+    #               "Lightning2", "Lightning7", "Mallat", "Meat", "MedicalImages", "MiddlePhalanxOutlineAgeGroup",
+    #               "MiddlePhalanxOutlineCorrect", "MiddlePhalanxTW", "MoteStrain", "NonInvasiveFatalECGThorax1",
+    #               "NonInvasiveFatalECGThorax2",
+    #               "OSULeaf",
+    #               "OliveOil", "PhalangesOutlinesCorrect", "Phoneme", "Plane", "ProximalPhalanxOutlineAgeGroup",
+    #               "ProximalPhalanxOutlineCorrect", "ProximalPhalanxTW", "RefrigerationDevices", "ScreenType",
+    #               "ShapeletSim", "ShapesAll", "SmallKitchenAppliances", "SonyAIBORobotSurface1",
+    #               "SonyAIBORobotSurface2", "StarLightCurves", "Strawberry", "SwedishLeaf", "Symbols",
+    #               "SyntheticControl", "ToeSegmentation1", "ToeSegmentation2", "Trace", "TwoLeadECG", "TwoPatterns",
+    #               "UWaveGestureLibraryAll", "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ",
+    #               "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
+
+n_good_perf_ops = 100 # intermediate number of good performers to cluster
+compute_features = False # False or True : compute classification accuracies?
+max_dist_cluster = 0.2 # gamma in paper, maximum allowed correlation distance within a cluster
+
+# normalisation of features as done in hctsa TS_normalize
+if 'maxmin' in runtype:
+    datatype = 'maxmin'
+elif 'scaledrobustsigmoid' in runtype:
+    datatype = 'scaledrobustsigmoid'
+else:
+    datatype = 'maxmin'
+    runtype = runtype + '_maxmin'
+    raise Warning('normalisation not specified! Using maxmin')
+#endregion
+
+
 
 import Task
 import Data_Input
 import Feature_Stats
 import Reducing_Redundancy
 import Plotting
-import os
-import sys
+
 
 import collections
 import modules.misc.PK_helper as hlp
@@ -1291,23 +1376,24 @@ class Workflow:
 
     def classify_good_perf_ops_vs_super_vs_good_ops(self):
 
-        featureNamesCatch16 = ['SY_DriftingMean50.min',
-                                'CO_TranslateShape_circle_35_pts.statav4_m',
-                                'FC_LoopLocalSimple_mean.stderr_chn',
-                                'SC_FluctAnal_2_dfa_50_2_logi.r2_se2',
-                                'DN_RemovePoints_absclose_05.ac2rat',
-                                'ST_LocalExtrema_n100.diffmaxabsmin',
-                                'AC_nl_036',
-                                'AC_nl_035',
-                                'AC_nl_112',
-                                'MF_CompareAR_1_10_05.stddiff',
-                                'IN_AutoMutualInfoStats_diff_20_gaussian.ami8',
-                                'PH_Walker_momentum_5.w_propzcross',
-                                'PH_Walker_biasprop_05_01.sw_meanabsdiff',
-                                'CO_HistogramAMI_even_10.ami3',
-                                'CO_HistogramAMI_even_2.ami3',
-                                'CO_AddNoise_1_even_10.ami_at_10']
-    
+        # featureNamesCatch16 = ['SY_DriftingMean50.min',
+        #                         'CO_TranslateShape_circle_35_pts.statav4_m',
+        #                         'FC_LoopLocalSimple_mean.stderr_chn',
+        #                         'SC_FluctAnal_2_dfa_50_2_logi.r2_se2',
+        #                         'DN_RemovePoints_absclose_05.ac2rat',
+        #                         'ST_LocalExtrema_n100.diffmaxabsmin',
+        #                         'AC_nl_036',
+        #                         'AC_nl_035',
+        #                         'AC_nl_112',
+        #                         'MF_CompareAR_1_10_05.stddiff',
+        #                         'IN_AutoMutualInfoStats_diff_20_gaussian.ami8',
+        #                         'PH_Walker_momentum_5.w_propzcross',
+        #                         'PH_Walker_biasprop_05_01.sw_meanabsdiff',
+        #                         'CO_HistogramAMI_even_10.ami3',
+        #                         'CO_HistogramAMI_even_2.ami3',
+        #                         'CO_AddNoise_1_even_10.ami_at_10']
+        featureNamesCatch16=['MF_StateSpace_n4sid_1_05_1_ac2', 'ST_LocalExtrema_n100_diffmaxabsmin', 'PH_Walker_biasprop_05_01_sw_meanabsdiff', 'PH_Walker_momentum_5_w_momentumzcross', 'AC_nl_036', 'AC_nl_122', 'CO_glscf_2_2_1', 'CO_glscf_2_2_3', 'RM_ami_3', 'SB_BinaryStats_iqr_longstretch1', 'SP_Summaries_pgram_hamm_linfitloglog_mf_a2', 'AC_nl_112', 'StatAvl50', 'FC_LocalSimple_mean4_sws', 'CO_TranslateShape_circle_35_pts_statav4_m', 'PH_Walker_prop_05_swss5_1', 'SC_FluctAnal_2_std_50_logi_ssr', 'DN_RemovePoints_absclose_05_ac2rat', 'IN_AutoMutualInfoStats_diff_20_gaussian_ami8', 'MF_steps_ahead_ar_2_6_maxdiffrms', 'CO_HistogramAMI_even_2_3', 'PH_ForcePotential_sine_10_004_10_std', 'MF_steps_ahead_ar_best_6_rmserr_6', 'MF_StateSpace_n4sid_1_05_1_ac3n']
+
         featureNamesCatch22 = ['CO_Embed2_Basic_tau.incircle_1',
                                 'CO_Embed2_Basic_tau.incircle_2',
                                 'FC_LocalSimple_mean1.taures',
@@ -2530,7 +2616,7 @@ class Workflow:
             mpl.pyplot.matshow( result_mat, cmap = 'OrRd', fignum=None)
             # mpl.pyplot.imshow(result_mat,cmap='OrRd')
             #mpl.pyplot.colorbar()
-            clb = mpl.pyplot.colorbar()
+            clb = mpl.pyplot.colorbar(shrink=0.8)
             clb.ax.set_title('accuracy') # before = 'avg task accuracy'
             mpl.pyplot.xticks(np.arange(0,len(n_clust_array)), n_clust_array, rotation = 45 ) 
             mpl.pyplot.yticks(np.arange(0,len(self.tasks)), np.array(self.task_names)[sorted_ind] )
@@ -2547,6 +2633,41 @@ class Workflow:
             mpl.pyplot.ylabel('Left-out-task')
             #mpl.pyplot.show()
             mpl.pyplot.savefig("svgs/datamat.svg",dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
+        # complete_average_logic = ('calculate','complete') # Or ('calculate,'complete') or "plot"
+        complete_average_logic = ('compute') # Or ('calculate,'complete') or "plot"
+
+        if 'calculate'==complete_average_logic[0]:
+            import pandas as pd
+
+            nfeatures = {key:[] for key in n_clust_array}
+            naccuracies = {key:[] for key in n_clust_array}
+            for i in range(len(self.tasks)):
+                for j,gamma in enumerate(n_clust_array):
+                    featurecount,accuracy = int(reduced[i, j]),float(result_mat[i, j])
+                    nfeatures[gamma].append(featurecount)
+                    naccuracies[gamma].append(accuracy/featurecount)
+            nfeatures = pd.DataFrame.from_dict(nfeatures,orient='index',columns=np.array(self.task_names)[sorted_ind])
+            naccuracies = pd.DataFrame.from_dict(naccuracies,orient='index',columns=np.array(self.task_names)[sorted_ind])
+            nfeatures.to_csv('nfeatures_{}.csv'.format(complete_average_logic[1]))
+            naccuracies.to_csv('naccuracies_{}.csv'.format(complete_average_logic[1]))
+            
+        if 'compute' == complete_average_logic:
+            import pandas as pd
+            nfeatures_average = pd.read_csv("nfeatures_average.csv",index_col=0)
+            naccuracies_average = pd.read_csv("naccuracies_average.csv",index_col=0)
+            nfeatures_complete = pd.read_csv("nfeatures_complete.csv",index_col=0)
+            naccuracies_complete = pd.read_csv("naccuracies_complete.csv",index_col=0)
+
+            mpl.pyplot.figure(figsize=(5,7))
+            for key in nfeatures_average.index:
+                mpl.pyplot.scatter(nfeatures_average.loc[key], naccuracies_average.loc[key],color='red')
+                mpl.pyplot.scatter(nfeatures_complete.loc[key], naccuracies_complete.loc[key],color='blue')
+            mpl.pyplot.legend(['average','complete'])
+            mpl.pyplot.title('Average performance per feature', fontsize= 16, horizontalalignment='center')
+            mpl.pyplot.xlabel(r'$\beta$')
+            mpl.pyplot.ylabel('Performance per feature')
+
+            mpl.pyplot.savefig("svgs/performanceperfeature.svg",dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
         if True:  # Originally Else: 
             
             # DISTRIBUTION PLOT ('dist')
@@ -2557,7 +2678,7 @@ class Workflow:
             mpl.pyplot.figure(figsize=(7,5))
             sns.violinplot(data=result_mat, color ="0.8")
             sns.stripplot(data=result_mat, jitter=True, zorder=1)
-            mpl.pyplot.title("'Average' Distribution Plot")
+            mpl.pyplot.title("'complete' Distribution Plot")
             mpl.pyplot.xticks(range(n_clust_steps),n_clust_array)
             mpl.pyplot.xlabel('thresholds')
             mpl.pyplot.ylabel('Accuracy')
@@ -2565,87 +2686,6 @@ class Workflow:
             mpl.pyplot.savefig("svgs/dist.svg",dpi=400, bbox_inches='tight', pad_inches=0.25, transparent=True)
 
 if __name__ == '__main__':
-
-    # -----------------------------------------------------------------
-    # -- Set Parameters -----------------------------------------------
-    # -----------------------------------------------------------------
-    if len(sys.argv) > 1:
-        runtype = sys.argv[1]
-    else:
-        runtype = 'dectree_maxmin' # 'dectree_maxmin'
-
-    if len(sys.argv) > 2:
-        task_names = sys.argv[2].split(",")
-    else:
-        # old 2015 data
-        # task_names = ["50words", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "CBF", "Car",
-        #               "ChlorineConcentration", "CinC_ECG_torso", "Coffee", "Computers", "Cricket_X", "Cricket_Y",
-        #               "Cricket_Z", "DiatomSizeReduction", "DistalPhalanxOutlineAgeGroup", "DistalPhalanxOutlineCorrect",
-        #               "DistalPhalanxTW", "ECG200", "ECG5000", "ECGFiveDays", "Earthquakes", "ElectricDevices", "FISH",
-        #               "FaceAll", "FaceFour", "FacesUCR", "FordA", "FordB", "Gun_Point", "Ham", "HandOutlines",
-        #               "Haptics", "Herring", "InlineSkate", "InsectWingbeatSound", "ItalyPowerDemand",
-        #               "LargeKitchenAppliances", "Lighting2", "Lighting7", "MALLAT", "Meat", "MedicalImages",
-        #               "MiddlePhalanxOutlineAgeGroup", "MiddlePhalanxOutlineCorrect", "MiddlePhalanxTW", "MoteStrain",
-        #               "NonInvasiveFatalECG_Thorax1", "NonInvasiveFatalECG_Thorax2", "OSULeaf", "OliveOil",
-        #               "PhalangesOutlinesCorrect", "Phoneme", "Plane", "ProximalPhalanxOutlineAgeGroup",
-        #               "ProximalPhalanxOutlineCorrect", "ProximalPhalanxTW", "RefrigerationDevices", "ScreenType",
-        #               "ShapeletSim", "ShapesAll", "SmallKitchenAppliances", "SonyAIBORobotSurface",
-        #               "SonyAIBORobotSurfaceII", "StarLightCurves", "Strawberry", "SwedishLeaf", "Symbols",
-        #               "ToeSegmentation1", "ToeSegmentation2", "Trace", "TwoLeadECG", "Two_Patterns",
-        #               "UWaveGestureLibraryAll", "Wine", "WordsSynonyms", "Worms", "WormsTwoClass", "synthetic_control",
-        #               "uWaveGestureLibrary_X", "uWaveGestureLibrary_Y", "uWaveGestureLibrary_Z", "wafer", "yoga"]
-        # task_names = ["Adiac", "ArrowHead", "Beef"] # ["BirdChicken", "50words"] # ["Wine","50words"]
-        # PHILS TASKS: task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
-        # # insignificance tasks
-        # task_names = ["CBF", "Lightning7"] # , "ECGMeditation", "LargeKitchenAppliances", "Lightning2", "MedicalImages"]
-        # UCR 2018:        
-        task_names = ["Left_CAMK_excitatory","Left_CAMK_PVCre","Left_CAMK_SHAM",
-                      "Left_excitatory_PVCre","Left_excitatory_SHAM","Left_PVCre_SHAM",
-                      "Right_CAMK_excitatory","Right_CAMK_PVCre","Right_CAMK_SHAM",
-                      "Right_excitatory_PVCre","Right_excitatory_SHAM","Right_PVCre_SHAM"]
-        '''task_names = ["HCTSA_1800001_C3-A2","HCTSA_1800005_C3-A2","HCTSA_1800458_C3-A2",
-                    "HCTSA_1800596_C3-A2","HCTSA_1800604_C3-A2","HCTSA_1800748_C3-A2",
-                    "HCTSA_1800749_C3-A2","HCTSA_1800807_C3-A2","HCTSA_1800821_C3-A2"]'''
-        #["RightCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N","LeftCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N",
-        #                "Control_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N"]
-
-        # task_names = ["Adiac", 'ArrowHead']
-        # # selection of tasks as in old UCR
-        # task_names = ["Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "CBF", "Car",
-        #               "ChlorineConcentration", "CinCECGtorso", "Coffee", "Computers", "CricketX", "CricketY",
-        #               "CricketZ",
-        #               "DiatomSizeReduction", "DistalPhalanxOutlineAgeGroup", "DistalPhalanxOutlineCorrect",
-        #               "DistalPhalanxTW", "ECG200", "ECG5000", "ECGFiveDays", "Earthquakes",
-        #               "ElectricDevices", "FaceAll", "FaceFour",
-        #               "FacesUCR",
-        #               "FiftyWords", "Fish", "FordA", "FordB", "GunPoint", "Ham", "HandOutlines", "Haptics",
-        #               "Herring", "InlineSkate", "InsectWingbeatSound", "ItalyPowerDemand", "LargeKitchenAppliances",
-        #               "Lightning2", "Lightning7", "Mallat", "Meat", "MedicalImages", "MiddlePhalanxOutlineAgeGroup",
-        #               "MiddlePhalanxOutlineCorrect", "MiddlePhalanxTW", "MoteStrain", "NonInvasiveFatalECGThorax1",
-        #               "NonInvasiveFatalECGThorax2",
-        #               "OSULeaf",
-        #               "OliveOil", "PhalangesOutlinesCorrect", "Phoneme", "Plane", "ProximalPhalanxOutlineAgeGroup",
-        #               "ProximalPhalanxOutlineCorrect", "ProximalPhalanxTW", "RefrigerationDevices", "ScreenType",
-        #               "ShapeletSim", "ShapesAll", "SmallKitchenAppliances", "SonyAIBORobotSurface1",
-        #               "SonyAIBORobotSurface2", "StarLightCurves", "Strawberry", "SwedishLeaf", "Symbols",
-        #               "SyntheticControl", "ToeSegmentation1", "ToeSegmentation2", "Trace", "TwoLeadECG", "TwoPatterns",
-        #               "UWaveGestureLibraryAll", "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ",
-        #               "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
-
-    n_good_perf_ops = 100 # intermediate number of good performers to cluster
-    compute_features = False # False or True : compute classification accuracies?
-    max_dist_cluster = 0.2 # gamma in paper, maximum allowed correlation distance within a cluster
-
-    # normalisation of features as done in hctsa TS_normalize
-    if 'maxmin' in runtype:
-        datatype = 'maxmin'
-    elif 'scaledrobustsigmoid' in runtype:
-        datatype = 'scaledrobustsigmoid'
-    else:
-        datatype = 'maxmin'
-        runtype = runtype + '_maxmin'
-        raise Warning('normalisation not specified! Using maxmin')
-
     basePath = locations.rootDir() + '/'
 
     # select runtype by analysis done:

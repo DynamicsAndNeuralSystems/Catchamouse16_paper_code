@@ -227,7 +227,6 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
                 text.set_style('italic')
     # MF_CompareAR_1_10_05_stddiff            CO_TranslateShape_circle_35_pts.std
     # MF_StateSpace_n4sid_1_05_1_ac2          AC_nl_035
-    
 
     return index
 

@@ -155,9 +155,6 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
         axmatrix.add_patch(mpl.patches.Rectangle(cluster_square_param[0],cluster_square_param[1],cluster_square_param[2],fill=0,ec='w',lw=2))  
 
     
-    # -----------------------------------------------------------------
-    # -- calculate and plot best features -----------------------------
-    # -----------------------------------------------------------------  
     best_features_marker = []
     for (i,j) in zip(cluster_bounds[:-1],cluster_bounds[1:]):
         measures_dendr = measures[1,index]
@@ -166,11 +163,72 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     axmatrix.scatter(best_features_marker,best_features_marker,color='w') 
     axmatrix.set_xlim([-0.5,abs_corr_array.shape[0]-0.5])
     axmatrix.set_ylim([-0.5,abs_corr_array.shape[0]-0.5])
+    print([text.get_text() for i,text in enumerate(axmatrix.get_yticklabels()) if i in best_features_marker])
+ 
+    # featureNamesCatch16 = [     'SY_DriftingMean50_min',
+    #                             'CO_TranslateShape_circle_35_pts_statav4_m',
+    #                             'FC_LoopLocalSimple_mean_stderr_chn',
+    #                             'SC_FluctAnal_2_dfa_50_2_logi_r2_se2',
+    #                             'DN_RemovePoints_absclose_05_ac2rat',
+    #                             'ST_LocalExtrema_n100_diffmaxabsmin',
+    #                             'AC_nl_036',
+    #                         'AC_nl_035',
+    #                             'AC_nl_112',
+    #                             'MF_CompareAR_1_10_05_stddiff',
+    #                             'IN_AutoMutualInfoStats_diff_20_gaussian_ami8',
+    #                         'PH_Walker_momentum_5_w_propzcross',
+    #                             'PH_Walker_biasprop_05_01_sw_meanabsdiff',
+    #                         'CO_HistogramAMI_even_10_ami3',
+    #                         'CO_HistogramAMI_even_2_ami3',
+    #                             'CO_AddNoise_1_even_10_ami_at_10']
+
+    featureNamesCatch16 = [
+        "SY_DriftingMean50_min",
+        "DN_RemovePoints_absclose_05_ac2rat",
+        "AC_nl_036",
+        "AC_nl_112",
+        "ST_LocalExtrema_n100_diffmaxabsmin",
+        "CO_TranslateShape_circle_35_pts_statav4_m",
+        "CO_TranslateShape_circle_35_pts_std",
+        "SC_FluctAnal_2_dfa_50_2_logi_r2_se2",
+        "IN_AutoMutualInfoStats_diff_20_gaussian_ami8",
+        "PH_Walker_momentum_5_w_momentumzcross",
+        "PH_Walker_biasprop_05_01_sw_meanabsdiff",
+        "FC_LoopLocalSimple_mean_stderr_chn",
+        "CO_HistogramAMI_even_10_3",
+        "CO_HistogramAMI_even_2_3",
+        "AC_nl_035",
+        "CO_AddNoise_1_even_10_ami_at_10"
+    ]
+
+    collected = []
+    count = 0
+    ## Loop over the labels and modify the adjusted labels
+    labels = [item.get_text() for item in axmatrix.get_yticklabels()]
+    for i,label in enumerate(labels):
+        if label in ["MF_CompareAR_1_10_05_stddiff","MF_StateSpace_n4sid_1_05_1_ac2"]:
+            labels[i] += "*"
+
+    axmatrix.set_yticklabels(labels)
+
+    for i,text in enumerate(axmatrix.get_yticklabels()):  # Loop over the labels to make the features bold 
+        if text.get_text() in featureNamesCatch16:
+            (text.set_color('k'),text.set_weight('bold'))
+            count+=1
+            collected.append(text.get_text())
+        elif i in best_features_marker:
+            if text.get_text() == "MF_CompareAR_1_10_05_stddiff*":
+                text.set_color('k')
+                text.set_weight('bold')
+                text.set_style('italic')
+            elif text.get_text() == "MF_StateSpace_n4sid_1_05_1_ac2*":
+                text.set_color('k')
+                text.set_weight('bold')
+                text.set_style('italic')
+    # MF_CompareAR_1_10_05_stddiff            CO_TranslateShape_circle_35_pts.std
+    # MF_StateSpace_n4sid_1_05_1_ac2          AC_nl_035
     
-    [(text.set_color('k'),text.set_weight('bold')) for i,text in enumerate(axmatrix.get_yticklabels()) if i in best_features_marker]
-    
-    
-    
+
     return index
 
 

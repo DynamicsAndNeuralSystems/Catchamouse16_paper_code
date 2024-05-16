@@ -2,90 +2,59 @@ import numpy as np
 import matplotlib as mpl
 import os
 import sys
+import collections
+import scipy.stats
+import warnings
+from pathos.multiprocessing import ThreadPool as Pool # ProcessingPool
+
 mpl.use("TkAgg")
 #mpl.plt.ion()
 
-#region 
-# -----------------------------------------------------------------
-# -- Set Parameters -----------------------------------------------
-# -----------------------------------------------------------------
-if len(sys.argv) > 1:
-    runtype = sys.argv[1]
-else:
-    runtype = 'dectree_maxmin' # 'dectree_maxmin'
-
-if len(sys.argv) > 2:
-    task_names = sys.argv[2].split(",")
-else:
-    # old 2015 data
-    # task_names = ["50words", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "CBF", "Car",
-    #               "ChlorineConcentration", "CinC_ECG_torso", "Coffee", "Computers", "Cricket_X", "Cricket_Y",
-    #               "Cricket_Z", "DiatomSizeReduction", "DistalPhalanxOutlineAgeGroup", "DistalPhalanxOutlineCorrect",
-    #               "DistalPhalanxTW", "ECG200", "ECG5000", "ECGFiveDays", "Earthquakes", "ElectricDevices", "FISH",
-    #               "FaceAll", "FaceFour", "FacesUCR", "FordA", "FordB", "Gun_Point", "Ham", "HandOutlines",
-    #               "Haptics", "Herring", "InlineSkate", "InsectWingbeatSound", "ItalyPowerDemand",
-    #               "LargeKitchenAppliances", "Lighting2", "Lighting7", "MALLAT", "Meat", "MedicalImages",
-    #               "MiddlePhalanxOutlineAgeGroup", "MiddlePhalanxOutlineCorrect", "MiddlePhalanxTW", "MoteStrain",
-    #               "NonInvasiveFatalECG_Thorax1", "NonInvasiveFatalECG_Thorax2", "OSULeaf", "OliveOil",
-    #               "PhalangesOutlinesCorrect", "Phoneme", "Plane", "ProximalPhalanxOutlineAgeGroup",
-    #               "ProximalPhalanxOutlineCorrect", "ProximalPhalanxTW", "RefrigerationDevices", "ScreenType",
-    #               "ShapeletSim", "ShapesAll", "SmallKitchenAppliances", "SonyAIBORobotSurface",
-    #               "SonyAIBORobotSurfaceII", "StarLightCurves", "Strawberry", "SwedishLeaf", "Symbols",
-    #               "ToeSegmentation1", "ToeSegmentation2", "Trace", "TwoLeadECG", "Two_Patterns",
-    #               "UWaveGestureLibraryAll", "Wine", "WordsSynonyms", "Worms", "WormsTwoClass", "synthetic_control",
-    #               "uWaveGestureLibrary_X", "uWaveGestureLibrary_Y", "uWaveGestureLibrary_Z", "wafer", "yoga"]
-    # task_names = ["Adiac", "ArrowHead", "Beef"] # ["BirdChicken", "50words"] # ["Wine","50words"]
-    # PHILS TASKS: task_names = ['MedicalImages', 'Cricket_X', 'InlineSkate', 'ECG200', 'WordsSynonyms', 'uWaveGestureLibrary_X', 'Two_Patterns', 'yoga', 'Symbols', 'uWaveGestureLibrary_Z', 'SonyAIBORobotSurfaceII', 'Cricket_Y', 'Gun_Point', 'OliveOil', 'Lighting7', 'NonInvasiveFatalECG _Thorax1', 'Haptics', 'Adiac', 'ChlorineConcentration', 'synthetic_control', 'OSULeaf', 'DiatomSizeReduction', 'SonyAIBORobotSurface', 'MALLAT', 'uWaveGestureLibrary_Y', 'CBF', 'ECGFiveDays', 'Lighting2', 'FISH', 'FacesUCR', 'FaceFour', 'Trace', 'Coffee', '50words', 'MoteStrain', 'wafer', 'Cricket_Z', 'SwedishLeaf']
-    # # insignificance tasks
-    # task_names = ["CBF", "Lightning7"] # , "ECGMeditation", "LargeKitchenAppliances", "Lightning2", "MedicalImages"]
-    # UCR 2018:        
-    task_names = ["Left_CAMK_excitatory","Left_CAMK_PVCre","Left_CAMK_SHAM",
+runtypes = ["svm_maxmin","dectree_maxmin","svm_maxmin_null","dectree_maxmin_null"]
+linkage_methods = ['average','complete']
+default_task_names = ["Left_CAMK_excitatory","Left_CAMK_PVCre","Left_CAMK_SHAM",
                     "Left_excitatory_PVCre","Left_excitatory_SHAM","Left_PVCre_SHAM",
                     "Right_CAMK_excitatory","Right_CAMK_PVCre","Right_CAMK_SHAM",
                     "Right_excitatory_PVCre","Right_excitatory_SHAM","Right_PVCre_SHAM"]
-    '''task_names = ["HCTSA_1800001_C3-A2","HCTSA_1800005_C3-A2","HCTSA_1800458_C3-A2",
-                "HCTSA_1800596_C3-A2","HCTSA_1800604_C3-A2","HCTSA_1800748_C3-A2",
-                "HCTSA_1800749_C3-A2","HCTSA_1800807_C3-A2","HCTSA_1800821_C3-A2"]'''
-    #["RightCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N","LeftCtx_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N",
-    #                "Control_HCTSA_CAMK_Excitatory_PVCre_SHAM_ts2-BL_N"]
+ # These are the default settings
 
-    # task_names = ["Adiac", 'ArrowHead']
-    # # selection of tasks as in old UCR
-    # task_names = ["Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken", "CBF", "Car",
-    #               "ChlorineConcentration", "CinCECGtorso", "Coffee", "Computers", "CricketX", "CricketY",
-    #               "CricketZ",
-    #               "DiatomSizeReduction", "DistalPhalanxOutlineAgeGroup", "DistalPhalanxOutlineCorrect",
-    #               "DistalPhalanxTW", "ECG200", "ECG5000", "ECGFiveDays", "Earthquakes",
-    #               "ElectricDevices", "FaceAll", "FaceFour",
-    #               "FacesUCR",
-    #               "FiftyWords", "Fish", "FordA", "FordB", "GunPoint", "Ham", "HandOutlines", "Haptics",
-    #               "Herring", "InlineSkate", "InsectWingbeatSound", "ItalyPowerDemand", "LargeKitchenAppliances",
-    #               "Lightning2", "Lightning7", "Mallat", "Meat", "MedicalImages", "MiddlePhalanxOutlineAgeGroup",
-    #               "MiddlePhalanxOutlineCorrect", "MiddlePhalanxTW", "MoteStrain", "NonInvasiveFatalECGThorax1",
-    #               "NonInvasiveFatalECGThorax2",
-    #               "OSULeaf",
-    #               "OliveOil", "PhalangesOutlinesCorrect", "Phoneme", "Plane", "ProximalPhalanxOutlineAgeGroup",
-    #               "ProximalPhalanxOutlineCorrect", "ProximalPhalanxTW", "RefrigerationDevices", "ScreenType",
-    #               "ShapeletSim", "ShapesAll", "SmallKitchenAppliances", "SonyAIBORobotSurface1",
-    #               "SonyAIBORobotSurface2", "StarLightCurves", "Strawberry", "SwedishLeaf", "Symbols",
-    #               "SyntheticControl", "ToeSegmentation1", "ToeSegmentation2", "Trace", "TwoLeadECG", "TwoPatterns",
-    #               "UWaveGestureLibraryAll", "UWaveGestureLibraryX", "UWaveGestureLibraryY", "UWaveGestureLibraryZ",
-    #               "Wafer", "Wine", "WordSynonyms", "Worms", "WormsTwoClass", "Yoga"]
+PARAMS = {
+            'runtype':          "svm_maxmin",
+            'linkage_method':   'average',
+            'task_names':       default_task_names,
+            'n_good_perf_ops':  100, # intermediate number of good performers to cluster
+            'compute_features': False, # False or True : compute classification accuracies?
+            'max_dist_cluster': 0.2,# gamma in paper, maximum allowed correlation distance within a cluster
+            'calculate_mat':    False,
+            'complete_average_logic': 'calculate'} # 'calculate' or 'plot'
+if len(sys.argv)>1:
+    if sys.argv[1] in runtypes:
+        PARAMS['runtype'] = sys.argv[1]
+    else:
+        warnings.warn("{} is invalid runtype - defaultying to {}".format(sys.argv[1],PARAMS['runtype']),Warning)
+if len(sys.argv)>2:
+    if sys.argv[2] in linkage_methods:
+        PARAMS['linkage_method'] = sys.argv[2]
+    else:
+        warnings.warn("{} is invalid linkage_method - defaultying to {}".format(sys.argv[2],PARAMS['linkage_method']),Warning)
+if len(sys.argv)>3:
+    PARAMS['task_names'] = sys.argv[3].split(",")
 
-n_good_perf_ops = 100 # intermediate number of good performers to cluster
-compute_features = False # False or True : compute classification accuracies?
-max_dist_cluster = 0.2 # gamma in paper, maximum allowed correlation distance within a cluster
+PARAMS['figure_dir'] = "svgs_%s_%s" %(PARAMS['runtype'], PARAMS['linkage_method'])
+if not os.path.isdir(PARAMS['figure_dir']):
+    os.mkdir(PARAMS['figure_dir'])
+
+
 
 # normalisation of features as done in hctsa TS_normalize
-if 'maxmin' in runtype:
+if 'maxmin' in PARAMS['runtype']:
     datatype = 'maxmin'
-elif 'scaledrobustsigmoid' in runtype:
+elif 'scaledrobustsigmoid' in PARAMS['runtype']:
     datatype = 'scaledrobustsigmoid'
 else:
     datatype = 'maxmin'
-    runtype = runtype + '_maxmin'
+    PARAMS['runtype'] = PARAMS['runtype'] + '_maxmin'
     raise Warning('normalisation not specified! Using maxmin')
-#endregion
 
 
 
@@ -95,17 +64,15 @@ import Feature_Stats
 import Reducing_Redundancy
 import Plotting
 
-
-import collections
 import modules.misc.PK_helper as hlp
 import modules.feature_importance.PK_feat_array_proc as fap
 import locations
 
-import scipy.stats
+
+
 # import statsmodels
 # import statsmodels.sandbox.stats.multicomp
 
-from pathos.multiprocessing import ThreadPool as Pool # ProcessingPool
 
 # To support Python2.7 functions from statsmodels, the reference link to the function is added below
 # https://github.com/statsmodels/statsmodels/blob/master/statsmodels/stats/multitest.py#L65
@@ -464,7 +431,6 @@ class Workflow:
         if self.redundancy_method.compare_space == 'problem_stats':
             self.redundancy_method.set_parameters(self.stats_good_op,self.good_op_ids,self.good_perf_op_ids)
 
-
     def find_good_op_ids(self, threshold):
         """
         Find the features that have been successfully calculated for more then threshold problems.
@@ -536,9 +502,6 @@ class Workflow:
             task.tot_stats_all_runs = np.array(task.tot_stats_all_runs)[includeIndicator,:]
             task.tot_stats_p_vals = np.array(task.tot_stats_p_vals)[includeIndicator]
 
-
-
-
     def list_bad_op_ids_and_tasks(self):
         """
         Which features fail for what tasks?
@@ -569,7 +532,6 @@ class Workflow:
                 for bad_task in item[1]:
                         f.write("%s," % bad_task)
                 f.write("\n\n")
-
 
     def list_bad_and_non_significant_ops(self):
         """
@@ -1077,8 +1039,6 @@ class Workflow:
         task = self.tasks[self.task_names == task_name]
         null_stats_this_op = null_stats[task.op_ids == op_ID, :]
 
-
-
     def select_good_pval_ops_sort_asc(self):
         """
         Select a subset of well performing operations by p-value
@@ -1376,23 +1336,46 @@ class Workflow:
 
     def classify_good_perf_ops_vs_super_vs_good_ops(self):
 
-        # featureNamesCatch16 = ['SY_DriftingMean50.min',
-        #                         'CO_TranslateShape_circle_35_pts.statav4_m',
-        #                         'FC_LoopLocalSimple_mean.stderr_chn',
-        #                         'SC_FluctAnal_2_dfa_50_2_logi.r2_se2',
-        #                         'DN_RemovePoints_absclose_05.ac2rat',
-        #                         'ST_LocalExtrema_n100.diffmaxabsmin',
-        #                         'AC_nl_036',
-        #                         'AC_nl_035',
-        #                         'AC_nl_112',
-        #                         'MF_CompareAR_1_10_05.stddiff',
-        #                         'IN_AutoMutualInfoStats_diff_20_gaussian.ami8',
-        #                         'PH_Walker_momentum_5.w_propzcross',
-        #                         'PH_Walker_biasprop_05_01.sw_meanabsdiff',
-        #                         'CO_HistogramAMI_even_10.ami3',
-        #                         'CO_HistogramAMI_even_2.ami3',
-        #                         'CO_AddNoise_1_even_10.ami_at_10']
-        featureNamesCatch16=['MF_StateSpace_n4sid_1_05_1_ac2', 'ST_LocalExtrema_n100_diffmaxabsmin', 'PH_Walker_biasprop_05_01_sw_meanabsdiff', 'PH_Walker_momentum_5_w_momentumzcross', 'AC_nl_036', 'AC_nl_122', 'CO_glscf_2_2_1', 'CO_glscf_2_2_3', 'RM_ami_3', 'SB_BinaryStats_iqr_longstretch1', 'SP_Summaries_pgram_hamm_linfitloglog_mf_a2', 'AC_nl_112', 'StatAvl50', 'FC_LocalSimple_mean4_sws', 'CO_TranslateShape_circle_35_pts_statav4_m', 'PH_Walker_prop_05_swss5_1', 'SC_FluctAnal_2_std_50_logi_ssr', 'DN_RemovePoints_absclose_05_ac2rat', 'IN_AutoMutualInfoStats_diff_20_gaussian_ami8', 'MF_steps_ahead_ar_2_6_maxdiffrms', 'CO_HistogramAMI_even_2_3', 'PH_ForcePotential_sine_10_004_10_std', 'MF_steps_ahead_ar_best_6_rmserr_6', 'MF_StateSpace_n4sid_1_05_1_ac3n']
+        CATCH16_PROPER =  [ 'SY_DriftingMean50.min',
+                            'DN_RemovePoints_absclose_05.ac2rat',
+                            'AC_nl_036',
+                            'AC_nl_112',
+                            'ST_LocalExtrema_n100.diffmaxabsmin',
+                            'CO_TranslateShape_circle_35_pts.statav4_m',
+                                                            'CO_TranslateShape_circle_35_pts.std',
+                            'SC_FluctAnal_2_dfa_50_2_logi.r2_se2',
+                            'IN_AutoMutualInfoStats_diff_20_gaussian.ami8',
+                            'PH_Walker_momentum_5.w_propzcross',
+                                                'PH_Walker_biasprop_05_01.sw_meanabsdiff',
+                                                'FC_LoopLocalSimple_mean.stderr_chn',
+                                                'CO_HistogramAMI_even_10.ami3',
+                            'CO_HistogramAMI_even_2.ami3',
+                                                'AC_nl_035',
+                            'CO_AddNoise_1_even_10.ami_at_10']
+        CATCH16_COMPLETELINKAGE = [  
+                            'SY_DriftingMean50.min',
+                            'DN_RemovePoints_absclose_05.ac2rat',
+                            'AC_nl_036',
+                            'AC_nl_112',
+                            'ST_LocalExtrema_n100.diffmaxabsmin',
+                            'CO_TranslateShape_circle_35_pts.statav4_m',
+                                                            'MF_CompareAR_1_10_05_stddiff', 
+                            # MISSING 'SC_FluctAnal_2_dfa_50_2_logi.r2_se2',
+                            # MISSING 'IN_AutoMutualInfoStats_diff_20_gaussian.ami8',
+                            'PH_Walker_momentum_5_w_momentumzcross', 
+                                                            'MF_steps_ahead_arma_3_1_6_ac1_6',
+                                   # MISSING   'FC_LoopLocalSimple_mean.stderr_chn',
+                            'SP_Summaries_welch_rect_fpolysat_rmse',  'CO_HistogramAMI_even_10_3', # DOUBLING UP
+                            'CO_HistogramAMI_even_2_3', 
+                                                        'MF_StateSpace_n4sid_1_05_1_ac2', 
+                            'CO_AddNoise_1_even_10_ami_at_10', 
+                            #OTHER IDENTIFIED CENTROIDS        
+                            'SC_FluctAnal_2_std_50_logi_ssr', 
+                            'RM_ami_3', 
+]
+
+        featureNamesCatch16 = CATCH16_PROPER if PARAMS['linkage_method']=='average' else CATCH16_COMPLETELINKAGE
+
 
         featureNamesCatch22 = ['CO_Embed2_Basic_tau.incircle_1',
                                 'CO_Embed2_Basic_tau.incircle_2',
@@ -1415,6 +1398,8 @@ class Workflow:
 
         # catch16 feature indicator
         catch16Indicator = [item in featureNamesCatch16 for item in self.good_op_names]
+        print([self.good_op_names[i] for i in range(len(self.good_op_ids)) if
+                      self.good_op_names[i] in featureNamesCatch16])
         catch16IDs = [self.good_op_ids[i] for i in range(len(self.good_op_ids)) if
                       self.good_op_names[i] in featureNamesCatch16]
         print(len(catch16IDs))
@@ -1523,9 +1508,7 @@ class Workflow:
         
         mpl.pyplot.xlabel('performance on whole feature set')
         mpl.pyplot.ylabel('performance with catchaMouse16') # catchaMouse16
-        if not os.path.isdir('svgs'):
-            os.mkdir('svgs')
-        mpl.pyplot.savefig("svgs/perf_compare_corr.svg", format = 'svg', dpi=400, bbox_inches='tight', pad_inches = 0.25, transparent=True)
+        mpl.pyplot.savefig("{}/perf_compare_corr.svg".format(PARAMS['figure_dir']), format = 'svg', dpi=400, bbox_inches='tight', pad_inches = 0.25, transparent=True)
         #mpl.pyplot.show()
 
     def UMAP_all_topOps_clusters(self):
@@ -2514,7 +2497,6 @@ class Workflow:
         which_plot = 'datamat' # options --> ('datamat', 'dist')
         
         # Compute the matrix? If matrix already computed, then put false
-        calculate_mat = False 
         
         n_clust_max = 0.5
         n_clust_step = 0.1
@@ -2532,7 +2514,7 @@ class Workflow:
         result_mat = []
         reduced = np.empty((len(self.tasks), n_clust_steps))
 
-        if calculate_mat:
+        if PARAMS['calculate_mat']:
             for n_topOpsInd, n_topOps in enumerate(n_topOps_array):
 
                 print "\nNow taking %i topOps." % n_topOps
@@ -2604,7 +2586,7 @@ class Workflow:
             mpl.pyplot.legend(labels=n_topOps_array.astype('int32') )
             mpl.pyplot.xlabel('no. of features')
             mpl.pyplot.ylabel('validated accuracy')
-            mpl.pyplot.savefig("svgs/scatter.svg",dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
+            mpl.pyplot.savefig("{}/scatter.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
             # mpl.pyplot.show()
         if (which_plot == 'datamat') or True:
             
@@ -2632,11 +2614,9 @@ class Workflow:
             mpl.pyplot.xlabel('\nthreshold applied')
             mpl.pyplot.ylabel('Left-out-task')
             #mpl.pyplot.show()
-            mpl.pyplot.savefig("svgs/datamat.svg",dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
-        # complete_average_logic = ('calculate','complete') # Or ('calculate,'complete') or "plot"
-        complete_average_logic = ('compute') # Or ('calculate,'complete') or "plot"
+            mpl.pyplot.savefig("{}/datamat.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
 
-        if 'calculate'==complete_average_logic[0]:
+        if 'calculate'==PARAMS['complete_average_logic']:
             import pandas as pd
 
             nfeatures = {key:[] for key in n_clust_array}
@@ -2648,10 +2628,10 @@ class Workflow:
                     naccuracies[gamma].append(accuracy/featurecount)
             nfeatures = pd.DataFrame.from_dict(nfeatures,orient='index',columns=np.array(self.task_names)[sorted_ind])
             naccuracies = pd.DataFrame.from_dict(naccuracies,orient='index',columns=np.array(self.task_names)[sorted_ind])
-            nfeatures.to_csv('nfeatures_{}.csv'.format(complete_average_logic[1]))
-            naccuracies.to_csv('naccuracies_{}.csv'.format(complete_average_logic[1]))
+            nfeatures.to_csv('nfeatures_{}.csv'.format(PARAMS['linkage_method']))
+            naccuracies.to_csv('naccuracies_{}.csv'.format(PARAMS['linkage_method']))
             
-        if 'compute' == complete_average_logic:
+        if 'plot'==PARAMS['complete_average_logic']:
             import pandas as pd
             nfeatures_average = pd.read_csv("nfeatures_average.csv",index_col=0)
             naccuracies_average = pd.read_csv("naccuracies_average.csv",index_col=0)
@@ -2667,7 +2647,7 @@ class Workflow:
             mpl.pyplot.xlabel(r'$\beta$')
             mpl.pyplot.ylabel('Performance per feature')
 
-            mpl.pyplot.savefig("svgs/performanceperfeature.svg",dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
+            mpl.pyplot.savefig("{}/performanceperfeature.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
         if True:  # Originally Else: 
             
             # DISTRIBUTION PLOT ('dist')
@@ -2683,7 +2663,7 @@ class Workflow:
             mpl.pyplot.xlabel('thresholds')
             mpl.pyplot.ylabel('Accuracy')
             #mpl.pyplot.show()
-            mpl.pyplot.savefig("svgs/dist.svg",dpi=400, bbox_inches='tight', pad_inches=0.25, transparent=True)
+            mpl.pyplot.savefig("{}/dist.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0.25, transparent=True)
 
 if __name__ == '__main__':
     basePath = locations.rootDir() + '/'
@@ -2695,32 +2675,32 @@ if __name__ == '__main__':
     # - dectree,
     # - svm, or
     # - linear
-    if 'dectree' in runtype:
-        if 'null' in runtype:
+    if 'dectree' in PARAMS['runtype']:
+        if 'null' in PARAMS['runtype']:
             ranking_method = Feature_Stats.Null_Decision_Tree()
         else:
-            null_folder = basePath + 'results/intermediate_results_' + runtype + '_null/'
+            null_folder = basePath + 'results/intermediate_results_' + PARAMS['runtype'] + '_null/'
             if not os.path.exists(null_folder):
                 os.makedirs(null_folder)
             null_pattern = null_folder + 'task_{:s}_tot_stats_all_runs.txt'
             ranking_method = Feature_Stats.Decision_Tree(null_pattern)
-    elif 'svm' in runtype:
-        if 'null' in runtype:
+    elif 'svm' in PARAMS['runtype']:
+        if 'null' in PARAMS['runtype']:
             ranking_method = Feature_Stats.Null_Linear_Classifier()
         else:
             ranking_method = Feature_Stats.Linear_Classifier()
     else:
         ranking_method = Feature_Stats.Linear_Classifier()
-        runtype = runtype + '_dectree'
+        PARAMS['runtype'] = PARAMS['runtype'] + '_dectree'
         raise Warning('classifier not specified! Using dectree')
 
     # First check if hpc input directory exists, otherwise use local one
     inputDir = basePath + 'input_data/'+datatype+'/'
 
-    intermediateResultsDir = basePath + 'results/intermediate_results_' + runtype + '/'
+    intermediateResultsDir = basePath + 'results/intermediate_results_' + PARAMS['runtype'] + '/'
 
     # create directories if not there
-    outputDir = basePath + 'output/' + runtype + '/'
+    outputDir = basePath + 'output/' + PARAMS['runtype'] + '/'
     if not os.path.exists(inputDir):
         os.makedirs(inputDir)
     if not os.path.exists(intermediateResultsDir):
@@ -2728,8 +2708,7 @@ if __name__ == '__main__':
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
 
-    print "runtype = {}, datatype = {}, inputDir = {}".format(runtype,datatype,inputDir)
-
+    print "runtype = {}, datatype = {}, inputDir = {}".format(PARAMS['runtype'],datatype,inputDir)
     #path_pattern = inputDir + 'HCTSA_{:s}_N.mat'
     old_matlab = False
     label_regex_pattern = '(?:[^\,]*\,){0}([^,]*)'  # FIRST VALUE
@@ -2745,7 +2724,7 @@ if __name__ == '__main__':
     select_good_perf_ops_combination = 'mean' # 'pos_sum' #
     similarity_method = 'corr'#'abscorr' # 'abscorr', 'corr', 'cos', 'euc'
     compare_space = 'problem_stats'
-    min_calc_tasks = np.ceil(float(len(task_names)) * 0.8) # np.ceil(float(len(task_names)) / float(1.25))
+    min_calc_tasks = np.ceil(float(len(PARAMS['task_names'])) * 0.8) # np.ceil(float(len(task_names)) / float(1.25))
 
     # -----------------------------------------------------------------
     # -- Initialise Class instances -----------------------------------
@@ -2754,18 +2733,18 @@ if __name__ == '__main__':
     input_method = Data_Input.Datafile_Input(inputDir,masking_method,label_regex_pattern)
     redundancy_method = Reducing_Redundancy.Reducing_Redundancy(similarity_method = similarity_method,compare_space = compare_space)
 
-    workflow = Workflow(task_names,input_method,ranking_method,
+    workflow = Workflow(PARAMS['task_names'],input_method,ranking_method,
                         # combine_tasks_method = combine_tasks_method,combine_tasks_norm = combine_tasks_norm,
                         select_good_perf_ops_method = select_good_perf_ops_method, select_good_perf_ops_norm = select_good_perf_ops_norm,
                         select_good_perf_ops_combination=select_good_perf_ops_combination, redundancy_method = redundancy_method,
-                        n_good_perf_ops = n_good_perf_ops)
+                        n_good_perf_ops = PARAMS['n_good_perf_ops'])
 
     # -----------------------------------------------------------------
     # -- Do the statistic calculations --------------------------------
     # -----------------------------------------------------------------
 
     # -- calculate the statistics
-    if compute_features:
+    if PARAMS['compute_features']:
         workflow.read_data(old_matlab=old_matlab)
         workflow.calculate_stats('tot_stats', path_pattern_task_attrib)
     else:
@@ -2809,7 +2788,7 @@ if __name__ == '__main__':
     # -- calculate the correlation matrix saved in workflow.redundancy_method.similarity_array
     workflow.redundancy_method.calc_similarity()
     # -- calculate the linkage, the cluster indices and the clustering in self.corr_linkage,self.cluster_inds,self.cluster_op_id_list,respectively
-    workflow.redundancy_method.calc_hierch_cluster(t = max_dist_cluster)
+    workflow.redundancy_method.calc_hierch_cluster(t = PARAMS['max_dist_cluster'])
     #
     # # -- single features for each cluster
     workflow.select_good_perf_cluster_center_ops()
@@ -2847,7 +2826,7 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- initialise the plotting class
 
-    plotting = Plotting.Plotting(workflow,max_dist_cluster = max_dist_cluster)
+    plotting = Plotting.Plotting(workflow,max_dist_cluster = PARAMS['max_dist_cluster'])
 
     if False:
         # -- Plot the statistics array
@@ -2885,5 +2864,5 @@ if __name__ == '__main__':
     # -----------------------------------------------------------------
     # -- show the plot as last task of the script
     # -----------------------------------------------------------------
-    mpl.pyplot.savefig("svgs/cluster.svg",dpi=400, bbox_inches='tight', pad_inches=0.25, transparent=True)
+    mpl.pyplot.savefig("{}/cluster.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0.25, transparent=True)
     #mpl.pyplot.show()

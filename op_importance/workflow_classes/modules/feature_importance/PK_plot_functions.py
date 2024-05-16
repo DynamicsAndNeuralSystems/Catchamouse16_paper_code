@@ -3,6 +3,8 @@ Created on 5 Nov 2015
 
 @author: philip
 '''
+from Workflow import PARAMS
+
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -91,7 +93,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     # Compute and plot dendrogram.
     fig = plt.figure(figsize=figsize)
     axdendro = fig.add_axes(rect_dendro)
-    corr_linkage = idtop.calc_linkage(abs_corr_array)[0]
+    corr_linkage = idtop.calc_linkage(abs_corr_array,PARAMS['linkage_method'])[0]
       
     corr_dendrogram = hierarchy.dendrogram(corr_linkage, orientation='left', color_threshold=max_dist_cluster)
     #axdendro.set_xticks([])
@@ -140,8 +142,11 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     # -- calculate and plot clusters ----------------------------------
     # -----------------------------------------------------------------
     #cluster_ind = hierarchy.fcluster(link_arr, t=cluster_t, criterion=cluster_criterion)
-    cluster_ind = hierarchy.fcluster(corr_linkage, t = max_dist_cluster, criterion='distance')
-                                     
+
+    if PARAMS['linkage_method']=='complete': #We force 'complete' to yield 16 clusters instead of using gamma
+        cluster_ind = hierarchy.fcluster(corr_linkage, t = 16, criterion='maxclust')
+    else:
+        cluster_ind = hierarchy.fcluster(corr_linkage, t = max_dist_cluster, criterion='distance')                              
     # -- plot delimiters for measures
     cluster_bounds = np.hstack((-1,np.nonzero(np.diff(cluster_ind[index]))[0],abs_corr_array.shape[0]-1))+1
     '''for bound in cluster_bounds:
@@ -163,8 +168,11 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     axmatrix.scatter(best_features_marker,best_features_marker,color='w') 
     axmatrix.set_xlim([-0.5,abs_corr_array.shape[0]-0.5])
     axmatrix.set_ylim([-0.5,abs_corr_array.shape[0]-0.5])
-    print([text.get_text() for i,text in enumerate(axmatrix.get_yticklabels()) if i in best_features_marker])
- 
+    if PARAMS['linkage_method']=='complete':
+
+        print("COMPLETE 16 CENTROIDS INCOMING...")
+        print([text.get_text() for i,text in enumerate(axmatrix.get_yticklabels()) if i in best_features_marker])
+    
     # featureNamesCatch16 = [     'SY_DriftingMean50_min',
     #                             'CO_TranslateShape_circle_35_pts_statav4_m',
     #                             'FC_LoopLocalSimple_mean_stderr_chn',

@@ -9,3 +9,4 @@
 /hpc_job_scripts/job-*
 /sarab_matlab_analysis/*.txt
 workflow_classes_cluster
+*csv

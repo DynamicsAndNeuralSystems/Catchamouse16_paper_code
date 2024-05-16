@@ -1,3 +1,4 @@
+from Workflow import PARAMS
 import modules.misc.PK_helper as hlp
 import modules.feature_importance.PK_ident_top_op as idtop
 import scipy.cluster.hierarchy as hierarchy
@@ -119,7 +120,7 @@ class Reducing_Redundancy:
         criterion : str, optional
             The criterion to use in forming flat clusters. 
         """
-        self.linkage = idtop.calc_linkage(self.similarity_array)[0]
+        self.linkage = idtop.calc_linkage(self.similarity_array, PARAMS['linkage_method'])[0]
         self.cluster_inds = hierarchy.fcluster(self.linkage, t = t, criterion=criterion)
         # -- map index to op_id and create list of lists representing clusters
         self.cluster_op_id_list = [[] for x in xrange(self.cluster_inds.max())]

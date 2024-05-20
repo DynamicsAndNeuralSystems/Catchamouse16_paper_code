@@ -23,10 +23,9 @@ PARAMS = {
             'linkage_method':   'average',
             'task_names':       default_task_names,
             'n_good_perf_ops':  100, # intermediate number of good performers to cluster
-            'compute_features': False, # False or True : compute classification accuracies?
+            'compute_features': True, # False or True : compute classification accuracies?
             'max_dist_cluster': 0.2,# gamma in paper, maximum allowed correlation distance within a cluster
-            'calculate_mat':    False,
-            'complete_average_logic': 'plot'} # 'calculate' or 'plot'
+            'calculate_mat':    True}
 if len(sys.argv)>1:
     if sys.argv[1] in runtypes:
         PARAMS['runtype'] = sys.argv[1]
@@ -38,6 +37,20 @@ if len(sys.argv)>2:
     else:
         warnings.warn("{} is invalid linkage_method - defaultying to {}".format(sys.argv[2],PARAMS['linkage_method']),Warning)
 if len(sys.argv)>3:
+    if sys.argv[3].lower() == "true":
+        PARAMS['compute_features']= True
+    elif sys.argv[3].lower() == "false":
+        PARAMS['compute_features']= False
+    else:
+        warnings.warn("{} is invalid compute_features - defaultying to {}".format(sys.argv[3],PARAMS['compute_features']),Warning)
+if len(sys.argv)>4:
+    if sys.argv[4].lower() == "true":
+        PARAMS['calculate_mat']= True
+    elif sys.argv[4].lower() == "false":
+        PARAMS['calculate_mat']= False
+    else:
+        warnings.warn("{} is invalid calculate_mat - defaultying to {}".format(sys.argv[3],PARAMS['calculate_mat']),Warning)
+if len(sys.argv)>5:
     PARAMS['task_names'] = sys.argv[3].split(",")
 
 PARAMS['figure_dir'] = "svgs_%s_%s" %(PARAMS['runtype'], PARAMS['linkage_method'])
@@ -2624,26 +2637,25 @@ class Workflow:
             mpl.pyplot.ylabel('Left-out-task')
             #mpl.pyplot.show()
             mpl.pyplot.savefig("{}/datamat.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
-            
-        if 'plot'==PARAMS['complete_average_logic']:
-            try:
-                average_performance = np.loadtxt("peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710_average.txt")
-                complete_performance = np.loadtxt("peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710_complete.txt")
+        # LOGIC SCANS FOR THE REQUIRED COMPARISON FILES AND THEN PLOTS IF ABLE TO          
+        try:
+            average_performance = np.loadtxt("peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710_average.txt")
+            complete_performance = np.loadtxt("peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710_complete.txt")
 
-                mpl.pyplot.figure()
-                mpl.pyplot.plot((0, 1.5), (0, 1.5), '--', color=np.array((1, 1, 1)) * 0.7)
-                mpl.pyplot.errorbar(average_performance[:, 4], complete_performance[:, 4],
-                                                xerr=average_performance[:, 5], yerr=complete_performance[:, 5], fmt='o',
-                                                color='r', ecolor='r')
+            mpl.pyplot.figure()
+            mpl.pyplot.plot((0, 1.5), (0, 1.5), '--', color=np.array((1, 1, 1)) * 0.7)
+            mpl.pyplot.errorbar(average_performance[:, 4], complete_performance[:, 4],
+                                            xerr=average_performance[:, 5], yerr=complete_performance[:, 5], fmt='o',
+                                            color='r', ecolor='r')
 
-                mpl.pyplot.xlabel('Accuracy of catchaMouse16')
-                mpl.pyplot.ylabel('Accuracy of complete linkage centroids') # catchaMouse16
-                print("Mean performance of the average clustering: {}".format(np.mean(average_performance[:, 4])))
-                print("Mean performance of the complete clustering: {}".format(np.mean(complete_performance[:, 4])))
-                mpl.pyplot.savefig("{}/performance_comparison.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
-            except IOError:
-                warnings.warn("Trying to compare average and complete clustering. Expected files not found. Have you run both the average and the complete clustering?",UserWarning)
-                print("Ignoring this plot for this run... Check that the both performance_mat files exist")
+            mpl.pyplot.xlabel('Accuracy of catchaMouse16')
+            mpl.pyplot.ylabel('Accuracy of complete linkage centroids') # catchaMouse16
+            print("Mean performance of the average clustering: {}".format(np.mean(average_performance[:, 4])))
+            print("Mean performance of the complete clustering: {}".format(np.mean(complete_performance[:, 4])))
+            mpl.pyplot.savefig("{}/performance_comparison.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
+        except IOError:
+            warnings.warn("Trying to compare average and complete clustering. Expected files not found. Have you run both the average and the complete clustering?",UserWarning)
+            print("IF THIS IS FIRST RUN, IGNORE THIS WARNING")
         if True:  # Originally Else: 
             
             # DISTRIBUTION PLOT ('dist')

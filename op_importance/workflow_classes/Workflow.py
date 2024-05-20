@@ -26,7 +26,7 @@ PARAMS = {
             'compute_features': False, # False or True : compute classification accuracies?
             'max_dist_cluster': 0.2,# gamma in paper, maximum allowed correlation distance within a cluster
             'calculate_mat':    False,
-            'complete_average_logic': 'calculate'} # 'calculate' or 'plot'
+            'complete_average_logic': 'plot'} # 'calculate' or 'plot'
 if len(sys.argv)>1:
     if sys.argv[1] in runtypes:
         PARAMS['runtype'] = sys.argv[1]
@@ -1374,7 +1374,14 @@ class Workflow:
                             'RM_ami_3', 
 ]
 
-        featureNamesCatch16 = CATCH16_PROPER if PARAMS['linkage_method']=='average' else CATCH16_COMPLETELINKAGE
+        if PARAMS['linkage_method']=='average':
+            featureNamesCatch16 = CATCH16_PROPER
+        elif PARAMS['linkage_method']=='complete':
+            featureNamesCatch16 = CATCH16_COMPLETELINKAGE
+        else:
+            print("PARAMS Linkage Method set improperly. Defaulting to catchamouse16 set")
+            featureNamesCatch16 = CATCH16_PROPER
+
 
 
         featureNamesCatch22 = ['CO_Embed2_Basic_tau.incircle_1',
@@ -1508,6 +1515,8 @@ class Workflow:
         
         mpl.pyplot.xlabel('performance on whole feature set')
         mpl.pyplot.ylabel('performance with catchaMouse16') # catchaMouse16
+        np.savetxt(locations.rootDir() + "/peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710_{}.txt".format(PARAMS['linkage_method']), perfmat)
+
         mpl.pyplot.savefig("{}/perf_compare_corr.svg".format(PARAMS['figure_dir']), format = 'svg', dpi=400, bbox_inches='tight', pad_inches = 0.25, transparent=True)
         #mpl.pyplot.show()
 
@@ -2615,39 +2624,26 @@ class Workflow:
             mpl.pyplot.ylabel('Left-out-task')
             #mpl.pyplot.show()
             mpl.pyplot.savefig("{}/datamat.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
-
-        if 'calculate'==PARAMS['complete_average_logic']:
-            import pandas as pd
-
-            nfeatures = {key:[] for key in n_clust_array}
-            naccuracies = {key:[] for key in n_clust_array}
-            for i in range(len(self.tasks)):
-                for j,gamma in enumerate(n_clust_array):
-                    featurecount,accuracy = int(reduced[i, j]),float(result_mat[i, j])
-                    nfeatures[gamma].append(featurecount)
-                    naccuracies[gamma].append(accuracy/featurecount)
-            nfeatures = pd.DataFrame.from_dict(nfeatures,orient='index',columns=np.array(self.task_names)[sorted_ind])
-            naccuracies = pd.DataFrame.from_dict(naccuracies,orient='index',columns=np.array(self.task_names)[sorted_ind])
-            nfeatures.to_csv('nfeatures_{}.csv'.format(PARAMS['linkage_method']))
-            naccuracies.to_csv('naccuracies_{}.csv'.format(PARAMS['linkage_method']))
             
         if 'plot'==PARAMS['complete_average_logic']:
-            import pandas as pd
-            nfeatures_average = pd.read_csv("nfeatures_average.csv",index_col=0)
-            naccuracies_average = pd.read_csv("naccuracies_average.csv",index_col=0)
-            nfeatures_complete = pd.read_csv("nfeatures_complete.csv",index_col=0)
-            naccuracies_complete = pd.read_csv("naccuracies_complete.csv",index_col=0)
+            try:
+                average_performance = np.loadtxt("peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710_average.txt")
+                complete_performance = np.loadtxt("peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710_complete.txt")
 
-            mpl.pyplot.figure(figsize=(5,7))
-            for key in nfeatures_average.index:
-                mpl.pyplot.scatter(nfeatures_average.loc[key], naccuracies_average.loc[key],color='red')
-                mpl.pyplot.scatter(nfeatures_complete.loc[key], naccuracies_complete.loc[key],color='blue')
-            mpl.pyplot.legend(['average','complete'])
-            mpl.pyplot.title('Average performance per feature', fontsize= 16, horizontalalignment='center')
-            mpl.pyplot.xlabel(r'$\beta$')
-            mpl.pyplot.ylabel('Performance per feature')
+                mpl.pyplot.figure()
+                mpl.pyplot.plot((0, 1.5), (0, 1.5), '--', color=np.array((1, 1, 1)) * 0.7)
+                mpl.pyplot.errorbar(average_performance[:, 4], complete_performance[:, 4],
+                                                xerr=average_performance[:, 5], yerr=complete_performance[:, 5], fmt='o',
+                                                color='r', ecolor='r')
 
-            mpl.pyplot.savefig("{}/performanceperfeature.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
+                mpl.pyplot.xlabel('Accuracy of catchaMouse16')
+                mpl.pyplot.ylabel('Accuracy of complete linkage centroids') # catchaMouse16
+                print("Mean performance of the average clustering: {}".format(np.mean(average_performance[:, 4])))
+                print("Mean performance of the complete clustering: {}".format(np.mean(complete_performance[:, 4])))
+                mpl.pyplot.savefig("{}/performance_comparison.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)
+            except IOError:
+                warnings.warn("Trying to compare average and complete clustering. Expected files not found. Have you run both the average and the complete clustering?",UserWarning)
+                print("Ignoring this plot for this run... Check that the both performance_mat files exist")
         if True:  # Originally Else: 
             
             # DISTRIBUTION PLOT ('dist')
@@ -2658,7 +2654,7 @@ class Workflow:
             mpl.pyplot.figure(figsize=(7,5))
             sns.violinplot(data=result_mat, color ="0.8")
             sns.stripplot(data=result_mat, jitter=True, zorder=1)
-            mpl.pyplot.title("'complete' Distribution Plot")
+            mpl.pyplot.title("'{}' Distribution Plot".format(PARAMS['linkage_method']))
             mpl.pyplot.xticks(range(n_clust_steps),n_clust_array)
             mpl.pyplot.xlabel('thresholds')
             mpl.pyplot.ylabel('Accuracy')

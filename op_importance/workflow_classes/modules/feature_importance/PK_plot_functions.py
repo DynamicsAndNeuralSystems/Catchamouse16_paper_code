@@ -95,7 +95,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     axdendro = fig.add_axes(rect_dendro)
     corr_linkage = idtop.calc_linkage(abs_corr_array,PARAMS['linkage_method'])[0]
       
-    corr_dendrogram = hierarchy.dendrogram(corr_linkage, orientation='left', color_threshold=max_dist_cluster)
+    corr_dendrogram = hierarchy.dendrogram(corr_linkage, orientation='right', color_threshold=max_dist_cluster)
     #axdendro.set_xticks([])
     axdendro.set_yticks([])
     axdendro.axvline(max_dist_cluster,ls='--',c='k')
@@ -119,7 +119,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
     # Plot colorbar.
     axcolor = fig.add_axes(rect_color)
     cbar = plt.colorbar(im, cax=axcolor)
-    cbar.set_label('Pearson correlation')
+    cbar.set_label(r'Absolute Pearson correlation, $|R|$')
     
     
     # Plot the quality measures
@@ -165,7 +165,7 @@ def plot_arr_dendrogram(abs_corr_array,names,max_dist_cluster,measures = None):
         measures_dendr = measures[1,index]
         best_features_marker.append(i+np.argmin(measures_dendr[i:j]))
         
-    axmatrix.scatter(best_features_marker,best_features_marker,color='w') 
+    # axmatrix.scatter(best_features_marker,best_features_marker,color='w') 
     axmatrix.set_xlim([-0.5,abs_corr_array.shape[0]-0.5])
     axmatrix.set_ylim([-0.5,abs_corr_array.shape[0]-0.5])
     if PARAMS['linkage_method']=='complete':

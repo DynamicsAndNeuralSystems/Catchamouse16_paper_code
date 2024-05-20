@@ -1,5 +1,9 @@
 *.asv
 *.png
+################################
+#Some locally generated files#
+################################
+peformance_mat_fullMeanStd_topMeanStd_clusterMeanStd_givenSplit_nonBalanced_new710_*
 
 ################################
 #Some locally generated folders#

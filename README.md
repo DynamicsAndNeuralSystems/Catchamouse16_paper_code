@@ -35,39 +35,69 @@ The code is written in python2 and requires the following packages:
 
 If beginning with the MATLAB data a slightly different routine needs to be followed in order to recover the figures:
 1. Place the data in `/HCTSA_CalculatedData` so that the base repo looks like
+2. 
 ├── example_pipeline_output.png
+
 ├── HCTSA_CalculatedData
+
 ├── MatToCSV.m
+
 ├── op_importance
+
 ├── README.md
+
 └── runscript.sh
-2. Now install hctsa in the parent directory as the repo
+
+3. Now install hctsa in the parent directory as the repo
+4. 
 ├── hctsa
+
 │   ├── Calculation
+
 │   ├── Database
+
 │   ├── FeatureSets
+
 │   ├── git-archive-all.sh
+
 │   ├── img
+
 │   ├── install.m
+
 │   ├── LICENSE.txt
+
 │   ├── Operations
+
 │   ├── PeripheryFunctions
+
 │   ├── PlottingAnalysis
+
 │   ├── README.md
+
 │   ├── startup.m
+
 │   ├── TimeSeries
+
 │   └── Toolboxes
+
 ├── op_importance
+
 │   ├── example_pipeline_output.png
+
 │   ├── HCTSA_CalculatedData
+
 │   ├── MatToCSV.m
+
 │   ├── op_importance
+
 │   ├── README.md
+
 │   └── runscript.sh
-3. Open MATLAB and run `startup.m` in `HCTSA`
-4. cd to `op_importance` and run `MatToCSV.m`
+
+6. Open MATLAB and run `startup.m` in `HCTSA`
+7. cd to `op_importance` and run `MatToCSV.m`
     - This will populate the data as normalised csv files in the correct location
-5. Execute `bash runscript.sh` in a terminal and the figures will be reproduced
+8. Execute `bash runscript.sh` in a terminal and the figures will be reproduced
 
 Note that `MatToCSV.m` is dependent on `HCTSA`. Newer versions of `HCTSA` might lead to compatability issues.
 ## Workflow.py

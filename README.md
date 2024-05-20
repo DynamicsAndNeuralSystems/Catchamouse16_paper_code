@@ -101,3 +101,9 @@ If beginning with the MATLAB data a slightly different routine needs to be follo
 
 Note that `MatToCSV.m` is dependent on `HCTSA`. Newer versions of `HCTSA` might lead to compatability issues.
 ## Workflow.py
+The main code is implemented in Workflow.py
+
+There are three primary structures of concern. 
+First, the `PARAMS` dictionary governs the behaviour of the code. The `runscript.sh` repeatedly calls `Workflow.py` with the correct paramaters in order to reproduce the figures.
+Secondly, the `class Workflow` instantiates a class with methods that are then used to process the data. The methods are helper functions and call on different files across the codebase. If debugging or using for your own purposes it is convenient to follow the print statements, which follow the typical pipeline.
+Finally, the `if __name__ == '__main__':` section instantiates the `workflow` object and calls the functions to create the relevant figures.

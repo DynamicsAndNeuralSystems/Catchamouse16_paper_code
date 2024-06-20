@@ -1,0 +1,17 @@
+Name,SpearmanCorrelation,CorrectedPvalue,hctsaCorrectedPvalue
+{\texttt{CO_AddNoise_1_even_10_ami_at_10}},-0.510668563300142,0.019565928337721,1
+{\texttt{CO_HistogramAMI_even_10_3}},-0.507604770762665,0.0198027559102737,1
+{\texttt{AC_nl_036}},0.498413393150235,0.0231645882633726,1
+{\texttt{CO_HistogramAMI_even_2_3}},-0.47346536820221,0.0385922806170525,1
+{\texttt{SY_DriftingMean50_min}},-0.463836305941569,0.0441711734325588,1
+{\texttt{IN_AutoMutualInfoStats_diff_20_gaussian_ami8}},-0.456176824597877,0.0478526270755793,1
+{\texttt{PH_Walker_momentum_5_w_momentumzcross}},-0.440420177262282,0.0606850486969114,1
+{\texttt{CO_TranslateShape_circle_35_pts_statav4_m}},-0.349381770434402,0.289298669916269,1
+{\texttt{ST_LocalExtrema_n100_diffmaxabsmin}},0.349162928110297,0.289298669916269,1
+{\texttt{AC_nl_112}},-0.282197176934019,0.603826791315638,1
+{\texttt{AC_nl_035}},-0.199474778422147,1,1
+{\texttt{PH_Walker_biasprop_05_01_sw_meanabsdiff}},-0.167961483750957,1,1
+{\texttt{DN_RemovePoints_absclose_05_ac2rat}},0.141043877885983,1,1
+{\texttt{FC_LoopLocalSimple_mean_stderr_chn}},-0.0725462304409673,1,1
+{\texttt{CO_TranslateShape_circle_35_pts_std}},0.0163037531458584,1,1
+{\texttt{SC_FluctAnal_2_dfa_50_2_logi_r2_se2}},-0.00164131743079111,1,1

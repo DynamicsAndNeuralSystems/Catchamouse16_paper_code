@@ -39,6 +39,7 @@ umap-master
 uniqueValues
 intermediateAnalysisResults
 HCTSA_CalculatedData
+cellDensityBOLD/catchaMouse16_paper/Data
 
 ############################
 #Python Specific GitIgnore#

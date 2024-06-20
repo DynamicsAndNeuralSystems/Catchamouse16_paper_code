@@ -1,0 +1,17 @@
+Name,SpearmanCorrelation,CorrectedPvalue,hctsaCorrectedPvalue
+{\texttt{SC_FluctAnal_2_dfa_50_2_logi_r2_se2}},0.523799102746471,0.013985406444837,1
+{\texttt{SY_DriftingMean50_min}},-0.418973629499945,0.140037222062296,1
+{\texttt{PH_Walker_biasprop_05_01_sw_meanabsdiff}},-0.328591749644381,0.623279308016193,1
+{\texttt{PH_Walker_momentum_5_w_momentumzcross}},-0.229893861472809,1,1
+{\texttt{FC_LoopLocalSimple_mean_stderr_chn}},0.214574898785425,1,1
+{\texttt{AC_nl_035}},0.21238647554437,1,1
+{\texttt{ST_LocalExtrema_n100_diffmaxabsmin}},0.197505197505197,1,1
+{\texttt{CO_TranslateShape_circle_35_pts_std}},-0.182405077141919,1,1
+{\texttt{CO_HistogramAMI_even_2_3}},-0.170587591640223,1,1
+{\texttt{AC_nl_112}},0.16686727213043,1,1
+{\texttt{CO_HistogramAMI_even_10_3}},-0.14651493598862,1,1
+{\texttt{CO_TranslateShape_circle_35_pts_statav4_m}},0.0902724586935113,1,1
+{\texttt{CO_AddNoise_1_even_10_ami_at_10}},0.0861144545355072,1,1
+{\texttt{IN_AutoMutualInfoStats_diff_20_gaussian_ami8}},0.0694824379034905,1,1
+{\texttt{AC_nl_036}},0.0631360105044316,1,1
+{\texttt{DN_RemovePoints_absclose_05_ac2rat}},-0.00973848342269395,1,1

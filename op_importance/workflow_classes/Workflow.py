@@ -2644,12 +2644,12 @@ class Workflow:
 
             mpl.pyplot.figure()
             mpl.pyplot.plot((0, 1.5), (0, 1.5), '--', color=np.array((1, 1, 1)) * 0.7)
-            mpl.pyplot.errorbar(average_performance[:, 4], complete_performance[:, 4],
-                                            xerr=average_performance[:, 5], yerr=complete_performance[:, 5], fmt='o',
+            mpl.pyplot.errorbar(complete_performance[:, 4], average_performance[:, 4],
+                                            xerr=complete_performance[:, 5], yerr=average_performance[:, 5], fmt='o',
                                             color='r', ecolor='r')
 
-            mpl.pyplot.xlabel('Accuracy of catchaMouse16')
-            mpl.pyplot.ylabel('Accuracy of complete linkage centroids') # catchaMouse16
+            mpl.pyplot.ylabel('Accuracy of catchaMouse16')
+            mpl.pyplot.xlabel('Accuracy of complete linkage centroids') # catchaMouse16
             print("Mean performance of the average clustering: {}".format(np.mean(average_performance[:, 4])))
             print("Mean performance of the complete clustering: {}".format(np.mean(complete_performance[:, 4])))
             mpl.pyplot.savefig("{}/performance_comparison.svg".format(PARAMS['figure_dir']),dpi=400, bbox_inches='tight', pad_inches=0, transparent=True)

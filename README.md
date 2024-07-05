@@ -1,4 +1,12 @@
-# catchaMouse16 paper - specific code.
+<p align="center"><img src="img/catch_a_mouse16_vecorized.svg" alt="catch22 logo" height="220"/></p>
+
+<h1 align="center"><em>catchaMouse16</em>: paper - specific code</h1>
+
+<p align="center">
+ 	<!-- <a href="https://zenodo.org/badge/latestdoi/146194807"><img src="https://zenodo.org/badge/146194807.svg" height="20"/></a> -->
+    <a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" height="20"/></a>
+ 	<a href="https://twitter.com/compTimeSeries"><img src="https://img.shields.io/twitter/url/https/twitter.com/compTimeSeries.svg?style=social&label=Follow%20%40compTimeSeries" height="20"/></a>
+</p>
 This branch is intended to be a pipeline to reproduce the results and figures from the catchaMouse16 paper draft.
 
 The two directories `cellDensityBOLD` and `op_importance` contain the src files required to reproduce the raw figures from the paper.

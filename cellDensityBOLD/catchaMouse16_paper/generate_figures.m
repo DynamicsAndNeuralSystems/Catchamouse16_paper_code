@@ -1,7 +1,7 @@
 %% A script to produce cell density figures for the catchaMouse16 paper.
 %
-% Before running this script please navigate to `./hctsa` and execute `startup.m`,
-% then to `./cellDensityBold` and execute `add_all_subfolders.m`
+% Before running this script please navigate to `./cellDensityBold` 
+% and execute `add_all_subfolders.m`
 %
 % The data required for this script can be found here: https://unisydneyedu-my.sharepoint.com/:f:/g/personal/bhar9988_uni_sydney_edu_au/Enzv6xw2fTVAh9IXNr-sokMBhnchPITdaMwRBO-fvmGdIQ?e=xtjH1U
 % Please place the folder found at that link into the same directory as
@@ -108,13 +108,13 @@ for t = 2:2:length(subData)
 end
 
 %% Plot heatmaps over each layer showing which pairs of layers/cell types have significant correlations
+clf()
 cla()
-numps = binarizedSignificant(dataHCTSA, [], 0);
+numps = binarizedSignificant(dataHCTSA([1:5 8], :), [], 0); % Only isocortex
 set(gcf, 'visible', 'off'); set(gcf, 'Units', 'Inches', 'Position', [0, 0, 6, 12], 'PaperUnits', 'points');
 exportgraphics(gcf, "./heatmap_hctsa.pdf")
-
 cla()
-numps = binarizedSignificant(dataCatch, [], 0);
+numps = binarizedSignificant(dataCatch([1:5 8], :), [], 0);
 cb = colorbar();
 cb.Ticks = 0:max(max(numps));
 clim([-0.5, max(max(numps))+0.5])

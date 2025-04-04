@@ -96,6 +96,13 @@ def calc_perform_corr_mat(all_classes_avg_good,norm = None, type='abscorr', max_
 
         corr_array = np.ma.corrcoef(acag_n_sort_red, rowvar=0)
 
+    elif type=='spearmanr':
+        from scipy.stats import spearmanr
+        corr_array, _ = spearmanr(acag_n_sort_red, axis=0)
+
+        # If using masked arrays, ensure proper handling of masked values
+        corr_array = np.ma.array(corr_array, mask=np.isnan(corr_array))
+
     elif type == 'abscorr':
 
         corr_array = np.abs(np.ma.corrcoef(acag_n_sort_red, rowvar=0))

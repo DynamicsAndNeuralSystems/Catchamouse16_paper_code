@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib as mpl
 import os
 import sys
@@ -22,8 +23,8 @@ PARAMS = {
             'runtype':          "svm_maxmin",
             'linkage_method':   'average',
             'task_names':       default_task_names,
-            'n_good_perf_ops':  100, # intermediate number of good performers to cluster
-            'compute_features': True, # False or True : compute classification accuracies?
+            'n_good_perf_ops':  100, # intermediate number of good performers to cluster ## beta
+            'compute_features': True, # False or True : compute cflassification accuracies?
             'max_dist_cluster': 0.2,# gamma in paper, maximum allowed correlation distance within a cluster
             'calculate_mat':    True}
 if len(sys.argv)>1:
@@ -2529,12 +2530,13 @@ class Workflow:
         n_clust_steps = len(n_clust_array)
 
         # Number of Top features
-        n_topOps_array = np.array([100])
+        n_topOps_array = np.array([25,50,100,200,400])
         
         #-------------------------------------
         
         result_mat = []
-        reduced = np.empty((len(self.tasks), n_clust_steps))
+        results_dict = {}
+        reduced = np.empty((len(self.tasks), n_clust_steps*len(n_topOps_array)))
 
         if PARAMS['calculate_mat']:
             for n_topOpsInd, n_topOps in enumerate(n_topOps_array):
@@ -2583,12 +2585,20 @@ class Workflow:
                                                                         task.labels, cv=folds, scoring=scorer)
 
                         left_out_task_acc.append( np.mean( score_this_task_cluster_ops ) ) # Mean of cv accuracy
-                        reduced[task_ind][clust_ind] = len(self.good_perf_cluster_center_op_ids)
+                        results_dict[(n_topOps, task.name, n_clust)] = np.mean( score_this_task_cluster_ops ) # In order to compare scores for different beta gamma pairs
+                        reduced[task_ind][clust_ind + n_topOpsInd*n_clust_steps] = len(self.good_perf_cluster_center_op_ids)
                         #cv_acc = np.append(cv_acc, score_this_task_cluster_ops) # append all cv accuracies -- 2D array
                     result_mat.append(left_out_task_acc) # no of clusters (y-axis) x no of tasks (x-axis)
                     
             np.save('result_mat.npy', result_mat) # save
             np.save('reduced.npy', reduced) # save
+            results_df = pd.DataFrame.from_dict(results_dict, orient='index').reset_index()
+            results_df['beta'] = results_df['index'].apply(lambda x: x[0])
+            results_df['task'] = results_df['index'].apply(lambda x: x[1])
+            results_df['gamma'] = results_df['index'].apply(lambda x: x[2])
+            results_df = results_df.drop('index',axis=1).rename(columns = {0:'score'})
+            results_df.to_csv("results_by_gamma_beta.csv",index=False)
+
         else: 
             # Load the computed data
             result_mat = np.load('result_mat.npy') # load
@@ -2730,7 +2740,7 @@ if __name__ == '__main__':
     select_good_perf_ops_norm = 'mean-norm' # 'zscore' # 'median-diff' # 'none' #
     select_good_perf_ops_method = 'sort_asc'
     select_good_perf_ops_combination = 'mean' # 'pos_sum' #
-    similarity_method = 'corr'#'abscorr' # 'abscorr', 'corr', 'cos', 'euc'
+    similarity_method = 'cos'#'abscorr' # 'abscorr', 'corr', 'cos', 'euc'
     compare_space = 'problem_stats'
     min_calc_tasks = np.ceil(float(len(PARAMS['task_names'])) * 0.8) # np.ceil(float(len(task_names)) / float(1.25))
 

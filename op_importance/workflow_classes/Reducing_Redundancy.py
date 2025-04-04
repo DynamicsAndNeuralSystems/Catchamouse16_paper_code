@@ -19,6 +19,8 @@ class Reducing_Redundancy:
             self.calc_similarity = self.calc_abs_corr
         elif similarity_method == 'corr':
             self.calc_similarity = self.calc_corr
+        elif similarity_method == 'spearmanr':
+            self.calc_similarity = self.calc_spearmanr
         elif similarity_method == 'cos':
             self.calc_similarity = self.calc_cos
         elif similarity_method == 'euc':
@@ -80,6 +82,11 @@ class Reducing_Redundancy:
         # -- no normalisation in here as the best performing features have been picked already, potentially using normalisation
         self.similarity_array,sort_ind,_ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals,norm=None, type='abscorr',
                                                               max_feat = self.ops_base_perf_vals.shape[1])
+        import pandas as pd
+        df = pd.DataFrame(self.similarity_array,index=self.good_perf_op_ids[sort_ind])
+        df.index.name = "sort_ind"
+        df.to_csv("/home/patrick/Documents/op_importance/op_importance/correlation_alternatives/abs_corr.csv")
+        raise Exception
         self.similarity_array_op_ids = self.good_perf_op_ids[sort_ind]
 
     def calc_corr(self):
@@ -89,7 +96,29 @@ class Reducing_Redundancy:
         # -- no normalisation in here as the best performing features have been picked already, potentially using normalisation
         self.similarity_array,sort_ind,_ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals,norm=None, type='abscorr',
                                                               max_feat = self.ops_base_perf_vals.shape[1])
+        import pandas as pd
+        df = pd.DataFrame(self.similarity_array,index=self.good_perf_op_ids[sort_ind])
+        df.index.name = "sort_ind"
+        df.to_csv("/home/patrick/Documents/op_importance/op_importance/correlation_alternatives/corr.csv")
+        raise Exception
+
         self.similarity_array_op_ids = self.good_perf_op_ids[sort_ind]
+
+    def calc_spearmanr(self):
+        """
+        Calculate the distance matrix using a correlation approach for every column in self.ops_base_perf_vals
+        """
+        # -- no normalisation in here as the best performing features have been picked already, potentially using normalisation
+        self.similarity_array,sort_ind,_ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals,norm=None, type='spearmanr',
+                                                              max_feat = self.ops_base_perf_vals.shape[1])
+        import pandas as pd
+        df = pd.DataFrame(self.similarity_array,index=self.good_perf_op_ids[sort_ind])
+        df.index.name = "sort_ind"
+        df.to_csv("/home/patrick/Documents/op_importance/op_importance/correlation_alternatives/spearmanr.csv")
+        raise Exception
+
+        self.similarity_array_op_ids = self.good_perf_op_ids[sort_ind]
+
 
     def calc_cos(self):
         """
@@ -98,6 +127,12 @@ class Reducing_Redundancy:
         # -- no normalisation in here as the best performing features have been picked already, potentially using normalisation
         self.similarity_array,sort_ind,_ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals,norm=None, type='cos',
                                                               max_feat = self.ops_base_perf_vals.shape[1])
+        import pandas as pd
+        df = pd.DataFrame(self.similarity_array,index=self.good_perf_op_ids[sort_ind])
+        df.index.name = "sort_ind"
+        df.to_csv("/home/patrick/Documents/op_importance/op_importance/correlation_alternatives/cos.csv")
+        raise Exception
+
         self.similarity_array_op_ids = self.good_perf_op_ids[sort_ind]
 
     def calc_euc(self):
@@ -108,6 +143,12 @@ class Reducing_Redundancy:
         self.similarity_array, sort_ind, _ = idtop.calc_perform_corr_mat(self.ops_base_perf_vals, norm=None,
                                                                          type='euc',
                                                                          max_feat=self.ops_base_perf_vals.shape[1])
+        import pandas as pd
+        df = pd.DataFrame(self.similarity_array,index=self.good_perf_op_ids[sort_ind])
+        df.index.name = "sort_ind"
+        df.to_csv("/home/patrick/Documents/op_importance/op_importance/correlation_alternatives/euc.csv")
+        raise Exception
+
         self.similarity_array_op_ids = self.good_perf_op_ids[sort_ind]
 
     def calc_hierch_cluster(self,t = 0.2, criterion='distance' ):

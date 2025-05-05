@@ -37,4 +37,4 @@ There is [comprehensive documentation](https://github.com/DynamicsAndNeuralSyste
 
 If you use this software, please read and cite this open-access article:
 
-- &#x1F4D7; PREPRINT OF THE PAPER.
+- &#x1F4D7; [bioRxiv preprint](https://www.biorxiv.org/content/10.1101/2024.07.14.603477).

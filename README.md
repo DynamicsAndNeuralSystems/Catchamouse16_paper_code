@@ -33,6 +33,13 @@ There is [comprehensive documentation](https://github.com/DynamicsAndNeuralSyste
 - A list of publications that have used the _catchaMouse16_ feature set or specific time series pipeline
 - And more :yum:
 
+## Note on the paper's feature descriptions
+
+Two feature descriptions in the paper's text are wrong; the code, and so the paper's results, are correct.
+`AC_nl_035` is ⟨x_t² x_{t−3} x_{t−5}⟩ and `AC_nl_036` is ⟨x_t² x_{t−3} x_{t−6}⟩ (the paper swaps the two formulas).
+`SY_DriftingMean50_min` uses windows of 50 samples (`SY_DriftingMean(x,'fix',50)`, so 18 windows at T = 900), not 50 windows.
+The [catchaMouse16 README](https://github.com/DynamicsAndNeuralSystems/catchaMouse16) has the corrected descriptions.
+
 ## Acknowledgement :+1:
 
 If you use this software, please read and cite this open-access article:
